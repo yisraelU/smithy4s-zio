@@ -16,7 +16,7 @@ object MyApp extends zio.ZIOAppDefault {
     } yield clientService
 
     x.map(_.addMenuItem("myfavoritePizza", null))
-      .provide()
-      .exit
+
+    ???
   }
 }

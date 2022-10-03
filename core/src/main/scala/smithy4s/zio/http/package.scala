@@ -51,6 +51,12 @@ package object http {
         .forContentType(codecAPI.mediaType(c).value)
         .getOrElse(throw new RuntimeException("media type not supported"))
   }
+  
+  def  collectFirstSome[A,B](list: List[A])(f: A =>Option[B] ):Option[B] = {
+    list.map(f).collectFirst {
+      case Some(value) => value
+    }
+  }
 
   implicit class ZHttpResponse(val response: Response) extends AnyVal {
     def withEntity[A](

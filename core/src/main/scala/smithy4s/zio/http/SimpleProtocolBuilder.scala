@@ -1,8 +1,8 @@
 package smithy4s.zio.http
 
-import smithy4s.{checkProtocol, GenLift, Monadic, ShapeTag, UnsupportedProtocolError}
+import smithy4s.{checkProtocol, GenLift, Interpreter, Monadic, ShapeTag, UnsupportedProtocolError}
 import smithy4s.http.CodecAPI
-import zhttp.http.URL
+import zhttp.http.{Http, HttpApp, Request, Response, URL}
 import zhttp.service.Client
 import zio.{IO, Task, ZIO}
 
@@ -23,6 +23,19 @@ abstract class SimpleProtocolBuilder[P](val codecs: CodecAPI)(implicit
       service: smithy4s.Service[Alg, Op]
   ) {
 
+    def routes[Alg[_[_, _, _, _, _]], Op[_, _, _, _, _]](
+                                                                impl: Monadic[Alg, Task]
+                                                              )(implicit
+                                                                serviceProvider: smithy4s.Service.Provider[Alg, Op]
+                                                              ): RouterBuilder[Alg, Op] = {
+      val service = serviceProvider.service
+      new RouterBuilder[Alg, Op](
+        service,
+        service.asTransformation[GenLift[Task]#λ](impl),
+        PartialFunction.empty
+      )
+    }
+
     def client[R](
         baseUrl: URL,
         zClient: Client[R]
@@ -38,6 +51,40 @@ abstract class SimpleProtocolBuilder[P](val codecs: CodecAPI)(implicit
           )
         )
         .map(service.transform[GenLift[Task]#λ]))
+
+  }
+
+  class RouterBuilder[
+    Alg[_[_, _, _, _, _]],
+    Op[_, _, _, _, _]
+  ] (
+                                          service: smithy4s.Service[Alg, Op],
+                                          impl: Interpreter[Op, Task],
+                                          errorTransformation: PartialFunction[Throwable, Throwable]
+                                        ){
+
+    val entityCompiler =
+      EntityCompiler.fromCodecAPI(codecs)
+
+    def mapErrors(
+                   fe: PartialFunction[Throwable, Throwable]
+                 ): RouterBuilder[Alg, Op] =
+      new RouterBuilder(service, impl, fe)
+
+    def flatMapErrors(
+                       fe: PartialFunction[Throwable, Throwable]
+                     ): RouterBuilder[Alg, Op] =
+      new RouterBuilder(service, impl, fe)
+
+    def make: ZIO[Any, UnsupportedProtocolError, Http[Any, Throwable, Request, Response]] =
+      ZIO.fromEither(checkProtocol(service, protocolTag)).as {
+        new Smithy4sZHttpRouter[Alg, Op ](
+          service,
+          impl,
+          errorTransformation,
+          entityCompiler
+        ).routes
+      }
 
   }
 }
