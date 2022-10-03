@@ -2,7 +2,7 @@ package smithy4s.zio.http
 
 import smithy4s.{checkProtocol, GenLift, Interpreter, Monadic, ShapeTag, UnsupportedProtocolError}
 import smithy4s.http.CodecAPI
-import zhttp.http.{Http, HttpApp, Request, Response, URL}
+import zhttp.http.{Http, HttpApp, Request, Response, RHttpApp, URL}
 import zhttp.service.Client
 import zio.{IO, Task, ZIO}
 
@@ -60,7 +60,7 @@ abstract class SimpleProtocolBuilder[P](val codecs: CodecAPI)(implicit
   ] (
                                           service: smithy4s.Service[Alg, Op],
                                           impl: Interpreter[Op, Task],
-                                          errorTransformation: PartialFunction[Throwable, Throwable]
+                                          errorTransformation: PartialFunction[Throwable, Task[Throwable]]
                                         ){
 
     val entityCompiler =
@@ -69,14 +69,14 @@ abstract class SimpleProtocolBuilder[P](val codecs: CodecAPI)(implicit
     def mapErrors(
                    fe: PartialFunction[Throwable, Throwable]
                  ): RouterBuilder[Alg, Op] =
-      new RouterBuilder(service, impl, fe)
+      new RouterBuilder(service, impl, fe andThen(e => ZIO.fail(e)))
 
     def flatMapErrors(
-                       fe: PartialFunction[Throwable, Throwable]
+                       fe: PartialFunction[Throwable, Task[Throwable]]
                      ): RouterBuilder[Alg, Op] =
       new RouterBuilder(service, impl, fe)
 
-    def make: ZIO[Any, UnsupportedProtocolError, Http[Any, Throwable, Request, Response]] =
+    def make[R]: ZIO[Any, UnsupportedProtocolError, RHttpApp[R]] =
       ZIO.fromEither(checkProtocol(service, protocolTag)).as {
         new Smithy4sZHttpRouter[Alg, Op ](
           service,

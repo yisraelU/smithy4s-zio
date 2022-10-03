@@ -50,7 +50,7 @@ private[smithy4s] object Smithy4sZHttpServerEndpoint {
       impl: Interpreter[Op, Task],
       endpoint: Endpoint[Op, I, E, O, SI, SO],
       codecs: EntityCompiler,
-      errorTransformation: PartialFunction[Throwable, Throwable]
+      errorTransformation: PartialFunction[Throwable, Task[Throwable]]
   ): Option[Smithy4sZHttpServerEndpoint] =
     HttpEndpoint.cast(endpoint).map { httpEndpoint =>
       new Smithy4sZHttpServerEndpointImpl[Op, I, E, O, SI, SO](
@@ -70,7 +70,7 @@ private[smithy4s] class Smithy4sZHttpServerEndpointImpl[ Op[_, _, _, _, _], I, E
                                                                                               endpoint: Endpoint[Op, I, E, O, SI, SO],
                                                                                                   httpEndpoint: HttpEndpoint[I],
                                                                                                   codecs: EntityCompiler,
-                                                                                                  errorTransformation: PartialFunction[Throwable, Throwable]
+                                                                                                  errorTransformation: PartialFunction[Throwable, Task[Throwable]]
                                                                                                 ) extends Smithy4sZHttpServerEndpoint {
   // format: on
 
@@ -110,7 +110,7 @@ private[smithy4s] class Smithy4sZHttpServerEndpointImpl[ Op[_, _, _, _, _], I, E
     case e @ endpoint.Error(_, _) => ZIO.fail(e)
     case scala.util.control.NonFatal(other)
         if errorTransformation.isDefinedAt(other) =>
-      ZIO.fail(errorTransformation(other))
+      errorTransformation(other).flatMap(e =>ZIO.fail(e))
   }
 
 

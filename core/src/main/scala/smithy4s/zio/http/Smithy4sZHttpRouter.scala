@@ -3,18 +3,18 @@ package smithy4s.zio.http
 import smithy4s.Interpreter
 import smithy4s.http.PathParams
 import smithy4s.zio.http.internal.Smithy4sZHttpServerEndpoint
-import zhttp.http.{Http, HttpApp, Method, Request}
+import zhttp.http.{Http, Method, Request, Response, RHttpApp}
 import zio.Task
 
 // format: off
 class Smithy4sZHttpRouter[Alg[_[_, _, _, _, _]], Op[_, _, _, _, _]](
                                                                           service: smithy4s.Service[Alg, Op],
                                                                           impl: Interpreter[Op, Task],
-                                                                          errorTransformation: PartialFunction[Throwable, Throwable],
+                                                                          errorTransformation: PartialFunction[Throwable, Task[Throwable]],
                                                                           codecs: EntityCompiler
                                                                         ){
 
-  val routes =  Http.fromFunctionZIO { {(request:Request) => {
+  def routes[R]: RHttpApp[R] =  Http.fromFunctionZIO { { (request:Request) => {
     for {
       endpoints <- perMethodEndpoint.get(request.method)
       path = request.url.path.segments.toArray.map(_.toString)

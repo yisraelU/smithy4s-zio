@@ -4,69 +4,76 @@ import zhttp.http.Status
 
 object StatusParser {
 
+  val MinCode = 100
+  val MaxCode = 599
+
   def fromCode(code: Int): Option[Status] = {
-    ???
+
+    if (code < MinCode || code > MaxCode) {
+      None
+    } else {
+
+      val status = code match {
+        case 100 => Status.Continue
+        case 101 => Status.SwitchingProtocols
+        case 102 => Status.Processing
+        case 200 => Status.Ok
+        case 201 => Status.Created
+        case 202 => Status.Accepted
+        case 203 => Status.NonAuthoritiveInformation
+        case 204 => Status.NoContent
+        case 205 => Status.ResetContent
+        case 206 => Status.PartialContent
+        case 207 => Status.MultiStatus
+        case 300 => Status.MultipleChoices
+        case 301 => Status.MovedPermanently
+        case 302 => Status.Found
+        case 303 => Status.SeeOther
+        case 304 => Status.NotModified
+        case 305 => Status.UseProxy
+        case 307 => Status.TemporaryRedirect
+        case 308 => Status.PermanentRedirect
+        case 400 => Status.BadRequest
+        case 401 => Status.Unauthorized
+        case 402 => Status.PaymentRequired
+        case 403 => Status.Forbidden
+        case 404 => Status.NotFound
+        case 405 => Status.MethodNotAllowed
+        case 406 => Status.NotAcceptable
+        case 407 => Status.ProxyAuthenticationRequired
+        case 408 => Status.RequestTimeout
+        case 409 => Status.Conflict
+        case 410 => Status.Gone
+        case 411 => Status.LengthRequired
+        case 412 => Status.PreconditionFailed
+        case 413 => Status.RequestEntityTooLarge
+        case 414 => Status.RequestUriTooLong
+        case 415 => Status.UnsupportedMediaType
+        case 416 => Status.RequestedRangeNotSatisfiable
+        case 417 => Status.ExpectationFailed
+        case 421 => Status.MisdirectedRequest
+        case 422 => Status.UnprocessableEntity
+        case 423 => Status.Locked
+        case 424 => Status.FailedDependency
+        case 425 => Status.UnorderedCollection
+        case 426 => Status.UpgradeRequired
+        case 428 => Status.PreconditionRequired
+        case 429 => Status.TooManyRequests
+        case 431 => Status.RequestHeaderFieldsTooLarge
+        case 500 => Status.InternalServerError
+        case 501 => Status.NotImplemented
+        case 502 => Status.BadGateway
+        case 503 => Status.ServiceUnavailable
+        case 504 => Status.GatewayTimeout
+        case 505 => Status.HttpVersionNotSupported
+        case 506 => Status.VariantAlsoNegotiates
+        case 507 => Status.InsufficientStorage
+        case 510 => Status.NotExtended
+        case 511 => Status.NetworkAuthenticationRequired
+        case _ => Status.Custom(code)
+
+      }
+      Some(status)
+    }
   }
-  /*
-    code match {
-  case  100 => Some(Status.Continue)
-  case 1  => Status.SwitchingProtocols
-      case => Status.Processing
-      case => Status.Ok
-      case => Status.Created
-      case => Status.Accepted
-      case => Status.NonAuthoritiveInformation
-      case => Status.NoContent
-      case => Status.ResetContent
-      case => Status.PartialContent
-      case => Status.MultiStatus
-      case => Status.MultipleChoices
-      case => Status.MovedPermanently
-      case => Status.Found
-      case => Status.SeeOther
-      case => Status.NotModified
-      case => Status.UseProxy
-      case => Status.TemporaryRedirect
-      case => Status.PermanentRedirect
-      case => Status.BadRequest
-      case => Status.Unauthorized
-      case => Status.PaymentRequired
-      case => Status.Forbidden
-      case => Status.NotFound
-      case => Status.MethodNotAllowed
-      case => Status.NotAcceptable
-      case => Status.ProxyAuthenticationRequired
-      case => Status.RequestTimeout
-      case => Status.Conflict
-      case => Status.Gone
-      case => Status.LengthRequired
-      case => Status.PreconditionFailed
-      case => Status.RequestEntityTooLarge
-      case => Status.RequestUriTooLong
-      case => Status.UnsupportedMediaType
-      case => Status.RequestedRangeNotSatisfiable
-      case => Status.ExpectationFailed
-      case => Status.MisdirectedRequest
-      case => Status.UnprocessableEntity
-      case => Status.Locked
-      case => Status.FailedDependency
-      case => Status.UnorderedCollection
-      case => Status.UpgradeRequired
-      case => Status.PreconditionRequired
-      case => Status.TooManyRequests
-      case => Status.RequestHeaderFieldsTooLarge
-      case => Status.InternalServerError
-      case => Status.NotImplemented
-      case => Status.BadGateway
-      case => Status.ServiceUnavailable
-      case => Status.GatewayTimeout
-      case => Status.HttpVersionNotSupported
-      case => Status.VariantAlsoNegotiates
-      case => Status.InsufficientStorage
-      case => Status.NotExtended
-      case => Status.NetworkAuthenticationRequired
-      case => Status.Custom(code)
-
-  }*/
-
 }

@@ -128,7 +128,7 @@ private[smithy4s] class Smithy4sZHttpClientEndpointImpl[R,Op[
 
   private val outputFromErrorResponse: Response => Task[O] = {
     endpoint.errorable match {
-      case None => errorResponseFallBack(_)
+      case None => errorResponseFallBack
       case Some(err) =>
         val allAlternatives = err.error.alternatives
         val picker = new ErrorAltPicker(allAlternatives)
@@ -138,7 +138,7 @@ private[smithy4s] class Smithy4sZHttpClientEndpointImpl[R,Op[
             val schema = alt.instance
             val errorMetadataDecoder =
               Metadata.PartialDecoder.fromSchema(schema)
-            implicit val errorCodec =
+            implicit val errorCodec: EntityDecoder[BodyPartial[A]] =
               entityCompiler.compilePartialEntityDecoder(schema)
 
             (response: Response) => {

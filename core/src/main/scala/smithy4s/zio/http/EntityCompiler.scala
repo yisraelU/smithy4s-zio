@@ -25,7 +25,7 @@ import zhttp.http.MediaType
 trait EntityCompiler {
 
   /**
-   * Turns a Schema into an ZIO-Http BodyEncoder
+   * Turns a Schema into an ZIO-Http EntityEncoder
    *
    * @param schema the value's schema
    * @return the entity encoder associated to the A value.
@@ -33,7 +33,7 @@ trait EntityCompiler {
   def compileEntityEncoder[A](schema: Schema[A]): EntityEncoder[A]
 
   /**
-   * Turns a Schema into an zio BodyDecoder
+   * Turns a Schema into an zio EntityyDecoder
    *
    * @param schema the value's schema
    * @return the entity decoder associated to the A value.
