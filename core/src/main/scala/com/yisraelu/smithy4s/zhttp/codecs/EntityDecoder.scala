@@ -1,7 +1,7 @@
-package smithy4s.zio.http.codecs
+package com.yisraelu.smithy4s.zhttp.codecs
 
-import zhttp.http.{Body, Headers, MediaType}
-import zio.{Task, ZIO}
+import zio.Task
+import zio.http._
 
 trait EntityDecoder[+A] {
 

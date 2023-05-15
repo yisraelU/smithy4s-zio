@@ -8,15 +8,16 @@ object MyApp extends zio.ZIOAppDefault {
   override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = {
 
     val x = for {
+      url <- ZIO.fromEither(URL.fromString("http://localhost:8080"))
       client <- Client.make[Any]
       clientService <- PizzaAdminService.simpleRestJson.client(
-        URL.empty,
+        url
         client
       )
     } yield clientService
 
     x.map(_.addMenuItem("myfavoritePizza", null))
 
-    ???
+
   }
 }

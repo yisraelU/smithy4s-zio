@@ -1,6 +1,7 @@
-package smithy4s.zio.http.internal
 
-import zhttp.http.Status
+package com.yisraelu.smithy4s.zhttp.internal
+
+import zio.http.Status
 
 object StatusParser {
 
@@ -20,7 +21,7 @@ object StatusParser {
         case 200 => Status.Ok
         case 201 => Status.Created
         case 202 => Status.Accepted
-        case 203 => Status.NonAuthoritiveInformation
+        case 203 => Status.NonAuthoritativeInformation
         case 204 => Status.NoContent
         case 205 => Status.ResetContent
         case 206 => Status.PartialContent
@@ -70,7 +71,7 @@ object StatusParser {
         case 507 => Status.InsufficientStorage
         case 510 => Status.NotExtended
         case 511 => Status.NetworkAuthenticationRequired
-        case _ => Status.Custom(code)
+        case _   => Status.Custom(code)
 
       }
       Some(status)

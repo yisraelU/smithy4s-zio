@@ -1,13 +1,13 @@
-package smithy4s.zio.http.codecs
+package com.yisraelu.smithy4s.zhttp.codecs
 
-import zhttp.http.{Body, Headers, MediaType}
 import zio.Chunk
+import zio.http._
 
 trait EntityEncoder[-A] {
 
   def encode(a: A): (Headers, Body)
+  final def contramap[B](f: B => A): EntityEncoder[B] = (b: B) => encode(f(b))
 
-  def contramap[B](f: B => A): EntityEncoder[B] = (b: B) => encode(f(b))
 }
 object EntityEncoder {
 
@@ -15,7 +15,7 @@ object EntityEncoder {
     (a: Array[Byte]) => {
 
       (
-        Headers.contentType(mediaType.fullType),
+        Headers(Header.ContentType(mediaType)),
         Body.fromChunk(Chunk.fromArray(a))
       )
     }

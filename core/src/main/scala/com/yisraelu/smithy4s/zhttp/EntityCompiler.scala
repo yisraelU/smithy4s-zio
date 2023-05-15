@@ -1,55 +1,47 @@
-package smithy4s.zio.http
+package com.yisraelu.smithy4s.zhttp
 
-/*
- *  Copyright 2021-2022 Disney Streaming
- *
- *  Licensed under the Tomorrow Open Source Technology License, Version 1.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *     https://disneystreaming.github.io/TOST-1.0.txt
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
+import com.yisraelu.smithy4s.zhttp.codecs.{EntityDecoder, EntityEncoder}
 import smithy4s.http.{BodyPartial, CodecAPI, Metadata}
 import smithy4s.Schema
-import smithy4s.zio.http.codecs.{EntityDecoder, EntityEncoder}
-import smithy4s.zio.http.codecs.EntityEncoder.byteArrayEncoder
-import zhttp.http.MediaType
+import com.yisraelu.smithy4s.zhttp.codecs.EntityEncoder.byteArrayEncoder
+import zio.http.MediaType
 
 trait EntityCompiler {
+
+  type Cache
+
+  def createCache(): Cache
 
   /**
    * Turns a Schema into an ZIO-Http EntityEncoder
    *
    * @param schema the value's schema
+   * @param cache a cache that can be used to avoid recompiling encoders
    * @return the entity encoder associated to the A value.
    */
-  def compileEntityEncoder[A](schema: Schema[A]): EntityEncoder[A]
+  def compileEntityEncoder[A](schema: Schema[A], cache: Cache): EntityEncoder[A]
 
   /**
-   * Turns a Schema into an zio EntityyDecoder
+   * Turns a Schema into an ZIO-Http EntityyDecoder
    *
    * @param schema the value's schema
+   * @param cache a cache that can be used to avoid recompiling encoders
    * @return the entity decoder associated to the A value.
    */
-  def compileEntityDecoder[A](schema: Schema[A]): EntityDecoder[A]
+  def compileEntityDecoder[A](schema: Schema[A], cache: Cache): EntityDecoder[A]
 
   /**
-   * Turns a Schema into an zio  BodyDecoder that only partially
+   * Turns a Schema into an ZIO-Http  BodyDecoder that only partially
    * decodes the data, expecting for decoded metadata to be provided
    * to complete the data.
    *
    * @param schema the value's schema
+   * @param cache a cache that can be used to avoid recompiling encoders
    * @return the entity encoder associated to the A value.
    */
   def compilePartialEntityDecoder[A](
-      schema: Schema[A]
+      schema: Schema[A],
+      cache: Cache
   ): EntityDecoder[BodyPartial[A]]
 
 }
@@ -60,8 +52,13 @@ object EntityCompiler {
       codecAPI: CodecAPI
   ): EntityCompiler =
     new EntityCompiler {
-      def compileEntityEncoder[A](schema: Schema[A]): EntityEncoder[A] = {
-        val codecA: codecAPI.Codec[A] = codecAPI.compileCodec(schema)
+      type Cache = codecAPI.Cache
+      def createCache(): Cache = codecAPI.createCache()
+      def compileEntityEncoder[A](
+          schema: Schema[A],
+          cache: Cache
+      ): EntityEncoder[A] = {
+        val codecA = codecAPI.compileCodec(schema, cache)
         val mediaType: MediaType = mediaTypeParser(codecAPI)(codecA)
         val expectBody = Metadata.PartialDecoder
           .fromSchema(schema)
@@ -76,9 +73,10 @@ object EntityCompiler {
       }
 
       def compileEntityDecoder[A](
-          schema: Schema[A]
+          schema: Schema[A],
+          cache: Cache
       ): EntityDecoder[A] = {
-        val codecA: codecAPI.Codec[A] = codecAPI.compileCodec(schema)
+        val codecA = codecAPI.compileCodec(schema, cache)
         val mediaType: MediaType = mediaTypeParser(codecAPI)(codecA)
         EntityDecoder
           .byteArrayDecoder(mediaType)
@@ -89,9 +87,10 @@ object EntityCompiler {
       }
 
       def compilePartialEntityDecoder[A](
-          schema: Schema[A]
+          schema: Schema[A],
+          cache: Cache
       ): EntityDecoder[BodyPartial[A]] = {
-        val codecA: codecAPI.Codec[A] = codecAPI.compileCodec(schema)
+        val codecA = codecAPI.compileCodec(schema, cache)
         val mediaType: MediaType = mediaTypeParser(codecAPI)(codecA)
         EntityDecoder
           .byteArrayDecoder(mediaType)
