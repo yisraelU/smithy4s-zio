@@ -12,7 +12,7 @@ import smithy4s.zio.http.internal.{
 import smithy4s.{Endpoint, ShapeTag, UnsupportedProtocolError, checkProtocol}
 import zio.IsSubtypeOfError.impl
 import zio.http._
-import zio.{Task, ZIO}
+import zio.{IO, Task, ZIO}
 
 /**
  * Abstract construct helping the construction of routers and clients
@@ -44,7 +44,8 @@ abstract class SimpleProtocolBuilder[P](
 
   class ServiceBuilder[
       Alg[_[_, _, _, _, _]]
-  ] private[http] (val service: smithy4s.Service[Alg]) { self =>
+  ] private[http] (val service: smithy4s.Service[Alg]) {
+    self =>
 
     def client(client: Client) =
       new ClientBuilder[Alg](client, service)
@@ -97,6 +98,9 @@ abstract class SimpleProtocolBuilder[P](
           }
         }
     }
+
+    def lift: IO[UnsupportedProtocolError, service.Impl[Task]] =
+      ZIO.fromEither(make)
   }
 
   class RouterBuilder[
@@ -118,7 +122,7 @@ abstract class SimpleProtocolBuilder[P](
      * val handlerPF: PartialFunction[Throwable, Throwable] = ???
      * builder.mapErrors(handlerPF).middleware(middleware)
      * }}}
-
+     *
      * {{{
      * val handlerPF: PartialFunction[Throwable, Throwable] = ???
      * val handler = ServerEndpointMiddleware.mapErrors(handlerPF)
@@ -145,7 +149,7 @@ abstract class SimpleProtocolBuilder[P](
      * val handlerPF: PartialFunction[Throwable, F[Throwable]] = ???
      * builder.flatMapErrors(handlerPF).middleware(middleware)
      * }}}
-
+     *
      * {{{
      * val handlerPF: PartialFunction[Throwable, F[Throwable]] = ???
      * val handler = ServerEndpointMiddleware.flatMapErrors(handlerPF)
@@ -195,6 +199,6 @@ abstract class SimpleProtocolBuilder[P](
           }
         }
 
+    def lift: IO[UnsupportedProtocolError, EHttpApp] = ZIO.fromEither(make)
   }
-
 }

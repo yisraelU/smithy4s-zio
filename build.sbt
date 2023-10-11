@@ -14,7 +14,8 @@ lazy val root = project
 
 lazy val allModules = Seq(
   http,
-  prelude
+  prelude,
+  examples
 ).map(projectToRef)
 
 
@@ -55,7 +56,6 @@ lazy val tests = (project in file("modules/tests")).dependsOn(http)
      Seq(
         Dependencies.Http4s.emberClient.value,
         Dependencies.Http4s.emberServer.value,
-
         Dependencies.Http4s.dsl.value,
         Dependencies.Http4s.circe.value,
         Dependencies.Weaver.cats.value,
@@ -64,3 +64,10 @@ lazy val tests = (project in file("modules/tests")).dependsOn(http)
       )
     },
   )
+
+
+lazy val examples = (project in file("modules/examples"))
+  .settings(
+    name := s"$projectPrefix-examples",
+  ).dependsOn(http, prelude)
+  .enablePlugins(Smithy4sCodegenPlugin)
