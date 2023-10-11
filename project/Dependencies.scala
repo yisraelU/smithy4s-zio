@@ -1,5 +1,5 @@
-import sbt.{Def, ModuleID}
-import sbt._, Keys._
+import sbt.{Def, ModuleID, *}
+import Keys.*
 
 
 object Dependencies {
@@ -15,6 +15,10 @@ object Dependencies {
       Def.setting("org.http4s" %% "http4s-ember-client" % http4sVersion.value)
     val dsl: Def.Initialize[ModuleID] =
       Def.setting("org.http4s" %% "http4s-dsl" % http4sVersion.value)
+  }
+
+  object Typelevel{
+    val vault: Def.Initialize[ModuleID] =   Def.setting("org.typelevel" %% "vault" % "3.5.0")
   }
 
   object Weaver {
