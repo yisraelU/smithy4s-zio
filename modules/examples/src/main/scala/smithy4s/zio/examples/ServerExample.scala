@@ -1,21 +1,21 @@
 package smithy4s.zio.examples
 
 import smithy4s.UnsupportedProtocolError
-import smithy4s.hello.{Greeting, HelloWorldService, Message}
+import smithy4s.hello.HelloWorldServiceGen.serviceInstance
+import smithy4s.zio.examples.impl.HelloWorldImpl
 import smithy4s.zio.http.SimpleRestJsonBuilder
-import zio.http.{EHttpApp, Server}
-import zio.{IO, Scope, Task, ZIO, ZIOAppArgs, ZIOAppDefault}
-
-object HelloWorldImpl extends HelloWorldService[Task] {
-  def hello(name: String, town: Option[String]): Task[Greeting] = ZIO.succeed {
-    town match {
-      case None    => Greeting(s"Hello $name!")
-      case Some(t) => Greeting(s"Hello $name from $t!")
-    }
-  }
-
-   def healthCheck(): Task[Message] = ZIO.succeed(Message("OK"))
+import smithy4s.zio.http.internal.EffectOps
+import zio.http.{
+  Body,
+  EHttpApp,
+  Request,
+  RequestHandlerMiddleware,
+  RequestHandlerMiddlewares,
+  Response,
+  Server,
+  Status
 }
+import zio.{Console, IO, Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
 
 object Routes {
   val example: IO[UnsupportedProtocolError, EHttpApp] =
@@ -24,7 +24,7 @@ object Routes {
 
 object Main extends ZIOAppDefault {
 
-  private val port = 8080
+  private val port = 8081
 
   val program: ZIO[Any, Throwable, Nothing] = {
     for {
@@ -33,7 +33,7 @@ object Main extends ZIOAppDefault {
       _ <- zio.Console.printLine(s"Server started on http://localhost:$port")
       server <- Server.serve(app.withDefaultErrorResponse)
     } yield server
-  }.provide(Server.defaultWithPort(8080))
+  }.provide(Server.defaultWithPort(port))
 
   override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = {
     program.exitCode

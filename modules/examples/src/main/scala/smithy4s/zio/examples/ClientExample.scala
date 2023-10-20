@@ -7,7 +7,7 @@ import zio.{ExitCode, Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
 object ClientExample extends ZIOAppDefault {
 
   private val helloWorldClient = for {
-    url <- ZIO.fromEither(URL.decode("http://localhost:8080"))
+    url <- ZIO.fromEither(URL.decode("http://localhost:8081"))
     client <- ZIO.service[Client]
     clientService <- SimpleRestJsonBuilder(HelloWorldService)
       .client(client)

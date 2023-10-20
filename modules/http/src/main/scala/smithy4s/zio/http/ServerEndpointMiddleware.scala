@@ -29,6 +29,7 @@ object ServerEndpointMiddleware {
           http
             .runZIO(req)
             .mapError {
+              // todo investigate the Option parameter for error
               case None    => new Exception("No response")
               case Some(e) => e
             }

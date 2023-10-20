@@ -1,10 +1,9 @@
 import sbt.{Def, ModuleID, *}
 import Keys.*
 
-
 object Dependencies {
   object Http4s {
-    val http4sVersion = Def.setting( "0.23.16")
+    val http4sVersion = Def.setting("0.23.16")
 
     val circe: Def.Initialize[ModuleID] =
       Def.setting("org.http4s" %% "http4s-circe" % http4sVersion.value)
@@ -17,14 +16,29 @@ object Dependencies {
       Def.setting("org.http4s" %% "http4s-dsl" % http4sVersion.value)
   }
 
-  object Typelevel{
-    val vault: Def.Initialize[ModuleID] =   Def.setting("org.typelevel" %% "vault" % "3.5.0")
+  object Smithy4s {
+    val complianceTests =
+      "com.disneystreaming.smithy4s" %% "smithy4s-compliance-tests" % "0.18.2" % Test
+    val core = "com.disneystreaming.smithy4s" %% "smithy4s-core" % "0.18.2"
+    val json = "com.disneystreaming.smithy4s" %% "smithy4s-json" % "0.18.2"
+  }
+
+  object ZIO {
+    val core = "dev.zio" %% "zio" % "2.0.13"
+    val prelude = "dev.zio" %% "zio-prelude" % "1.0.0-RC21"
+    val test = "dev.zio" %% "zio-test" % "2.0.18" % Test
+    val testSbt = "dev.zio" %% "zio-test-sbt" % "2.0.18" % Test
+    val testMagnolia = "dev.zio" %% "zio-test-magnolia" % "2.0.18" % Test
+  }
+  object Typelevel {
+    val vault: Def.Initialize[ModuleID] =
+      Def.setting("org.typelevel" %% "vault" % "3.5.0")
   }
 
   object Weaver {
 
     val weaverVersion =
-      Def.setting("0.8.0" )
+      Def.setting("0.8.0")
 
     val cats: Def.Initialize[ModuleID] =
       Def.setting("com.disneystreaming" %% "weaver-cats" % weaverVersion.value)

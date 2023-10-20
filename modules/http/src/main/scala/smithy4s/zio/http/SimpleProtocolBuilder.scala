@@ -67,7 +67,7 @@ abstract class SimpleProtocolBuilder[P](
   ] private[http] (
       client: Client,
       val service: smithy4s.Service[Alg],
-      uri: URL = URL
+      url: URL = URL
         .decode("http://localhost:8080")
         .getOrElse(throw new Exception("Invalid URL")),
       middleware: ClientEndpointMiddleware = Endpoint.Middleware.noop[Client]
@@ -79,7 +79,7 @@ abstract class SimpleProtocolBuilder[P](
     def middleware(
         mid: ClientEndpointMiddleware
     ): ClientBuilder[Alg] =
-      new ClientBuilder[Alg](this.client, this.service, this.uri, mid)
+      new ClientBuilder[Alg](this.client, this.service, this.url, mid)
 
     def make: Either[UnsupportedProtocolError, service.Impl[Task]] = {
       checkProtocol(service, protocolTag)
@@ -91,7 +91,7 @@ abstract class SimpleProtocolBuilder[P](
               service,
               client,
               (client: Client) => ZHttpToSmithy4sClient(client),
-              simpleProtocolCodecs.makeClientCodecs(uri),
+              simpleProtocolCodecs.makeClientCodecs(url),
               middleware,
               (response: Response) => response.status.isSuccess
             )
@@ -175,7 +175,7 @@ abstract class SimpleProtocolBuilder[P](
             ServerEndpointMiddleware.flatMapErrors(errorTransformation)
           val finalMiddleware =
             errorHandler.andThen(middleware).andThen(errorHandler)
-          val router: Request => Option[ZIO[Any, Throwable, Response]] =
+          val router =
             HttpUnaryServerRouter(service)(
               impl,
               simpleProtocolCodecs.makeServerCodecs,

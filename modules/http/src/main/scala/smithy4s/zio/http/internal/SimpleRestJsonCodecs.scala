@@ -7,17 +7,8 @@ import smithy4s.http._
 import smithy4s.json.Json
 import smithy4s.server.UnaryServerCodecs
 import smithy4s.zio.http.SimpleProtocolCodecs
-import smithy4s.zio.http.internal.{
-  EffectOps,
-  fromSmithy4sHttpRequest,
-  fromSmithy4sHttpResponse,
-  toSmithy4sHttpRequest,
-  toSmithy4sHttpResponse,
-  toSmithy4sHttpUri,
-  zioMonadThrowLike
-}
+import zio.Task
 import zio.http.{Request, Response, URL}
-import zio.{Task, ZIO}
 
 // scalafmt: {maxColumn = 120}
 private[http] class SimpleRestJsonCodecs(
@@ -68,9 +59,9 @@ private[http] class SimpleRestJsonCodecs(
   }
 
   def makeClientCodecs(
-      uri: URL
+      url: URL
   ): UnaryClientCodecs.Make[Task, Request, Response] = {
-    val baseRequest = HttpRequest(HttpMethod.POST, toSmithy4sHttpUri(uri, None), Map.empty, Blob.empty)
+    val baseRequest = HttpRequest(HttpMethod.POST, toSmithy4sHttpUri(url, None), Map.empty, Blob.empty)
     HttpUnaryClientCodecs.builder
       .withBodyEncoders(payloadEncoders)
       .withSuccessBodyDecoders(payloadDecoders)
