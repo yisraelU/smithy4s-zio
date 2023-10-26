@@ -8,4 +8,3 @@ addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.14.0")
 addSbtPlugin("com.github.sbt" % "sbt-git" % "2.0.1")
 addSbtPlugin("com.disneystreaming.smithy4s" % "smithy4s-sbt-codegen" % "0.18.2")
 addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.2.1")
-

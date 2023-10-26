@@ -191,13 +191,13 @@ abstract class SimpleProtocolBuilder[P](
               getUri =
                 (request: Request) => toSmithy4sHttpUri(request.url, None),
               addDecodedPathParams = (request: Request, pathParams) =>
-                // todo: add path params
-                request
+                tagRequest(request, pathParams)
             )
           Http.collectZIO { req =>
             router(req).getOrElse(ZIO.fail(new Exception("No response")))
           }
         }
+    // todo perhaps add a parameter a handler for the Error of None
 
     def lift: IO[UnsupportedProtocolError, EHttpApp] = ZIO.fromEither(make)
   }

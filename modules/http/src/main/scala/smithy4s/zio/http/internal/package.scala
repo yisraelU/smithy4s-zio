@@ -41,11 +41,11 @@ package object internal {
   }
 
   def toSmithy4sHttpRequest(req: Request): Task[Smithy4sHttpRequest[Blob]] = {
-    // todo look into the pathparams notion and how its implemented via Vault
-    val uri = toSmithy4sHttpUri(req.url, None)
-    val headers = getHeaders(req.headers)
-    val method = toSmithy4sHttpMethod(req.method)
-    collectBytes(req.body).map { blob =>
+    val (newReq, pathParams) = lookupPathParams(req)
+    val uri = toSmithy4sHttpUri(newReq.url, pathParams)
+    val headers = getHeaders(newReq.headers)
+    val method = toSmithy4sHttpMethod(newReq.method)
+    collectBytes(newReq.body).map { blob =>
       Smithy4sHttpRequest(method, uri, headers, blob)
     }
   }
@@ -89,7 +89,7 @@ package object internal {
       uriScheme,
       uri.host.getOrElse("localhost"),
       uri.port,
-      uri.path.segments.map(_.text).filter(_.nonEmpty),
+      uri.path.textSegments,
       getQueryParams(uri),
       pathParams
     )

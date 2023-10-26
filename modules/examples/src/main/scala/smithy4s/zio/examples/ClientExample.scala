@@ -15,9 +15,11 @@ object ClientExample extends ZIOAppDefault {
       .lift
   } yield clientService
 
-  private val program: ZIO[Client, Throwable, Greeting] =
+  private val program: ZIO[Client, Throwable, Unit] =
     helloWorldClient.flatMap { client =>
-      client.hello("World", None)
+      client
+        .hello("John", Some("Missouri"))
+        .flatMap(greeting => ZIO.attempt(println(greeting)))
     }
 
   override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] =

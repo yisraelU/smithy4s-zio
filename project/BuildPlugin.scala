@@ -42,9 +42,9 @@ object BuildPlugin extends AutoPlugin {
 
   // Mill-like simple layout
   def simpleLayout(
-                    platform: Platform,
-                    catsEffect: Boolean = false
-                  ): Seq[Setting[_]] = {
+      platform: Platform,
+      catsEffect: Boolean = false
+  ): Seq[Setting[_]] = {
 
     val baseDir = Def.setting {
       sourceDirectory.value.getParentFile
@@ -52,8 +52,8 @@ object BuildPlugin extends AutoPlugin {
 
     val platformSuffix = Def.setting {
       platform match {
-        case JVMPlatform => Seq("-jvm", "-jvm-native", "-jvm-js")
-        case JSPlatform => Seq("-js", "-jvm-js", "-js-native")
+        case JVMPlatform    => Seq("-jvm", "-jvm-native", "-jvm-js")
+        case JSPlatform     => Seq("-js", "-jvm-js", "-js-native")
         case NativePlatform => Seq("-native", "-jvm-native", "-js-native")
       }
     }
@@ -64,7 +64,7 @@ object BuildPlugin extends AutoPlugin {
           case "2.11" => Seq("-2", "-2.11")
           case "2.12" => Seq("-2", "-2.12")
           case "2.13" => Seq("-2", "-2.13")
-          case _ => Seq("-3")
+          case _      => Seq("-3")
         }
       }
 
@@ -95,7 +95,6 @@ object BuildPlugin extends AutoPlugin {
     )
   }
 
-
   lazy val compilerPlugins = Seq(
     libraryDependencies ++= {
       if (scalaVersion.value.startsWith("2."))
@@ -108,7 +107,6 @@ object BuildPlugin extends AutoPlugin {
       else Seq.empty
     }
   )
-
 
   lazy val commonCompilerOptions = Seq(
     "-deprecation", // Emit warning and location for usages of deprecated APIs.
@@ -149,7 +147,7 @@ object BuildPlugin extends AutoPlugin {
   )
 
   lazy val compilerOptions2_12_Only =
-  // These are unrecognized for Scala 2.13.
+    // These are unrecognized for Scala 2.13.
     Seq(
       "-Xfuture", // Turn on future language features.
       "-Xlint:by-name-right-associative", // By-name parameter of right associative operator.

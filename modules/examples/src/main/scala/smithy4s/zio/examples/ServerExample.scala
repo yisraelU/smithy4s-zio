@@ -4,18 +4,8 @@ import smithy4s.UnsupportedProtocolError
 import smithy4s.hello.HelloWorldServiceGen.serviceInstance
 import smithy4s.zio.examples.impl.HelloWorldImpl
 import smithy4s.zio.http.SimpleRestJsonBuilder
-import smithy4s.zio.http.internal.EffectOps
-import zio.http.{
-  Body,
-  EHttpApp,
-  Request,
-  RequestHandlerMiddleware,
-  RequestHandlerMiddlewares,
-  Response,
-  Server,
-  Status
-}
-import zio.{Console, IO, Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
+import zio.http.{EHttpApp, Server}
+import zio.{IO, Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
 
 object Routes {
   val example: IO[UnsupportedProtocolError, EHttpApp] =
@@ -30,7 +20,6 @@ object Main extends ZIOAppDefault {
     for {
       _ <- zio.Console.printLine(s"Starting server on http://localhost:$port")
       app <- Routes.example
-      _ <- zio.Console.printLine(s"Server started on http://localhost:$port")
       server <- Server.serve(app.withDefaultErrorResponse)
     } yield server
   }.provide(Server.defaultWithPort(port))

@@ -17,14 +17,17 @@ object Dependencies {
   }
 
   object Smithy4s {
+    val version = "0.18.2"
     val complianceTests =
-      "com.disneystreaming.smithy4s" %% "smithy4s-compliance-tests" % "0.18.2" % Test
-    val core = "com.disneystreaming.smithy4s" %% "smithy4s-core" % "0.18.2"
-    val json = "com.disneystreaming.smithy4s" %% "smithy4s-json" % "0.18.2"
+      "com.disneystreaming.smithy4s" %% "smithy4s-compliance-tests" % version % Test
+    val core = "com.disneystreaming.smithy4s" %% "smithy4s-core" % version
+    val json = "com.disneystreaming.smithy4s" %% "smithy4s-json" % version
+    val http4s = "com.disneystreaming.smithy4s" %% "smithy4s-http4s" % version
   }
 
   object ZIO {
     val core = "dev.zio" %% "zio" % "2.0.13"
+    val http = "dev.zio" %% "zio-http" % "3.0.0-RC2"
     val prelude = "dev.zio" %% "zio-prelude" % "1.0.0-RC21"
     val test = "dev.zio" %% "zio-test" % "2.0.18" % Test
     val testSbt = "dev.zio" %% "zio-test-sbt" % "2.0.18" % Test

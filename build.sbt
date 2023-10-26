@@ -3,6 +3,10 @@ import sbt.Project.projectToRef
 ThisBuild / version := "0.1.0-SNAPSHOT"
 Global / onChangedBuildSource := ReloadOnSourceChanges
 ThisBuild / scalaVersion := "2.13.12"
+addCommandAlias(
+  "fmt",
+  ";scalafmtAll;scalafmtSbt;"
+)
 addCompilerPlugin(
   "org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full
 )
@@ -39,8 +43,9 @@ lazy val http = (project in file("modules/http"))
     libraryDependencies ++= Seq(
       Dependencies.Smithy4s.core,
       Dependencies.Smithy4s.json,
+      Dependencies.Smithy4s.http4s,
       Dependencies.Typelevel.vault.value,
-      "dev.zio" %% "zio-http" % "3.0.0-RC2"
+      Dependencies.ZIO.http
     )
   )
 
