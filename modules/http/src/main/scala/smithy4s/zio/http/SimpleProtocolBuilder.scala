@@ -13,6 +13,7 @@ import smithy4s.{Endpoint, ShapeTag, UnsupportedProtocolError, checkProtocol}
 import zio.IsSubtypeOfError.impl
 import zio.http._
 import zio.{IO, Task, ZIO}
+import smithy4s.zio.http.AppOps
 
 /**
  * Abstract construct helping the construction of routers and clients
@@ -175,17 +176,16 @@ abstract class SimpleProtocolBuilder[P](
             ServerEndpointMiddleware.flatMapErrors(errorTransformation)
           val finalMiddleware =
             errorHandler.andThen(middleware).andThen(errorHandler)
+          val toReqResMiddleware
+              : Endpoint.Middleware[Request => ZIO[Any, Throwable, Response]] =
+            finalMiddleware.biject(app => app.runZIO(_: Request).orNotFound)(
+              fxn => Http.collectZIO(PartialFunction.fromFunction(fxn))
+            )
           val router =
             HttpUnaryServerRouter(service)(
               impl,
               simpleProtocolCodecs.makeServerCodecs,
-              finalMiddleware.biject(app =>
-                app
-                  .runZIO(_: Request)
-                  .flattenErrorOption[Throwable, Throwable](
-                    new Exception("No response")
-                  )
-              )(fxn => Http.collectZIO(PartialFunction.fromFunction(fxn))),
+              toReqResMiddleware,
               getMethod =
                 (request: Request) => toSmithy4sHttpMethod(request.method),
               getUri =
@@ -194,11 +194,13 @@ abstract class SimpleProtocolBuilder[P](
                 tagRequest(request, pathParams)
             )
           Http.collectZIO { req =>
-            router(req).getOrElse(ZIO.fail(new Exception("No response")))
+            router
+              .apply(req) match {
+              case Some(value) => value
+              case None        => ZIO.succeed(Response.status(Status.NotFound))
+            }
           }
         }
-    // todo perhaps add a parameter a handler for the Error of None
-
     def lift: IO[UnsupportedProtocolError, EHttpApp] = ZIO.fromEither(make)
   }
 }

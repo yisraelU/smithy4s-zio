@@ -3,9 +3,8 @@ package smithy4s.zio
 import cats.effect.SyncIO
 import org.typelevel.vault.Key
 import smithy4s.Endpoint
-import smithy4s.http.{CaseInsensitive, HttpMethod, PathParams}
-import zio.Task
-import zio.http.Method._
+import smithy4s.http.PathParams
+import zio.ZIO
 import zio.http._
 
 package object http {
@@ -38,5 +37,12 @@ package object http {
       req.removeHeader(pathParamsKey),
       pathParamsString.map(deserializePathParams)
     )
+  }
+
+  implicit class AppOps[A, E](eff: ZIO[A, Option[E], Response]) {
+    def orNotFound: ZIO[A, E, Response] = eff.unsome.map {
+      case None        => Response.status(Status.NotFound)
+      case Some(value) => value
+    }
   }
 }
