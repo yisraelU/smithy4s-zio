@@ -1,5 +1,0 @@
-[repositories]
-  local
-  org-maven: https://artifactory.us-east-1.bamgrid.net/org-maven-repo1/
-  svcscommons-maven: https://artifactory.us-east-1.bamgrid.net/svcscommons-maven/
-  apiregistry-maven: https://artifactory.us-east-1.bamgrid.net/artifactory/apiregistry-maven/

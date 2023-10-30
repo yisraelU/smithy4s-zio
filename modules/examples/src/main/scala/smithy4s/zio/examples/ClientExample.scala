@@ -7,7 +7,7 @@ import zio.{ExitCode, Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
 object ClientExample extends ZIOAppDefault {
 
   private val helloWorldClient = for {
-    url <- ZIO.fromEither(URL.decode("http://localhost:8080"))
+    url <- ZIO.fromEither(URL.decode("http://localhost:8081"))
     client <- ZIO.service[Client]
     clientService <- SimpleRestJsonBuilder(HelloWorldService)
       .client(client)
@@ -15,9 +15,11 @@ object ClientExample extends ZIOAppDefault {
       .lift
   } yield clientService
 
-  private val program: ZIO[Client, Throwable, Greeting] =
+  private val program: ZIO[Client, Throwable, Unit] =
     helloWorldClient.flatMap { client =>
-      client.hello("World", None)
+      client
+        .hello("John", Some("Missouri"))
+        .flatMap(greeting => ZIO.attempt(println(greeting)))
     }
 
   override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] =

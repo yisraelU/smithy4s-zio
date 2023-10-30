@@ -13,6 +13,7 @@ import smithy4s.{Endpoint, ShapeTag, UnsupportedProtocolError, checkProtocol}
 import zio.IsSubtypeOfError.impl
 import zio.http._
 import zio.{IO, Task, ZIO}
+import smithy4s.zio.http.AppOps
 
 /**
  * Abstract construct helping the construction of routers and clients
@@ -67,7 +68,7 @@ abstract class SimpleProtocolBuilder[P](
   ] private[http] (
       client: Client,
       val service: smithy4s.Service[Alg],
-      uri: URL = URL
+      url: URL = URL
         .decode("http://localhost:8080")
         .getOrElse(throw new Exception("Invalid URL")),
       middleware: ClientEndpointMiddleware = Endpoint.Middleware.noop[Client]
@@ -79,7 +80,7 @@ abstract class SimpleProtocolBuilder[P](
     def middleware(
         mid: ClientEndpointMiddleware
     ): ClientBuilder[Alg] =
-      new ClientBuilder[Alg](this.client, this.service, this.uri, mid)
+      new ClientBuilder[Alg](this.client, this.service, this.url, mid)
 
     def make: Either[UnsupportedProtocolError, service.Impl[Task]] = {
       checkProtocol(service, protocolTag)
@@ -91,7 +92,7 @@ abstract class SimpleProtocolBuilder[P](
               service,
               client,
               (client: Client) => ZHttpToSmithy4sClient(client),
-              simpleProtocolCodecs.makeClientCodecs(uri),
+              simpleProtocolCodecs.makeClientCodecs(url),
               middleware,
               (response: Response) => response.status.isSuccess
             )
@@ -175,30 +176,31 @@ abstract class SimpleProtocolBuilder[P](
             ServerEndpointMiddleware.flatMapErrors(errorTransformation)
           val finalMiddleware =
             errorHandler.andThen(middleware).andThen(errorHandler)
-          val router: Request => Option[ZIO[Any, Throwable, Response]] =
+          val toReqResMiddleware
+              : Endpoint.Middleware[Request => ZIO[Any, Throwable, Response]] =
+            finalMiddleware.biject(app => app.runZIO(_: Request).orNotFound)(
+              fxn => Http.collectZIO(PartialFunction.fromFunction(fxn))
+            )
+          val router =
             HttpUnaryServerRouter(service)(
               impl,
               simpleProtocolCodecs.makeServerCodecs,
-              finalMiddleware.biject(app =>
-                app
-                  .runZIO(_: Request)
-                  .flattenErrorOption[Throwable, Throwable](
-                    new Exception("No response")
-                  )
-              )(fxn => Http.collectZIO(PartialFunction.fromFunction(fxn))),
+              toReqResMiddleware,
               getMethod =
                 (request: Request) => toSmithy4sHttpMethod(request.method),
               getUri =
                 (request: Request) => toSmithy4sHttpUri(request.url, None),
               addDecodedPathParams = (request: Request, pathParams) =>
-                // todo: add path params
-                request
+                tagRequest(request, pathParams)
             )
           Http.collectZIO { req =>
-            router(req).getOrElse(ZIO.fail(new Exception("No response")))
+            router
+              .apply(req) match {
+              case Some(value) => value
+              case None        => ZIO.succeed(Response.status(Status.NotFound))
+            }
           }
         }
-
     def lift: IO[UnsupportedProtocolError, EHttpApp] = ZIO.fromEither(make)
   }
 }

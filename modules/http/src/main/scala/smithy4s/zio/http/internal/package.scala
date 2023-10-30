@@ -11,7 +11,6 @@ import smithy4s.http.{
   HttpUri => Smithy4sHttpUri,
   HttpUriScheme => Smithy4sHttpUriScheme
 }
-import zio.http.Method._
 import zio.http._
 import zio.stream.ZStream
 import zio.{Chunk, IO, Task, ZIO}
@@ -42,11 +41,11 @@ package object internal {
   }
 
   def toSmithy4sHttpRequest(req: Request): Task[Smithy4sHttpRequest[Blob]] = {
-    // todo look into the pathparams notion and how its implemented via Vault
-    val uri = toSmithy4sHttpUri(req.url, None)
-    val headers = getHeaders(req.headers)
-    val method = toSmithy4sHttpMethod(req.method)
-    collectBytes(req.body).map { blob =>
+    val (newReq, pathParams) = lookupPathParams(req)
+    val uri = toSmithy4sHttpUri(newReq.url, pathParams)
+    val headers = getHeaders(newReq.headers)
+    val method = toSmithy4sHttpMethod(newReq.method)
+    collectBytes(newReq.body).map { blob =>
       Smithy4sHttpRequest(method, uri, headers, blob)
     }
   }
@@ -90,7 +89,7 @@ package object internal {
       uriScheme,
       uri.host.getOrElse("localhost"),
       uri.port,
-      uri.path.segments.map(_.text),
+      uri.path.textSegments,
       getQueryParams(uri),
       pathParams
     )
@@ -183,11 +182,9 @@ package object internal {
   ): Map[String, List[String]] =
     uri.queryParams.map
       .collect {
-        case (name, value) if value.isEmpty => name -> "true"
-        case (name, Chunk(value))           => name -> value
+        case (name, value) if value.isEmpty => name -> List("true")
+        case (name, values)                 => name -> values.toList
       }
-      .groupBy(_._1)
-      .map { case (k, v) => k -> v.values.toList }
 
   private def collectBytes(body: Body): Task[Blob] =
     body.asStream.chunks.runCollect
@@ -199,18 +196,7 @@ package object internal {
   ): ZStream[Any, Nothing, Byte] =
     ZStream.fromChunk(Chunk.fromArray(blob.toArray))
 
-  def toZHttpMethod(method: HttpMethod): Method = {
-    method match {
-      case HttpMethod.PUT          => PUT
-      case HttpMethod.POST         => POST
-      case HttpMethod.DELETE       => DELETE
-      case HttpMethod.GET          => GET
-      case HttpMethod.PATCH        => PATCH
-      case HttpMethod.OTHER(value) => Method.fromString(value)
-    }
-  }
-
-  def toHeaders(mp: Map[CaseInsensitive, Seq[String]]): Headers = {
+  private def toHeaders(mp: Map[CaseInsensitive, Seq[String]]): Headers = {
     Headers {
       mp.flatMap { case (k, v) =>
         v.map(vv => Header.Custom(k.value, vv))
@@ -224,16 +210,4 @@ package object internal {
     req.headers.toList.groupBy(_.headerName).map { case (k, v) =>
       (CaseInsensitive(k), v.map(_.renderedValue))
     }
-
-  private[smithy4s] def getFirstHeader(
-      headers: Headers,
-      s: String
-  ): Option[String] =
-    headers.toList.find(_.headerName == s).map(_.renderedValue)
-
-  def collectFirstSome[A, B](list: List[A])(f: A => Option[B]): Option[B] = {
-    list.map(f).collectFirst { case Some(value) =>
-      value
-    }
-  }
 }
