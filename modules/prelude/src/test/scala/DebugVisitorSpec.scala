@@ -9,7 +9,7 @@ import smithy4s.zio.prelude.testcases._
 import smithy4s.{Blob, Hints, ShapeId, Timestamp}
 import zio.Scope
 import zio.prelude.Debug
-import zio.prelude.Debug.Repr
+import zio.prelude.Debug.{Renderer, Repr}
 import zio.test.{Spec, TestEnvironment, assertTrue}
 
 import scala.language.implicitConversions
@@ -118,7 +118,7 @@ object DebugVisitorSpec extends zio.test.ZIOSpecDefault {
         }
         val intList = List(1, 2, 3)
         val foo = Foo(intList)
-        val expected = Debug[List[Int]].debug(foo.foos).render
+        val expected = "Foo(foos = List(1, 2, 3))"
         val output: String = visitor(Foo.schema).debug(foo)
         assertTrue(expected == output)
       },
@@ -133,7 +133,7 @@ object DebugVisitorSpec extends zio.test.ZIOSpecDefault {
         }
         val intSet = Set(1, 2, 3)
         val foo = Foo(intSet)
-        val expected = Debug[Set[Int]].debug(foo.foos).render
+        val expected = "Foo(foos = Set(1, 2, 3))"
         val output: String = visitor(Foo.schema).debug(foo)
         assertTrue(expected == output)
       },
@@ -148,7 +148,7 @@ object DebugVisitorSpec extends zio.test.ZIOSpecDefault {
         }
         val intVector = Vector(1, 2, 3)
         val foo = Foo(intVector)
-        val expected = Debug[Vector[Int]].debug(foo.foos).render
+        val expected = "Foo(foos = Vector(1, 2, 3))"
         val output: String = visitor(Foo.schema).debug(foo)
         assertTrue(expected == output)
       },
@@ -163,7 +163,7 @@ object DebugVisitorSpec extends zio.test.ZIOSpecDefault {
         }
         val intIndexedSeq = IndexedSeq(1, 2, 3)
         val foo = Foo(intIndexedSeq)
-        val expected = Debug[IndexedSeq[Int]].debug(foo.foos).render
+        val expected = "Foo(foos = IndexedSeq(1, 2, 3))"
         val output: String = visitor(Foo.schema).debug(foo)
         assertTrue(expected == output)
       },
@@ -178,7 +178,7 @@ object DebugVisitorSpec extends zio.test.ZIOSpecDefault {
         }
         val intMap = Map("foo" -> 1, "bar" -> 2)
         val foo = Foo(intMap)
-        val expected = Debug[Map[String, Int]].debug(foo.foos).render
+        val expected = "Foo(foos = Map(\"foo\" -> 1, \"bar\" -> 2))"
         val output: String = visitor(Foo.schema).debug(foo)
         assertTrue(expected == output)
       },
@@ -203,7 +203,7 @@ object DebugVisitorSpec extends zio.test.ZIOSpecDefault {
           }
         }
         val foo = Foo("foo", "bar")
-        val expected = foo.toString
+        val expected = "Foo(x = \"foo\", y = \"bar\")"
         val output: String = visitor(Foo.schema).debug(foo)
         assertTrue(expected == output)
       },
@@ -229,7 +229,7 @@ object DebugVisitorSpec extends zio.test.ZIOSpecDefault {
         }
 
         val foo = Foo("foo", None)
-        val expected = foo.toString
+        val expected = "Foo(x = \"foo\", y = None)"
         val output: String = visitor(Foo.schema).debug(foo)
         assertTrue(expected == output)
       },
@@ -251,10 +251,12 @@ object DebugVisitorSpec extends zio.test.ZIOSpecDefault {
       test("union") {
         val foo0 = IntValue(1)
         val foo1 = StringValue("foo")
-        val showOutput0: String = visitor(schema).debug(foo0)
-        val showOutput1: String = visitor(schema).debug(foo1)
+        val showOutput0: String =
+          visitor(schema).debug(foo0).render(Renderer.Simple)
+        val showOutput1: String =
+          visitor(schema).debug(foo1).render(Renderer.Simple)
         assertTrue(showOutput0 == "IntOrString(intValue = 1)")
-        assertTrue(showOutput1 == "IntOrString(stringValue = foo)")
+        assertTrue(showOutput1 == "IntOrString(stringValue = \"foo\")")
 
       },
       test("enumeration") {

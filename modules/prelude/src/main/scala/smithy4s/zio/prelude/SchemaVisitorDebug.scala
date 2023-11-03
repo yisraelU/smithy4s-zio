@@ -2,22 +2,15 @@ package smithy4s.zio.prelude
 
 import smithy4s.capability.EncoderK
 import smithy4s.schema.Alt.Precompiler
-import smithy4s.{Bijection, Hints, Lazy, Refinement, ShapeId}
+import smithy4s.schema._
 import smithy4s.zio.prelude.instances.all._
-import smithy4s.schema.{
-  Alt,
-  CachedSchemaCompiler,
-  CollectionTag,
-  CompilationCache,
-  EnumTag,
-  EnumValue,
-  Field,
-  Primitive,
-  Schema,
-  SchemaVisitor
-}
-import zio.prelude.{Debug, DebugOps}
-import zio.prelude.Debug.{Renderer, Repr}
+import smithy4s.{Schema, _}
+import _root_.zio.prelude.Debug
+import _root_.zio.prelude.Debug.VectorDebug
+import _root_.zio.prelude.Debug.Repr
+import _root_.zio.prelude.Debug.Repr.Constructor
+
+import scala.collection.immutable.ListMap
 
 object SchemaVisitorDebug extends CachedSchemaCompiler.Impl[Debug] {
   protected type Aux[A] = Debug[A]
@@ -30,8 +23,7 @@ object SchemaVisitorDebug extends CachedSchemaCompiler.Impl[Debug] {
 }
 
 final class SchemaVisitorDebug(
-    val cache: CompilationCache[Debug],
-    val renderer: Renderer = Renderer.Simple
+    val cache: CompilationCache[Debug]
 ) extends SchemaVisitor.Cached[Debug] {
   self =>
   override def primitive[P](
@@ -50,7 +42,7 @@ final class SchemaVisitorDebug(
     tag match {
       case CollectionTag.ListTag       => Debug[List[A]]
       case CollectionTag.SetTag        => setDebug
-      case CollectionTag.VectorTag     => Debug[Vector[A]]
+      case CollectionTag.VectorTag     => VectorDebug
       case CollectionTag.IndexedSeqTag => indexedSeqDebug
 
     }
@@ -62,8 +54,8 @@ final class SchemaVisitorDebug(
       key: Schema[K],
       value: Schema[V]
   ): Debug[Map[K, V]] = {
-    implicit val keyD = self(key)
-    implicit val valueD = self(value)
+    implicit val keyD: Debug[K] = self(key)
+    implicit val valueD: Debug[V] = self(value)
     Debug[Map[K, V]]
   }
 
@@ -83,18 +75,20 @@ final class SchemaVisitorDebug(
   ): Debug[S] = {
     def compileField[A](
         field: Field[S, A]
-    ): S => String = {
+    ): S => (String, Repr) = {
       val debugField = self(field.schema)
-      s => s"${field.label} = ${debugField.debug(field.get(s))}"
+      s => (field.label, debugField.debug(field.get(s)))
     }
 
     val functions = fields.map(f => compileField(f))
     Debug.make { s =>
       val values = functions
         .map(f => f(s))
-        .map { case (value) => s"$value" }
-        .mkString("(", ", ", ")")
-      s"${shapeId.name}$values"
+      Constructor(
+        shapeId.namespace.split(".").toList,
+        shapeId.name,
+        ListMap(values: _*)
+      )
     }
   }
 
@@ -106,8 +100,13 @@ final class SchemaVisitorDebug(
   ): Debug[U] = {
     val precomputed: Precompiler[Debug] = new Precompiler[Debug] {
       override def apply[A](label: String, instance: Schema[A]): Debug[A] = {
-        val showUnion = self(instance)
-        (t: A) => s"${shapeId.name}($label = ${showUnion.debug(t).render})"
+        val debugUnionInst = self(instance)
+        (t: A) =>
+          Constructor(
+            shapeId.namespace.split(".").toList,
+            shapeId.name,
+            ListMap(label -> debugUnionInst.debug(t))
+          )
       }
     }
     implicit val encoderKShow: EncoderK[Debug, Repr] =
@@ -143,7 +142,7 @@ final class SchemaVisitorDebug(
   }
 
   override def option[A](schema: Schema[A]): Debug[Option[A]] = {
-    implicit val debugA = self(schema)
+    implicit val debugA: Debug[A] = self(schema)
     Debug[Option[A]]
   }
 }
