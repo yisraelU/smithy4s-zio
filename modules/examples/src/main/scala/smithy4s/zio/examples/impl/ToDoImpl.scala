@@ -20,7 +20,7 @@ class ToDoImpl(database: Database[Todo], host: String)
         title = title,
         order = order,
         description = description,
-        url = s"$host/todos/$id",
+        url = Url(s"$host/todos/$id"),
         completed = false
       )
       _ <- database.insert(todo)
