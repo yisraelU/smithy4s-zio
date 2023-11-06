@@ -21,7 +21,8 @@ lazy val root = project
 lazy val allModules = Seq(
   http,
   prelude,
-  examples
+  examples,
+  tests
 ).map(projectToRef)
 
 lazy val prelude = (project in file("modules/prelude"))

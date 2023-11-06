@@ -1,16 +1,11 @@
 package smithy4s.zio.examples
 
-import smithy4s.UnsupportedProtocolError
-import smithy4s.hello.HelloWorldServiceGen.serviceInstance
-import smithy4s.zio.examples.impl.HelloWorldImpl
+import example.todo.Todo
+import example.todo.TodoServiceGen.serviceInstance
+import smithy4s.zio.examples.impl.{InMemoryDatabase, PrimaryKeyGen, ToDoImpl}
 import smithy4s.zio.http.SimpleRestJsonBuilder
-import zio.http.{EHttpApp, Server}
-import zio.{IO, Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
-
-object Routes {
-  val example: IO[UnsupportedProtocolError, EHttpApp] =
-    SimpleRestJsonBuilder.routes(HelloWorldImpl).lift
-}
+import zio.http.Server
+import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
 
 object Main extends ZIOAppDefault {
 
@@ -19,7 +14,11 @@ object Main extends ZIOAppDefault {
   val program: ZIO[Any, Throwable, Nothing] = {
     for {
       _ <- zio.Console.printLine(s"Starting server on http://localhost:$port")
-      app <- Routes.example
+      keyGen = PrimaryKeyGen.default()
+      db <- InMemoryDatabase.make[Todo](keyGen)
+      app <- SimpleRestJsonBuilder
+        .routes(ToDoImpl(db, "http://localhost/todos"))
+        .lift
       server <- Server.serve(app.withDefaultErrorResponse)
     } yield server
   }.provide(Server.defaultWithPort(port))

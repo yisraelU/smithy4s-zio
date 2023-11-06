@@ -1,26 +1,21 @@
 package smithy4s.zio.examples
 
-import smithy4s.hello.{Greeting, HelloWorldService}
+import example.todo.TodoServiceGen
 import smithy4s.zio.http.SimpleRestJsonBuilder
 import zio.http.{Client, URL}
-import zio.{ExitCode, Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
+import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
 object ClientExample extends ZIOAppDefault {
 
-  private val helloWorldClient = for {
+  private val todoClient = for {
     url <- ZIO.fromEither(URL.decode("http://localhost:8081"))
     client <- ZIO.service[Client]
-    clientService <- SimpleRestJsonBuilder(HelloWorldService)
+    clientService <- SimpleRestJsonBuilder(TodoServiceGen)
       .client(client)
       .uri(url)
       .lift
   } yield clientService
 
-  private val program: ZIO[Client, Throwable, Unit] =
-    helloWorldClient.flatMap { client =>
-      client
-        .hello("John", Some("Missouri"))
-        .flatMap(greeting => ZIO.attempt(println(greeting)))
-    }
+  private val program: ZIO[Client, Throwable, Unit] = ???
 
   override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] =
     program.exitCode.provide(Client.default)
