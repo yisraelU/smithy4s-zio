@@ -21,6 +21,7 @@ lazy val root = project
 lazy val allModules = Seq(
   http,
   prelude,
+  schema,
   examples,
   tests
 ).map(projectToRef)
@@ -31,6 +32,20 @@ lazy val prelude = (project in file("modules/prelude"))
     libraryDependencies ++= Seq(
       Dependencies.Smithy4s.core,
       Dependencies.ZIO.prelude,
+      Dependencies.ZIO.schema,
+      Dependencies.ZIO.test,
+      Dependencies.ZIO.testSbt,
+      Dependencies.ZIO.testMagnolia
+    ),
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+  )
+
+lazy val schema = (project in file("modules/schema"))
+  .settings(
+    name := s"$projectPrefix-schema",
+    libraryDependencies ++= Seq(
+      Dependencies.Smithy4s.core,
+      Dependencies.ZIO.schema,
       Dependencies.ZIO.test,
       Dependencies.ZIO.testSbt,
       Dependencies.ZIO.testMagnolia
@@ -68,7 +83,8 @@ lazy val tests = (project in file("modules/tests"))
 
 lazy val examples = (project in file("modules/examples"))
   .settings(
-    name := s"$projectPrefix-examples"
+    name := s"$projectPrefix-examples",
+    fork / run := true
   )
   .dependsOn(http, prelude)
   .enablePlugins(Smithy4sCodegenPlugin)
