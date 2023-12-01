@@ -71,12 +71,13 @@ final class SchemaTransformer(
     def closed[A](enumV: EnumValue[E]): A => E = _ => enumV.value
 
     // what schema should this translate to , should we use the Smithy4s model of a schema or the ZIO model of a schema
-    val caseSet:CaseSet.Aux[E] = CaseSet.apply[E](values.map { enumV =>
+    val caseSet: CaseSet.Aux[E] = CaseSet.apply[E](values.map { enumV =>
       {
         tag match {
           case EnumTag.ClosedStringEnum =>
             constructStringCaseSet(enumV)(closed[String](enumV))
-          case EnumTag.ClosedIntEnum => constructIntCaseSet(enumV)(closed[Int](enumV))
+          case EnumTag.ClosedIntEnum =>
+            constructIntCaseSet(enumV)(closed[Int](enumV))
           case EnumTag.OpenStringEnum(unknown) =>
             constructStringCaseSet(enumV)(unknown)
           case EnumTag.OpenIntEnum(unknown) =>
@@ -86,21 +87,21 @@ final class SchemaTransformer(
     }: _*)
 
     def constructStringCaseSet(enumV: EnumValue[E]) = {
-      Case.apply[E,String](
+      Case.apply[E, String](
         enumV.name,
         ZSchema[String],
-        total(_:E).stringValue,
+        total(_: E).stringValue,
         _: String => E,
         (e: E) => total(e).name == enumV.name
       )
     }
 
     def constructIntCaseSet(enumV: EnumValue[E]) = {
-      Case.apply[E,Int](
+      Case.apply[E, Int](
         enumV.name,
         ZSchema[Int],
-        total(_:E).intValue,
-        _:Int=>E,
+        total(_: E).intValue,
+        _: Int => E,
         (e: E) => total(e).name == enumV.name
       )
     }

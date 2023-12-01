@@ -5,10 +5,9 @@ import org.typelevel.vault.Key
 import smithy4s.Endpoint
 import smithy4s.http.PathParams
 import zio.ZIO
-import zio.http._
+import zio.http.*
 
 package object http {
-  type ServerEndpointMiddleware = Endpoint.Middleware[EHttpApp]
   type ClientEndpointMiddleware = Endpoint.Middleware[Client]
 
   private val pathParamsKey: String =

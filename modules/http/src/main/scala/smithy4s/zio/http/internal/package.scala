@@ -11,28 +11,31 @@ import smithy4s.http.{
   HttpUri => Smithy4sHttpUri,
   HttpUriScheme => Smithy4sHttpUriScheme
 }
+import smithy4s.zio.http.internal.ZHttpToSmithy4sClient.ResourcefulTask
 import zio.http._
 import zio.stream.ZStream
 import zio.{Chunk, IO, Task, ZIO}
 
 package object internal {
 
-  implicit val zioMonadThrowLike: MonadThrowLike[zio.Task] =
-    new MonadThrowLike[zio.Task] {
-      override def flatMap[A, B](fa: Task[A])(f: A => Task[B]): Task[B] =
+  implicit val zioMonadThrowLike: MonadThrowLike[ResourcefulTask] =
+    new MonadThrowLike[ResourcefulTask] {
+      override def flatMap[A, B](fa: ResourcefulTask[A])(
+          f: A => ResourcefulTask[B]
+      ): ResourcefulTask[B] =
         fa.flatMap(f)
 
       override def raiseError[A](e: Throwable): Task[A] = ZIO.fail(e)
 
-      override def handleErrorWith[A](fa: Task[A])(
-          f: Throwable => Task[A]
-      ): Task[A] = fa.catchAll(f)
-
       override def pure[A](a: A): Task[A] = ZIO.succeed(a)
 
-      override def zipMapAll[A](seq: IndexedSeq[Task[Any]])(
+      override def handleErrorWith[A](fa: ResourcefulTask[A])(
+          f: Throwable => ResourcefulTask[A]
+      ): ResourcefulTask[A] = fa.catchAll(f)
+
+      override def zipMapAll[A](seq: IndexedSeq[ResourcefulTask[Any]])(
           f: IndexedSeq[Any] => A
-      ): Task[A] = ZIO.collectAll(seq).map(f)
+      ): ResourcefulTask[A] = ZIO.collectAll(seq).map(f)
     }
 
   implicit class EffectOps[+A](val a: A) extends AnyVal {
@@ -59,11 +62,11 @@ package object internal {
         headers.addHeader("Content-Length", contentLength.toString)
     }
     Request(
-      Body.fromStream(toStream(req.body)),
-      headers = updatedHeaders,
+      version = Version.`HTTP/1.1`,
       method,
       fromSmithy4sHttpUri(req.uri),
-      version = Version.`HTTP/1.1`,
+      updatedHeaders,
+      Body.fromStream(toStream(req.body)),
       remoteAddress = Option.empty
     )
   }
@@ -89,7 +92,7 @@ package object internal {
       uriScheme,
       uri.host.getOrElse("localhost"),
       uri.port,
-      uri.path.textSegments,
+      uri.path.segments,
       getQueryParams(uri),
       pathParams
     )
@@ -124,7 +127,7 @@ package object internal {
     }
 
   def fromSmithy4sHttpUri(uri: Smithy4sHttpUri): URL = {
-    val path = Path.root.++(Path(uri.path.map(Path.Segment.apply).toVector))
+    val path = Path(uri.path.mkString("/")).addLeadingSlash
     val scheme = uri.scheme match {
       case Smithy4sHttpUriScheme.Https => Scheme.HTTPS
       case _                           => Scheme.HTTP
