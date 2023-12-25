@@ -10,3 +10,5 @@ addSbtPlugin("com.disneystreaming.smithy4s" % "smithy4s-sbt-codegen" % "0.18.3")
 addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.2.1")
 addSbtPlugin("com.github.sbt" % "sbt-dynver" % "5.0.1")
 addSbtPlugin("org.typelevel" % "sbt-typelevel" % "0.6.2")
+// sbt revolver
+addSbtPlugin("io.spray" % "sbt-revolver" % "0.9.1")

@@ -12,8 +12,6 @@ import zio.prelude.Debug
 import zio.prelude.Debug.{Renderer, Repr}
 import zio.test.{Spec, TestEnvironment, assertTrue}
 
-import scala.language.implicitConversions
-
 object DebugVisitorSpec extends zio.test.ZIOSpecDefault {
 
   def visitor[A]: Schema[A] => Debug[A] = SchemaVisitorDebug.fromSchema(_)

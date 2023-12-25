@@ -4,11 +4,14 @@ import cats.effect.SyncIO
 import org.typelevel.vault.Key
 import smithy4s.Endpoint
 import smithy4s.http.PathParams
-import zio.ZIO
+import zio.{Task, ZIO}
 import zio.http.*
 
 package object http {
+  type HttpRoutes = Routes[Any, Throwable]
   type ClientEndpointMiddleware = Endpoint.Middleware[Client]
+  type ServerEndpointMiddleware = Endpoint.Middleware[HttpRoutes]
+  type SimpleHandler = Request => Task[Response]
 
   private val pathParamsKey: String =
     Key.newKey[SyncIO, PathParams].unsafeRunSync().hashCode().toString
@@ -20,6 +23,7 @@ package object http {
   private def deserializePathParams(pathParamsString: String): PathParams = {
     pathParamsString
       .split("&")
+      .filterNot(_.isEmpty)
       .map { param =>
         val Array(key, value) = param.split("=")
         key -> value

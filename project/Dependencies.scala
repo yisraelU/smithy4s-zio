@@ -1,5 +1,4 @@
 import sbt.{Def, ModuleID, *}
-import Keys.*
 
 object Dependencies {
   object Http4s {
@@ -17,7 +16,7 @@ object Dependencies {
   }
 
   object Smithy4s {
-    val version = "0.18.2"
+    val version = "0.18.3"
     val complianceTests =
       "com.disneystreaming.smithy4s" %% "smithy4s-compliance-tests" % version % Test
     val core = "com.disneystreaming.smithy4s" %% "smithy4s-core" % version
@@ -25,13 +24,33 @@ object Dependencies {
     val http4s = "com.disneystreaming.smithy4s" %% "smithy4s-http4s" % version
   }
 
+  object Smithy {
+    val smithyVersion = "1.41.1"
+    val org = "software.amazon.smithy"
+    val testTraits = org % "smithy-protocol-test-traits" % smithyVersion
+    val model = org % "smithy-model" % smithyVersion
+    val build = org % "smithy-build" % smithyVersion
+    val awsTraits = org % "smithy-aws-traits" % smithyVersion
+    val waiters = org % "smithy-waiters" % smithyVersion
+
+  }
+
+  val Alloy = new {
+    val org = "com.disneystreaming.alloy"
+    val alloyVersion = "0.2.8"
+    val core = org % "alloy-core" % alloyVersion
+    val openapi = org %% "alloy-openapi" % alloyVersion
+    val `protocol-tests` = org % "alloy-protocol-tests" % alloyVersion
+  }
+
   object ZIO {
-    val core = "dev.zio" %% "zio" % "2.0.13"
+    val core = "dev.zio" %% "zio" % "2.0.19"
     val http = "dev.zio" %% "zio-http" % "3.0.0-RC3"
     val prelude = "dev.zio" %% "zio-prelude" % "1.0.0-RC21"
     val schema = "dev.zio" %% "zio-schema" % "0.4.15"
-    val test = "dev.zio" %% "zio-test" % "2.0.18" % Test
-    val testSbt = "dev.zio" %% "zio-test-sbt" % "2.0.18" % Test
+    val catsInterop = "dev.zio" %% "zio-interop-cats" % "23.1.0.0"
+    val test = "dev.zio" %% "zio-test" % "2.0.19" % Test
+    val testSbt = "dev.zio" %% "zio-test-sbt" % "2.0.19" % Test
     val testMagnolia = "dev.zio" %% "zio-test-magnolia" % "2.0.18" % Test
   }
   object Typelevel {

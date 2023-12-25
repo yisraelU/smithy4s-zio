@@ -1,5 +1,12 @@
 package smithy4s.zio.http
 
+import alloy.SimpleRestJson
+import smithy4s.Service
+import smithy4s.example.WeatherGen
+import smithy4s.zio.http.builders.client.ClientBuilder
+import zio.http.Client
+import zio.{Scope, ZEnvironment, ZIO, ZLayer}
+
 object SimpleRestJsonBuilder extends SimpleRestJsonBuilder(1024, false, true)
 
 class SimpleRestJsonBuilder private (

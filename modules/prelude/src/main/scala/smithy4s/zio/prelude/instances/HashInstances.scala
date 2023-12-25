@@ -3,7 +3,6 @@ package instances
 
 import smithy4s.kinds.PolyFunction
 import smithy4s.schema.Primitive
-import smithy4s.zio.prelude.instances.all.blobEquals
 import smithy4s.{Blob, ShapeId, Timestamp}
 import zio.prelude.coherent.HashOrd.derive
 import zio.prelude.{Equal, Hash}

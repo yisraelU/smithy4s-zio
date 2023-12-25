@@ -1,12 +1,15 @@
 package smithy4s.zio.http.internal
 
 import smithy4s.Blob
-import smithy4s.client.*
+import smithy4s.capability.MonadThrowLike
+import smithy4s.client.UnaryClientCodecs
 import smithy4s.codecs.BlobEncoder
 import smithy4s.http.*
 import smithy4s.json.Json
+import smithy4s.server.UnaryServerCodecs
 import smithy4s.zio.http.SimpleProtocolCodecs
 import smithy4s.zio.http.internal.ZHttpToSmithy4sClient.ResourcefulTask
+import zio.{Scope, Task, ZIO}
 import zio.http.{Request, Response, URL}
 
 // scalafmt: {maxColumn = 120}
@@ -42,6 +45,7 @@ private[http] class SimpleRestJsonCodecs(
   def makeClientCodecs(
       url: URL
   ): UnaryClientCodecs.Make[ResourcefulTask, Request, Response] = {
+    implicit val monadThrowLike = zioMonadThrowLike[Scope]
     val baseRequest = HttpRequest(HttpMethod.POST, toSmithy4sHttpUri(url, None), Map.empty, Blob.empty)
     HttpUnaryClientCodecs.builder
       .withBodyEncoders(payloadEncoders)
@@ -57,6 +61,25 @@ private[http] class SimpleRestJsonCodecs(
       .withHostPrefixInjection(hostPrefixInjection)
       .build()
 
+  }
+
+  def makeServerCodecs = {
+    implicit val monadThrowLike = zioMonadThrowLike[Any]
+    val baseResponse = HttpResponse(200, Map.empty, Blob.empty)
+
+    HttpUnaryServerCodecs.builder
+      .withBodyDecoders(payloadDecoders)
+      .withSuccessBodyEncoders(payloadEncoders)
+      .withErrorBodyEncoders(payloadEncoders)
+      .withErrorTypeHeaders(errorHeaders: _*)
+      .withMetadataDecoders(Metadata.Decoder)
+      .withMetadataEncoders(Metadata.Encoder)
+      .withBaseResponse(_ => baseResponse.pure)
+      .withResponseMediaType("application/json")
+      .withWriteEmptyStructs(!_.isUnit)
+      .withRequestTransformation[Request](toSmithy4sHttpRequest)
+      .withResponseTransformation(fromSmithy4sHttpResponse(_).pure)
+      .build()
   }
 
 }

@@ -1,4 +1,5 @@
 import sbt.Project.projectToRef
+import smithy4s.codegen.Smithy4sCodegenPlugin
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 Global / onChangedBuildSource := ReloadOnSourceChanges
@@ -23,7 +24,7 @@ lazy val allModules = Seq(
   prelude,
   schema,
   examples,
-  tests
+  scenarios
 ).map(projectToRef)
 
 lazy val prelude = (project in file("modules/prelude"))
@@ -54,6 +55,7 @@ lazy val schema = (project in file("modules/schema"))
   )
 
 lazy val http = (project in file("modules/http"))
+  .dependsOn(scenarios)
   .settings(
     name := s"$projectPrefix-http",
     libraryDependencies ++= Seq(
@@ -61,30 +63,35 @@ lazy val http = (project in file("modules/http"))
       Dependencies.Smithy4s.json,
       Dependencies.Smithy4s.http4s,
       Dependencies.Typelevel.vault.value,
-      Dependencies.ZIO.http
-    )
+      Dependencies.ZIO.http,
+      Dependencies.ZIO.test,
+      Dependencies.ZIO.testSbt
+    ),
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
+  .enablePlugins(ScalafixPlugin)
 
-lazy val tests = (project in file("modules/tests"))
-  .dependsOn(http)
+lazy val scenarios = (project in file("modules/test-scenarios"))
   .settings(
     name := s"$projectPrefix-tests",
     libraryDependencies ++= {
       Seq(
-        Dependencies.Http4s.emberClient.value,
-        Dependencies.Http4s.emberServer.value,
-        Dependencies.Http4s.dsl.value,
-        Dependencies.Http4s.circe.value,
-        Dependencies.Weaver.cats.value,
-        Dependencies.Smithy4s.complianceTests
+        Dependencies.Smithy4s.core
       )
-    }
+    },
+    Compile / smithy4sInputDirs := Seq(sourceDirectory.value / "smithy")
   )
+  .enablePlugins(Smithy4sCodegenPlugin)
 
 lazy val examples = (project in file("modules/examples"))
   .settings(
     name := s"$projectPrefix-examples",
-    fork / run := true
+    fork / run := true,
+    libraryDependencies ++= Seq(
+      Dependencies.Smithy4s.http4s,
+      Dependencies.Http4s.emberServer.value,
+      Dependencies.ZIO.catsInterop
+    )
   )
   .dependsOn(http, prelude)
   .enablePlugins(Smithy4sCodegenPlugin)

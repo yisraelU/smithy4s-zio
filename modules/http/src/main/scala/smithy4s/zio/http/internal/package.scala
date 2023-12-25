@@ -11,36 +11,36 @@ import smithy4s.http.{
   HttpUri => Smithy4sHttpUri,
   HttpUriScheme => Smithy4sHttpUriScheme
 }
-import smithy4s.zio.http.internal.ZHttpToSmithy4sClient.ResourcefulTask
-import zio.http._
+import zio.http.*
 import zio.stream.ZStream
 import zio.{Chunk, IO, Task, ZIO}
 
 package object internal {
-
-  implicit val zioMonadThrowLike: MonadThrowLike[ResourcefulTask] =
-    new MonadThrowLike[ResourcefulTask] {
-      override def flatMap[A, B](fa: ResourcefulTask[A])(
-          f: A => ResourcefulTask[B]
-      ): ResourcefulTask[B] =
+  def zioMonadThrowLike[R]: MonadThrowLike[ZIO[R, Throwable, *]] =
+    new MonadThrowLike[ZIO[R, Throwable, *]] {
+      override def flatMap[A, B](fa: ZIO[R, Throwable, A])(
+          f: A => ZIO[R, Throwable, B]
+      ): ZIO[R, Throwable, B] =
         fa.flatMap(f)
 
-      override def raiseError[A](e: Throwable): Task[A] = ZIO.fail(e)
+      override def raiseError[A](e: Throwable): ZIO[R, Throwable, A] =
+        ZIO.die(e)
 
-      override def pure[A](a: A): Task[A] = ZIO.succeed(a)
+      override def pure[A](a: A): ZIO[R, Throwable, A] = ZIO.succeed(a)
 
-      override def handleErrorWith[A](fa: ResourcefulTask[A])(
-          f: Throwable => ResourcefulTask[A]
-      ): ResourcefulTask[A] = fa.catchAll(f)
+      // we have already handled throwables via using a Response
+      override def handleErrorWith[A](fa: ZIO[R, Throwable, A])(
+          f: Throwable => ZIO[R, Throwable, A]
+      ): ZIO[R, Throwable, A] = fa.catchAllDefect(f)
 
-      override def zipMapAll[A](seq: IndexedSeq[ResourcefulTask[Any]])(
+      override def zipMapAll[A](seq: IndexedSeq[ZIO[R, Throwable, Any]])(
           f: IndexedSeq[Any] => A
-      ): ResourcefulTask[A] = ZIO.collectAll(seq).map(f)
+      ): ZIO[R, Throwable, A] = ZIO.collectAll(seq).map(f)
     }
 
-  implicit class EffectOps[+A](val a: A) extends AnyVal {
-    def pure: Task[A] = ZIO.succeed(a)
-    def fail[E](e: E): IO[E, A] = ZIO.fail(e)
+  implicit class EffectOps[+A, +E](private val a: A) extends AnyVal {
+    def pure: IO[E, A] = ZIO.succeed(a)
+    def fail[E1 >: E](e: E1): IO[E1, A] = ZIO.fail(e)
   }
 
   def toSmithy4sHttpRequest(req: Request): Task[Smithy4sHttpRequest[Blob]] = {
@@ -118,7 +118,9 @@ package object internal {
     )
   }
 
-  def toSmithy4sHttpResponse(res: Response): Task[Smithy4sHttpResponse[Blob]] =
+  def toSmithy4sHttpResponse(
+      res: Response
+  ): IO[Throwable, Smithy4sHttpResponse[Blob]] =
     collectBytes(res.body).map { blob =>
       val headers = res.headers.headers
         .map(h => CaseInsensitive(h.headerName) -> Seq(h.renderedValue))

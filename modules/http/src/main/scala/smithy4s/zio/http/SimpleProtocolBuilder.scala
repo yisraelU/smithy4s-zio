@@ -1,11 +1,11 @@
 package smithy4s.zio.http
 
-import smithy4s.client.UnaryClientCompiler
-import smithy4s.zio.http.internal.ZHttpToSmithy4sClient.ResourcefulTask
-import smithy4s.zio.http.internal.{ZHttpToSmithy4sClient, zioMonadThrowLike}
-import smithy4s.{Endpoint, ShapeTag, UnsupportedProtocolError, checkProtocol}
+import smithy4s.kinds.FunctorAlgebra
+import smithy4s.zio.http.builders.client.ClientBuilder
+import smithy4s.zio.http.builders.server.RouterBuilder
+import smithy4s.{Endpoint, ShapeTag}
+import zio.Task
 import zio.http.*
-import zio.{IO, ZIO}
 
 /**
  * Abstract construct helping the construction of routers and clients
@@ -22,55 +22,29 @@ abstract class SimpleProtocolBuilder[P](
       service: smithy4s.Service[Alg]
   ): ServiceBuilder[Alg] = new ServiceBuilder(service)
 
+  def routes[Alg[_[_, _, _, _, _]]](
+      impl: FunctorAlgebra[Alg, Task]
+  )(implicit
+      service: smithy4s.Service[Alg]
+  ): RouterBuilder[Alg, P] = {
+    new RouterBuilder[Alg, P](
+      protocolTag,
+      simpleProtocolCodecs,
+      service,
+      impl,
+      PartialFunction.empty,
+      Endpoint.Middleware.noop
+    )
+  }
+
   class ServiceBuilder[
       Alg[_[_, _, _, _, _]]
   ] private[http] (val service: smithy4s.Service[Alg]) {
     self =>
 
     def client(client: Client) =
-      new ClientBuilder[Alg](client, service)
+      new ClientBuilder[Alg, P](simpleProtocolCodecs, client, service)
   }
-
-  class ClientBuilder[
-      Alg[_[_, _, _, _, _]]
-  ] private[http] (
-      client: Client,
-      val service: smithy4s.Service[Alg],
-      url: URL = URL
-        .decode("http://localhost:8080")
-        .getOrElse(throw new Exception("Invalid URL")),
-      middleware: ClientEndpointMiddleware = Endpoint.Middleware.noop[Client]
-  ) {
-
-    def uri(uri: URL): ClientBuilder[Alg] =
-      new ClientBuilder[Alg](this.client, this.service, uri, this.middleware)
-
-    def middleware(
-        mid: ClientEndpointMiddleware
-    ): ClientBuilder[Alg] =
-      new ClientBuilder[Alg](this.client, this.service, this.url, mid)
-
-    def make
-        : Either[UnsupportedProtocolError, service.Impl[ResourcefulTask]] = {
-      checkProtocol(service, protocolTag)
-        // Making sure the router is evaluated lazily, so that all the compilation inside it
-        // doesn't happen in case of a missing protocol
-        .map { _ =>
-          service.impl {
-            UnaryClientCompiler(
-              service,
-              client,
-              (client: Client) => ZHttpToSmithy4sClient(client),
-              simpleProtocolCodecs.makeClientCodecs(url),
-              middleware,
-              (response: Response) => response.status.isSuccess
-            )
-          }
-        }
-    }
-
-    def lift: IO[UnsupportedProtocolError, service.Impl[ResourcefulTask]] =
-      ZIO.fromEither(make)
-  }
-
 }
+
+object SimpleProtocolBuilder {}

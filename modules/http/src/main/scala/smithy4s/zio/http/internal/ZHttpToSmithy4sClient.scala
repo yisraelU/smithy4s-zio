@@ -1,12 +1,13 @@
 package smithy4s.zio.http.internal
 
 import smithy4s.client.UnaryLowLevelClient
-import zio.{RIO, Scope, ZIO}
 import zio.http.{Client, Request, Response}
+import zio.{RIO, Scope, ZIO}
 
 private[http] object ZHttpToSmithy4sClient {
 
-  type ResourcefulTask[Output] = RIO[Scope, Output]
+  type ResourcefulTask[Output] = ZIO[Scope, Throwable, Output]
+
   def apply(
       client: Client
   ): UnaryLowLevelClient[ResourcefulTask, Request, Response] = {

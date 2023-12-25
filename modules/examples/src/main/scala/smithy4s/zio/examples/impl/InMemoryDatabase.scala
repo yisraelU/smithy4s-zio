@@ -39,7 +39,7 @@ class InMemoryDatabase[A](
 
   override def deleteAll(): Task[Unit] = {
     for {
-      _ <- ref.update(m => Map.empty)
+      _ <- ref.update(_ => Map.empty)
     } yield ()
   }
 
