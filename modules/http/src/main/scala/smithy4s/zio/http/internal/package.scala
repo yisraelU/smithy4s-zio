@@ -83,7 +83,13 @@ package object internal {
           case Scheme.WS =>
             throw new UnsupportedOperationException("Websocket not supported")
           case Scheme.WSS =>
-            throw new UnsupportedOperationException("Websocket not supported")
+            throw new UnsupportedOperationException(
+              "Secure Websocket not supported"
+            )
+          case Scheme.Custom(scheme) =>
+            throw new UnsupportedOperationException(
+              s"custom scheme $scheme is not supported"
+            )
         }
       case _ => Smithy4sHttpUriScheme.Http
     }
@@ -140,7 +146,7 @@ package object internal {
     val location = URL.Location.Absolute(
       scheme = scheme,
       host = uri.host,
-      port = uri.port.getOrElse(80)
+      originalPort = uri.port
     )
 
     URL(

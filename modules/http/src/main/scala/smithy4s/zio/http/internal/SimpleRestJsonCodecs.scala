@@ -1,15 +1,13 @@
 package smithy4s.zio.http.internal
 
 import smithy4s.Blob
-import smithy4s.capability.MonadThrowLike
 import smithy4s.client.UnaryClientCodecs
 import smithy4s.codecs.BlobEncoder
 import smithy4s.http.*
 import smithy4s.json.Json
-import smithy4s.server.UnaryServerCodecs
 import smithy4s.zio.http.SimpleProtocolCodecs
 import smithy4s.zio.http.internal.ZHttpToSmithy4sClient.ResourcefulTask
-import zio.{Scope, Task, ZIO}
+import zio.Scope
 import zio.http.{Request, Response, URL}
 
 // scalafmt: {maxColumn = 120}

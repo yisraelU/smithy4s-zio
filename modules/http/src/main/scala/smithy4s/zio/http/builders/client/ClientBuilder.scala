@@ -6,7 +6,7 @@ import smithy4s.zio.http.internal.{ZHttpToSmithy4sClient, zioMonadThrowLike}
 import smithy4s.zio.http.{ClientEndpointMiddleware, SimpleProtocolCodecs}
 import smithy4s.{Endpoint, ShapeTag, UnsupportedProtocolError, checkProtocol}
 import zio.http.{Client, Response, URL}
-import zio.{IO, Scope, ZIO, ZLayer}
+import zio.{IO, Scope, ZIO}
 
 class ClientBuilder[
     Alg[_[_, _, _, _, _]],
@@ -42,7 +42,6 @@ class ClientBuilder[
     )
 
   def make: Either[UnsupportedProtocolError, service.Impl[ResourcefulTask]] = {
-    implicit val monadThrow = zioMonadThrowLike[Any]
 
     checkProtocol(service, protocolTag)
       // Making sure the router is evaluated lazily, so that all the compilation inside it

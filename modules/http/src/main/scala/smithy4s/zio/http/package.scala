@@ -4,7 +4,7 @@ import cats.effect.SyncIO
 import org.typelevel.vault.Key
 import smithy4s.Endpoint
 import smithy4s.http.PathParams
-import zio.{Task, ZIO}
+import zio.Task
 import zio.http.*
 
 package object http {
@@ -25,10 +25,15 @@ package object http {
       .split("&")
       .filterNot(_.isEmpty)
       .map { param =>
-        val Array(key, value) = param.split("=")
-        key -> value
+        {
+          param.split("=") match {
+            case Array(key, value) => key -> value
+            case _                 => throw new RuntimeException() // todo
+          }
+        }
       }
       .toMap
+
   }
   def tagRequest(req: Request, pathParams: PathParams): Request = {
     val serializedPathParams = serializePathParams(pathParams)
@@ -40,12 +45,5 @@ package object http {
       req.removeHeader(pathParamsKey),
       pathParamsString.map(deserializePathParams)
     )
-  }
-
-  implicit class AppOps[A, E](eff: ZIO[A, Option[E], Response]) {
-    def orNotFound: ZIO[A, E, Response] = eff.unsome.map {
-      case None        => Response.status(Status.NotFound)
-      case Some(value) => value
-    }
   }
 }
