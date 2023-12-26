@@ -24,6 +24,7 @@ object ServerEndpointMiddleware {
           case scala.util.control.NonFatal(other) if f.isDefinedAt(other) =>
             f(other).flatMap(ZIO.die(_))
         }
+        // todo pending error mapping added to Routes
         routes
       }
     }
