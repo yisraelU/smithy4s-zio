@@ -26,10 +26,10 @@ import zio.test.{
   assertZIO
 }
 
-object ServiceBuilderHttp4sSpec extends ZIOSpecDefault {
+object ServiceBuilderZIOHttpSpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
-    suite("")(
+    suite("tests service oriented customizations")(
       test("Capable of altering the URI path of an endpoint") {
         val serviceImpl: HelloWorldAuthService[Task] =
           new HelloWorldAuthService[Task] {

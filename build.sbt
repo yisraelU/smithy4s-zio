@@ -79,7 +79,9 @@ lazy val scenarios = (project in file("modules/test-scenarios"))
         Dependencies.Smithy4s.core
       )
     },
-    Compile / smithy4sInputDirs := Seq(sourceDirectory.value / "smithy")
+    Compile / smithy4sInputDirs := Seq(sourceDirectory.value / "smithy"),
+    Compile / resourceDirectory :=  sourceDirectory.value  / "resources",
+    Compile / smithy4sOutputDir := sourceDirectory.value / "generated",
   )
   .enablePlugins(Smithy4sCodegenPlugin)
 

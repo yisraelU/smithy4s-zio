@@ -1,10 +1,13 @@
 /*package smithy4s.zio.http
 
 
+import cats.data.Chain
 import smithy4s.example.*
 import smithy4s.Timestamp
 import smithy4s.http.CaseInsensitive
 import smithy4s.http.UnknownErrorResponse
+import zio.{Ref, Task, ZIO}
+import zio.http.{Client, Request, Response}
 import zio.json.ast.Json
 import zio.test.ZIOSpecDefault
 
@@ -23,8 +26,8 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
 
   clientTest("Errors make it through") { (client, backend, log) =>
     for {
-      ts <- IO(Timestamp(Timestamp.nowUTC().epochSecond, 0))
-      uuid <- UUIDGen.randomUUID[IO]
+      ts <- Task(Timestamp(Timestamp.nowUTC().epochSecond, 0))
+      uuid <- UUIDGen.randomUUID[Task]
       response <- Created(
         Json.fromString(uuid.toString),
         Header.Raw(
@@ -158,7 +161,7 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
 
   def clientTestForError[E](
                              name: String,
-                             response: Response[IO],
+                             response: Response,
                              expected: E
                            )(implicit
                              loc: SourceLocation,
@@ -183,78 +186,63 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
     }
   }
 
-  def clientTest(name: TestName)(
+  def clientTest(name: String)(
     f: (
-      PizzaAdminService[IO],
+      PizzaAdminService[Task],
         Backend,
-        Log[IO]
-      ) => IO[Expectations]
+      ) => Task[Expectations]
   ): Unit =
     test(name) { (res, log) => f(res._1, res._2, log) }
 
   // If right, TCP will be exercised.
   def makeClient: Either[
-    HttpApp[IO] => Resource[IO, PizzaAdminService[IO]],
-    Int => Resource[IO, PizzaAdminService[IO]]
+    Client => Task[PizzaAdminService[Task]],
+    Int => Task[PizzaAdminService[Task]]
   ]
 
-  type Res = (PizzaAdminService[IO], Backend)
-  def sharedResource: Resource[IO, (PizzaAdminService[IO], Backend)] =
-    for {
-      ref <- Resource.eval(IO.ref(State.empty))
-      app = router(ref)
-      client <- makeClient match {
-        case Left(fromHttpApp) => fromHttpApp(app)
-        case Right(fromPort) =>
-          for {
-            port <- retryResource(server(app))
-            client <- fromPort(port)
-          } yield client
-      }
-    } yield (client, Backend(ref))
 
-  case class Backend(ref: Ref[IO, State]) {
-    def prepResponse(key: String, response: Response[IO]): IO[Unit] =
+
+  case class Backend(ref: Ref[State]) {
+    def prepResponse(key: String, response: Response): Task[Unit] =
       ref.update(_.prepResponse(key, response))
 
-    def lastRequest(key: String): IO[Request[IO]] =
+    def lastRequest(key: String): Task[Request] =
       ref.get.flatMap(_.lastRequest(key))
   }
 
   case class State(
-                    requests: Map[String, Chain[Request[IO]]],
-                    nextResponses: Map[String, Response[IO]]
+                    requests: Map[String, Chain[Request]],
+                    nextResponses: Map[String, Response]
                   ) {
-    def lastRequest(key: String): IO[Request[IO]] = requests
+    def lastRequest(key: String): Task[Request] = 
+      ZIO.fromOption(requests
       .get(key)
-      .flatMap(_.lastOption)
-      .liftTo[IO](new Throwable(s"Found no request matching $key"))
+      .flatMap(_.lastOption)).orElseFail(new Throwable(s"Found no request matching $key"))
 
-    def saveRequest(key: String, request: Request[IO]) = {
+    def saveRequest(key: String, request: Request) = {
       val reqForKey = requests.getOrElse(key, Chain.empty)
       val updated = reqForKey.append(request)
       this.copy(requests = requests + (key -> updated))
     }
 
-    def prepResponse(key: String, response: Response[IO]) =
+    def prepResponse(key: String, response: Response) =
       this.copy(nextResponses = nextResponses + (key -> response))
 
-    def getResponse(key: String): IO[Response[IO]] = nextResponses
-      .get(key)
-      .liftTo[IO](new Throwable(s"Found no response matching $key"))
+    def getResponse(key: String): Task[Response] = 
+      ZIO.fromOption(nextResponses.get(key)).orElseFail(new Throwable(s"Found no response matching $key"))
   }
 
   object State {
     val empty = State(Map.empty, Map.empty)
   }
 
-  def router(ref: Ref[IO, State]) = {
-    def storeAndReturn(key: String, request: Request[IO]): IO[Response[IO]] =
+  def router(ref: Ref[State]) = {
+    def storeAndReturn(key: String, request: Request): Task[Response] =
       // Collecting the whole body eagerly to make sure we don't consume it after closing the connection
-      request.body.compile.toVector.flatMap { body =>
+      request.body.asChunk.flatMap { body =>
         ref
           .updateAndGet(
-            _.saveRequest(key, request.withBodyStream(fs2.Stream.emits(body)))
+            _.saveRequest(key, request.copy(body = ))
           )
           .flatMap(_.getResponse(key))
       }
@@ -262,7 +250,7 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
     object Q extends OptionalQueryParamDecoderMatcher[String]("query")
 
     HttpRoutes
-      .of[IO] {
+      .of[Task] {
         case request @ (POST -> Root / "restaurant" / key / "menu" / "item") =>
           storeAndReturn(key, request)
         case request @ (GET -> Root / "restaurant" / key / "menu") =>
@@ -297,18 +285,19 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
       .orNotFound
   }
 
-  val randomInt = Resource.eval(IO(scala.util.Random.nextInt(9999)))
+  val randomInt = Resource.eval(Task(scala.util.Random.nextInt(9999)))
 
   val randomPort = randomInt.map(_ + 50000)
 
-  def server(app: HttpApp[IO]): Resource[IO, Int]
+  def server(app: HttpApp[Task]): Resource[Task, Int]
 
   def retryResource[A](
-                        resource: Resource[IO, A],
+                        resource: Resource[Task, A],
                         max: Int = 10
-                      ): Resource[IO, A] =
+                      ): Resource[Task, A] =
     if (max <= 0) resource
     else resource.orElse(retryResource(resource, max - 1))
 
 }
- */
+ 
+*/
