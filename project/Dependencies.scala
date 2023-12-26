@@ -22,6 +22,7 @@ object Dependencies {
     val core = "com.disneystreaming.smithy4s" %% "smithy4s-core" % version
     val json = "com.disneystreaming.smithy4s" %% "smithy4s-json" % version
     val http4s = "com.disneystreaming.smithy4s" %% "smithy4s-http4s" % version
+    val tests = "com.disneystreaming.smithy4s" %% "smithy4s-tests" % version % Test
   }
 
   object Smithy {

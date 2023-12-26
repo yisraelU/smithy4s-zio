@@ -1,13 +1,20 @@
 /*package smithy4s.zio.http
 
 
+import cats.Show
 import cats.data.Chain
+import cats.effect.std.UUIDGen
+import cats.implicits.catsSyntaxOptionId
+import org.http4s.dsl.impl.OptionalQueryParamDecoderMatcher
 import smithy4s.example.*
 import smithy4s.Timestamp
 import smithy4s.http.CaseInsensitive
 import smithy4s.http.UnknownErrorResponse
+import weaver.{Expectations, SourceLocation}
+import weaver.Expectations.Helpers.{expect, failure}
+import zio.http.codec.HttpCodec.Created
 import zio.{Ref, Task, ZIO}
-import zio.http.{Client, Request, Response}
+import zio.http.{Body, Client, Header, Headers, Request, Response, Status}
 import zio.json.ast.Json
 import zio.test.ZIOSpecDefault
 
@@ -24,16 +31,15 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
     )
   )
 
-  clientTest("Errors make it through") { (client, backend, log) =>
+  clientTest("Errors make it through") { (client, backend) =>
     for {
-      ts <- Task(Timestamp(Timestamp.nowUTC().epochSecond, 0))
-      uuid <- UUIDGen.randomUUID[Task]
-      response <- Created(
-        Json.fromString(uuid.toString),
-        Header.Raw(
-          CIString("X-ADDED-AT"),
+      ts <- ZIO.succeed(Timestamp(Timestamp.nowUTC().epochSecond, 0))
+      uuid <- ZIO.attempt(java.util.UUID.randomUUID())
+      response <- Response(Status.Created,
+        Headers(Header.Custom("X-ADDED-AT",
           ts.epochSecond.toString()
-        )
+        )),
+       Body.fromString(Json.Str(uuid.toString).toString())
       )
       _ <- backend.prepResponse("foo", response)
       menuItem = MenuItem(
@@ -44,28 +50,28 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
       )
       result <- client.addMenuItem("foo", menuItem)
       request <- backend.lastRequest("foo")
-      requestBody <- request.asJson
+      requestBody <- request.body.asString
     } yield {
 
-      val pizzaItem = Json.obj(
-        "pizza" -> Json.obj(
-          "name" -> Json.fromString("margharita"),
-          "base" -> Json.fromString("T"),
-          "toppings" -> Json.arr(
-            Json.fromString("Mushroom")
+      val pizzaItem = Json.Obj(
+        "pizza" -> Json.Obj(
+          "name" -> Json.Str("margharita"),
+          "base" -> Json.Str("T"),
+          "toppings" -> Json.Arr(
+            Json.Str("Mushroom")
           )
         )
       )
 
-      val expectedBody = Json.obj(
+      val expectedBody = Json.Obj(
         "food" -> pizzaItem,
-        "price" -> Json.fromFloatOrNull(9.5f)
+        "price" -> Json.Num(9.5f)
       )
 
       val expectedResult = AddMenuItemResult(uuid.toString(), ts)
 
       expect(requestBody == expectedBody) &&
-        expect(request.uri.path.toString == "/restaurant/foo/menu/item") &&
+        expect(request.url.path.toString == "/restaurant/foo/menu/item") &&
         expect(result == expectedResult)
     }
   }
@@ -73,27 +79,19 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
   clientTestForError(
     "Receives errors as exceptions",
     Response(status = Status.NotFound)
-      .withHeaders(Header.Raw(CIString("X-Error-Type"), "NotFoundError"))
-      .withEntity(
-        Json.obj("name" -> Json.fromString("bar"))
+      .addHeader(Header.Custom("X-Error-Type", "NotFoundError"))
+      .copy(
+        body = Body.fromString(Json.Obj("name" -> Json.Str("bar")).toString())
       ),
     NotFoundError("bar")
   )
 
-  clientTestForError(
-    "Handle error with a unique status code mapping (418)",
-    Response(status = Status.ImATeapot)
-      .withEntity(
-        Json.obj("message" -> Json.fromString("generic error message for 418"))
-      ),
-    GenericClientError("generic error message for 418")
-  )
 
   clientTestForError(
     "Handle error w/o a discriminator header nor a unique status code",
     Response(status = Status.ProxyAuthenticationRequired)
-      .withEntity(
-        Json.obj("message" -> Json.fromString("generic client error message"))
+      .copy(
+        body = Body.fromString(Json.Obj("message" -> Json.Str("generic client error message")).toString())
       ),
     unknownResponse(
       407,
@@ -113,7 +111,7 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
       body
     )
 
-  clientTest("Headers are case insensitive") { (client, backend, log) =>
+  clientTest("Headers are case insensitive") { (client, backend) =>
     for {
       res <- client.headerEndpoint(
         uppercaseHeader = "upper".some,
@@ -129,10 +127,10 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
     }
   }
 
-  clientTest("code decoded in structure") { (client, backend, log) =>
+  clientTest("code decoded in structure") { (client, backend) =>
     val code = 201
     for {
-      response <- Created()
+      response <- Created
       _ <- backend.prepResponse(s"customCode$code", response)
       res <- client.customCode(code)
     } yield {
@@ -140,7 +138,7 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
     }
   }
 
-  clientTest("Round trip") { (client, backend, log) =>
+  clientTest("Round trip") { (client, backend) =>
     for {
       res <- client.roundTrip(
         label = "l",
@@ -168,13 +166,13 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
                              ct: scala.reflect.ClassTag[E],
                              show: Show[E] = Show.fromToString[E]
                            ) = {
-    clientTest(name) { (client, backend, log) =>
+    clientTest(name) { (client, backend) =>
       for {
         _ <- backend.prepResponse(
           name,
           response
         )
-        maybeResult <- client.getMenu(name).attempt
+        maybeResult <- client.getMenu(name).either
       } yield maybeResult match {
         case Right(_) => failure("expected failure")
         case Left(error: E) =>
@@ -192,7 +190,7 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
         Backend,
       ) => Task[Expectations]
   ): Unit =
-    test(name) { (res, log) => f(res._1, res._2, log) }
+    test(name) { (res) => f(res._1, res._2) }
 
   // If right, TCP will be exercised.
   def makeClient: Either[
@@ -237,15 +235,17 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
   }
 
   def router(ref: Ref[State]) = {
-    def storeAndReturn(key: String, request: Request): Task[Response] =
+    def storeAndReturn(key: String, request: Request): Task[Response] = {
       // Collecting the whole body eagerly to make sure we don't consume it after closing the connection
       request.body.asChunk.flatMap { body =>
         ref
           .updateAndGet(
-            _.saveRequest(key, request.copy(body = ))
+            _.saveRequest(key, request.copy(body = Body.fromChunk(body) ))
           )
           .flatMap(_.getResponse(key))
       }
+
+    }
 
     object Q extends OptionalQueryParamDecoderMatcher[String]("query")
 
@@ -267,9 +267,9 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
             .map(
               _.deepMerge(
                 Json
-                  .obj(
-                    "label" -> Json.fromString(label),
-                    "query" -> q.map(Json.fromString).getOrElse(Json.Null)
+                  .Obj(
+                    "label" -> Json.Str(label),
+                    "query" -> q.map(Json.Str).getOrElse(Json.Null)
                   )
                   .deepDropNullValues
               )
@@ -279,7 +279,7 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
           storeAndReturn(s"customCode$code", request)
 
         case POST -> Root / "book" / _ =>
-          val body = Json.obj("message" -> Json.fromString("test"))
+          val body = Json.Obj("message" -> Json.Str("test"))
           Ok(body)
       }
       .orNotFound

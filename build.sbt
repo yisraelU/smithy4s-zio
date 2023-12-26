@@ -54,6 +54,24 @@ lazy val schema = (project in file("modules/schema"))
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
 
+lazy val `compliance-tests` = (project in file("modules/compliance-tests"))
+  .settings(
+    name := s"$projectPrefix-compliance-test",
+    libraryDependencies ++= Seq(
+      Dependencies.Smithy4s.core,
+      Dependencies.Smithy4s.json,
+      Dependencies.Smithy4s.tests,
+      Dependencies.ZIO.http,
+      Dependencies.ZIO.test,
+      Dependencies.ZIO.testSbt,
+      Dependencies.ZIO.testMagnolia,
+      Dependencies.Smithy.testTraits % Smithy4s
+    ),
+    Compile / smithy4sAllowedNamespaces := List("smithy.test"),
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+  )
+  .dependsOn(http)
+  .enablePlugins(Smithy4sCodegenPlugin)
 lazy val http = (project in file("modules/http"))
   .dependsOn(scenarios)
   .settings(
@@ -65,7 +83,8 @@ lazy val http = (project in file("modules/http"))
       Dependencies.Typelevel.vault.value,
       Dependencies.ZIO.http,
       Dependencies.ZIO.test,
-      Dependencies.ZIO.testSbt
+      Dependencies.ZIO.testSbt,
+      Dependencies.Smithy4s.tests
     ),
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
