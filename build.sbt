@@ -24,7 +24,8 @@ lazy val allModules = Seq(
   prelude,
   schema,
   examples,
-  scenarios
+  scenarios,
+  `compliance-tests`
 ).map(projectToRef)
 
 lazy val prelude = (project in file("modules/prelude"))
@@ -61,6 +62,10 @@ lazy val `compliance-tests` = (project in file("modules/compliance-tests"))
       Dependencies.Smithy4s.core,
       Dependencies.Smithy4s.json,
       Dependencies.Smithy4s.tests,
+      Dependencies.Circe.parser,
+      Dependencies.ZIO.catsInterop,
+      Dependencies.Fs2Data.xml.value,
+      Dependencies.LiHaoyi.pprint,
       Dependencies.ZIO.http,
       Dependencies.ZIO.test,
       Dependencies.ZIO.testSbt,
@@ -99,8 +104,8 @@ lazy val scenarios = (project in file("modules/test-scenarios"))
       )
     },
     Compile / smithy4sInputDirs := Seq(sourceDirectory.value / "smithy"),
-    Compile / resourceDirectory :=  sourceDirectory.value  / "resources",
-    Compile / smithy4sOutputDir := sourceDirectory.value / "generated",
+    Compile / resourceDirectory := sourceDirectory.value / "resources",
+    Compile / smithy4sOutputDir := sourceDirectory.value / "generated"
   )
   .enablePlugins(Smithy4sCodegenPlugin)
 

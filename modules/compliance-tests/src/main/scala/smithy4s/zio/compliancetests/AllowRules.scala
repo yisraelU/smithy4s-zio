@@ -1,5 +1,3 @@
-
-
 package smithy4s.zio.compliancetests
 
 import smithy.test.AppliesTo

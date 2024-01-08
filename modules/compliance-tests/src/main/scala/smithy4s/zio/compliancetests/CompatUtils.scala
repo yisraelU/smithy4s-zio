@@ -1,6 +1,3 @@
-
-
-
 package smithy4s.zio.compliancetests
 
 import cats.{Applicative, MonadThrow, Monoid}

@@ -1,9 +1,8 @@
-
-
 package smithy4s.zio.compliancetests
 
 import smithy4s.Service
 import zio.Task
+import zio.interop.catz.asyncInstance
 
 /**
   * A construct allowing for running http protocol compliance tests against the implementation of a given protocol.
@@ -15,17 +14,17 @@ import zio.Task
   */
 object HttpProtocolCompliance {
 
-  def clientTests[ Alg[_[_, _, _, _, _]]](
-      reverseRouter: ReverseRouter[Task],
+  def clientTests[Alg[_[_, _, _, _, _]]](
+      reverseRouter: ReverseRouter,
       service: Service[Alg]
   ): List[ComplianceTest[Task]] =
-    new internals.ClientHttpComplianceTestCase[Task, Alg](
+    new internals.ClientHttpComplianceTestCase[Alg](
       reverseRouter,
       service
     ).allClientTests()
 
-  def serverTests[ Alg[_[_, _, _, _, _]]](
-      router: Router[Task],
+  def serverTests[Alg[_[_, _, _, _, _]]](
+      router: Router,
       service: Service[Alg]
   ): List[ComplianceTest[Task]] =
     new internals.ServerHttpComplianceTestCase[Task, Alg](
@@ -33,9 +32,9 @@ object HttpProtocolCompliance {
       service
     ).allServerTests()
 
-  def clientAndServerTests[ Alg[_[_, _, _, _, _]]](
-                                                    router: Router[Task] & ReverseRouter[Task],
-                                                    service: Service[Alg]
+  def clientAndServerTests[Alg[_[_, _, _, _, _]]](
+      router: Router & ReverseRouter,
+      service: Service[Alg]
   ): List[ComplianceTest[Task]] =
     clientTests(router, service) ++ serverTests(router, service)
 

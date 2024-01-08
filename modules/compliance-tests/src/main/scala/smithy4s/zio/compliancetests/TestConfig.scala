@@ -1,4 +1,3 @@
-
 package smithy4s.zio.compliancetests
 
 import smithy4s.zio.compliancetests.TestConfig.TestType

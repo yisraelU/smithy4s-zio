@@ -1,24 +1,14 @@
-/*
- *  Copyright 2021-2023 Disney Streaming
- *
- *  Licensed under the Tomorrow Open Source Technology License, Version 1.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *     https://disneystreaming.github.io/TOST-1.0.txt
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
 package smithy4s.zio.compliancetests.internals
 
+import cats.Eq
+import cats.syntax.all.*
+import io.circe.Json
+import io.circe.parser.*
+import smithy.test.{HttpRequestTestCase, HttpResponseTestCase}
 import smithy4s.zio.compliancetests.ComplianceTest.*
+import zio.http.{Headers, QueryParams}
 
-private[internals] object assert {
+object assert {
 
   // private implicit val eventsEq: Eq[XmlEvent] = Eq.fromUniversalEquals
 
@@ -63,14 +53,13 @@ private[internals] object assert {
     }
   }
 
-  private def xmlEql[F[_]: Concurrent](
+  /*  private def xmlEql(
       result: String,
       testCase: String
-  ): F[ComplianceResult] = {
-    val parseXml: String => F[List[XmlEvent]] = in =>
-      Stream
-        .emit[F, String](in)
-        .through(events(false))
+  ): Task[ComplianceResult] = {
+    val parseXml: String => Task[List[XmlEvent]] = in =>
+      ZStream.from(in)
+        .pipeThrough(events(false))
         .through(normalize)
         .flatMap {
           case x @ XmlEvent.XmlString(value, _) =>
@@ -101,7 +90,7 @@ private[internals] object assert {
 
       }
     }
-  }
+  }*/
 
   def eql[A: Eq](
       result: A,
@@ -118,23 +107,24 @@ private[internals] object assert {
     }
   }
 
-  def bodyEql[F[_]: Concurrent](
+  def bodyEql(
       result: String,
       testCase: Option[String],
       bodyMediaType: Option[String]
-  ): F[ComplianceResult] = {
+  ): ComplianceResult = {
     if (testCase.isDefined)
       if (isJson(bodyMediaType)) {
-        jsonEql(result, testCase.getOrElse("")).pure[F]
+        jsonEql(result, testCase.getOrElse(""))
       } else if (isXml(bodyMediaType)) {
-        xmlEql[F](result, testCase.getOrElse(""))
+        ???
+        // xmlEql(result, testCase.getOrElse(""))
       } else {
-        eql(result, testCase.getOrElse("")).pure[F]
+        eql(result, testCase.getOrElse(""))
       }
-    else success.pure[F]
+    else success
   }
 
-  private def queryParamsExistenceCheck(
+  def queryParamsExistenceCheck(
       queryParameters: Map[String, Seq[String]],
       requiredParameters: Option[List[String]],
       forbiddenParameters: Option[List[String]]
@@ -160,12 +150,13 @@ private[internals] object assert {
     checkRequired |+| checkForbidden
   }
 
-  private def queryParamValuesCheck(
+  def queryParamValuesCheck(
       queryParameters: Map[String, Seq[String]],
       testCase: Option[List[String]]
   ) = {
     testCase.toList.flatten
-      .map(splitQuery)
+      .map(QueryParams.decode(_))
+      .flatMap(_.map)
       .collect {
         case (key, _) if !queryParameters.contains(key) =>
           fail(s"missing query parameter $key")
@@ -188,31 +179,31 @@ private[internals] object assert {
    * Headers listed in headers do not need to appear in this list.
     */
 
-  private def headersExistenceCheck(
+  def headersExistenceCheck(
       headers: Headers,
       requiredHeaders: Option[List[String]],
       forbiddenHeaders: Option[List[String]]
   ) = {
     val checkRequired = requiredHeaders.toList.flatten.collect {
-      case key if headers.get(CIString(key)).isEmpty =>
+      case key if headers.get(key).isEmpty =>
         assert.fail(s"Header $key is required request.")
     }.combineAll
     val checkForbidden = forbiddenHeaders.toList.flatten.collect {
-      case key if headers.get(CIString(key)).isDefined =>
+      case key if headers.get(key).isDefined =>
         assert.fail(s"Header $key is forbidden in the request.")
     }.combineAll
     checkRequired |+| checkForbidden
   }
 
-  private def headerKeyValueCheck(
-      headers: Map[CIString, String],
+  def headerKeyValueCheck(
+      headers: Map[CharSequence, CharSequence],
       expected: Option[Map[String, String]]
   ) = {
 
     expected
       .map {
         _.toList.collect { case (key, value) =>
-          headers.get(CIString(key)) match {
+          headers.get(key) match {
             case Some(v) if v == value => success
             case Some(v) =>
               assert.fail(s"Header $key has value `$v` but expected `$value`")

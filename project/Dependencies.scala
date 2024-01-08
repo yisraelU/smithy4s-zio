@@ -14,6 +14,20 @@ object Dependencies {
     val dsl: Def.Initialize[ModuleID] =
       Def.setting("org.http4s" %% "http4s-dsl" % http4sVersion.value)
   }
+  object Fs2Data {
+    val xml: Def.Initialize[ModuleID] =
+      Def.setting("org.gnieh" %% "fs2-data-xml" % "1.9.1")
+  }
+  object LiHaoyi {
+    val sourcecode = "com.lihaoyi" %% "sourcecode" % "0.2.7"
+    val pprint = "com.lihaoyi" %% "pprint" % "0.8.1"
+  }
+
+  object Circe {
+    val version = "0.14.5"
+    val core = "io.circe" %% "circe-core" % version
+    val parser = "io.circe" %% "circe-parser" % version
+  }
 
   object Smithy4s {
     val version = "0.18.3"
@@ -22,7 +36,8 @@ object Dependencies {
     val core = "com.disneystreaming.smithy4s" %% "smithy4s-core" % version
     val json = "com.disneystreaming.smithy4s" %% "smithy4s-json" % version
     val http4s = "com.disneystreaming.smithy4s" %% "smithy4s-http4s" % version
-    val tests = "com.disneystreaming.smithy4s" %% "smithy4s-tests" % version % Test
+    val tests =
+      "com.disneystreaming.smithy4s" %% "smithy4s-tests" % version % Test
   }
 
   object Smithy {

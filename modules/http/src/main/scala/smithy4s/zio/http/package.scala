@@ -26,9 +26,9 @@ package object http {
       .filterNot(_.isEmpty)
       .map { param =>
         {
-          param.split("=") match {
+          param.split("=", 2) match {
             case Array(key, value) => key -> value
-            case _                 => throw new RuntimeException() // todo
+            case Array(k)          => (k, "")
           }
         }
       }

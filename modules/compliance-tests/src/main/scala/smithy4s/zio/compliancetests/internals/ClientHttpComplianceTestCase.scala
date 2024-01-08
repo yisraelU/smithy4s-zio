@@ -1,110 +1,35 @@
-/*
- *  Copyright 2021-2023 Disney Streaming
- *
- *  Licensed under the Tomorrow Open Source Technology License, Version 1.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *     https://disneystreaming.github.io/TOST-1.0.txt
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
-
 package smithy4s.zio.compliancetests.internals
 
-import smithy4s.{Document, Service}
+import cats.Eq
+import cats.effect.Async
+import cats.syntax.all.*
+import smithy.test.*
 import smithy4s.http.HttpContractError
-import smithy4s.zio.compliancetests.ComplianceTest.ComplianceResult
 import smithy4s.zio.compliancetests.TestConfig.*
 import smithy4s.zio.compliancetests.internals.eq.EqSchemaVisitor
-import smithy4s.zio.compliancetests.{ComplianceTest, ReverseRouter}
+import smithy4s.zio.compliancetests.{ComplianceTest, ReverseRouter, headerMonoid, matchRequest}
+import smithy4s.{Document, Service}
+import zio.http.{Body, Header, Headers, HttpApp, Request, Response, Status, URL}
+import zio.{Promise, Task, ZIO, durationInt}
 
-import scala.concurrent.duration.*
+import java.util.concurrent.TimeoutException
 
 private[compliancetests] class ClientHttpComplianceTestCase[
-    F[_],
     Alg[_[_, _, _, _, _]]
-](
-    reverseRouter: ReverseRouter[F],
-    serviceInstance: Service[Alg]
-)(implicit ce: Async[F]) {
+](reverseRouter: ReverseRouter, serviceInstance: Service[Alg])(implicit
+    ce: Async[Task]
+) {
   import reverseRouter.*
-  private val baseUri = uri"http://localhost/"
+  private val baseUri = URL.decode("http://localhost/").toOption.get
   private[compliancetests] implicit val service: Service[Alg] = serviceInstance
-
-  private def matchRequest(
-      request: Request[F],
-      testCase: HttpRequestTestCase
-  ): F[ComplianceResult] = {
-
-    val bodyAssert = request.bodyText.compile.string.flatMap { responseBody =>
-      assert.bodyEql(
-        responseBody,
-        testCase.body,
-        testCase.bodyMediaType
-      )
-    }
-
-    val resolvedHostPrefix =
-      testCase.resolvedHost
-        .zip(testCase.host)
-        .map { case (resolved, host) => resolved.split(host)(0) }
-
-    val resolvedHostAssert =
-      request.uri.host
-        .map(_.value)
-        .zip(resolvedHostPrefix)
-        .map { case (a, b) =>
-          assert.contains(a, b, "resolved host test :").pure[F]
-        }
-        .toList
-
-    val receivedPathSegments =
-      request.uri.path.segments.map(_.decoded())
-    val expectedPathSegments =
-      Uri.Path.unsafeFromString(testCase.uri).segments.map(_.decoded())
-
-    val expectedUri = baseUri
-      .withPath(Uri.Path.unsafeFromString(testCase.uri))
-      .withMultiValueQueryParams(
-        parseQueryParams(testCase.queryParams)
-      )
-    val pathAssert =
-      assert.eql(
-        receivedPathSegments,
-        expectedPathSegments,
-        "path test :"
-      )
-    val queryAssert = assert.testCase.checkQueryParameters(
-      testCase,
-      expectedUri.query.multiParams
-    )
-    val methodAssert = assert.eql(
-      request.method.name.toLowerCase(),
-      testCase.method.toLowerCase(),
-      "method test :"
-    )
-    val ioAsserts: List[F[ComplianceResult]] =
-      bodyAssert +: (resolvedHostAssert ++ List(
-        assert.testCase.checkHeaders(testCase, request.headers),
-        pathAssert,
-        queryAssert,
-        methodAssert
-      ).map(_.pure[F]))
-    ioAsserts.combineAll(cats.Applicative.monoid[F, ComplianceResult])
-  }
 
   private[compliancetests] def clientRequestTest[I, E, O, SE, SO](
       endpoint: service.Endpoint[I, E, O, SE, SO],
       testCase: HttpRequestTestCase
-  ): ComplianceTest[F] = {
-    type R[I_, E_, O_, SE_, SO_] = F[O_]
+  ): ComplianceTest[Task] = {
+    type R[I_, E_, O_, SE_, SO_] = Task[O_]
     val inputFromDocument = CanonicalSmithyDecoder.fromSchema(endpoint.input)
-    ComplianceTest[F](
+    ComplianceTest[Task](
       testCase.id,
       testCase.protocol,
       endpoint.id,
@@ -113,27 +38,29 @@ private[compliancetests] class ClientHttpComplianceTestCase[
       run = ce.defer {
         val input = inputFromDocument
           .decode(testCase.params.getOrElse(Document.obj()))
-          .liftTo[F]
+          .liftTo[Task]
 
-        deferred[Request[F]].flatMap { requestDeferred =>
-          val app = HttpApp[F] { req =>
-            req.body.compile.toVector
-              .map(fs2.Stream.emits(_))
-              .map(req.withBodyStream(_))
-              .flatMap(requestDeferred.complete(_))
-              .as(Response[F]())
+        Promise.make[Nothing, Request].flatMap { requestDeferred =>
+          val app: HttpApp[Any] = HttpApp.collectZIO { case req =>
+            req.body.asChunk
+              .map(chunk => req.copy(body = zio.http.Body.fromChunk(chunk)))
+              .flatMap(requestDeferred.succeed(_))
+              .mapBoth(Response.fromThrowable, _ => Response())
           }
-          reverseRoutes[Alg](app, testCase.host).use { client =>
+
+          reverseRoutes[Alg](app, testCase.host).flatMap { client =>
             input
               .flatMap { in =>
                 // avoid blocking the test forever...
-                val request = requestDeferred.get.timeout(1.second)
-                val output: F[O] = service
+                val request = requestDeferred.await.timeoutFail(
+                  new TimeoutException("Request timed out")
+                )(1.second)
+                val output: Task[O] = service
                   .toPolyFunction[R](client)
                   .apply(endpoint.wrap(in))
                 output.attemptNarrow[HttpContractError].productR(request)
               }
-              .flatMap { req => matchRequest(req, testCase) }
+              .flatMap { req => matchRequest(req, testCase, baseUri) }
           }
         }
       }
@@ -144,19 +71,19 @@ private[compliancetests] class ClientHttpComplianceTestCase[
       endpoint: service.Endpoint[I, E, O, SE, SO],
       testCase: HttpResponseTestCase,
       errorSchema: Option[ErrorResponseTest[_, E]] = None
-  ): ComplianceTest[F] = {
+  ): ComplianceTest[Task] = {
 
-    type R[I_, E_, O_, SE_, SO_] = F[O_]
+    type R[I_, E_, O_, SE_, SO_] = Task[O_]
 
     val dummyInput = DefaultSchemaVisitor(endpoint.input)
 
-    ComplianceTest[F](
+    ComplianceTest[Task](
       testCase.id,
       testCase.protocol,
       endpoint.id,
       testCase.documentation,
       clientRes,
-      run = ce.defer {
+      run = {
         implicit val outputEq: Eq[O] =
           EqSchemaVisitor(endpoint.output)
         val buildResult = {
@@ -166,49 +93,54 @@ private[compliancetests] class ClientHttpComplianceTestCase[
                 CanonicalSmithyDecoder.fromSchema(endpoint.output)
 
               (doc: Document) =>
-                outputDecoder
-                  .decode(doc)
-                  .liftTo[F]
+                ZIO.fromEither(
+                  outputDecoder
+                    .decode(doc)
+                )
             }
             .left
-            .map(_.errorEq[F])
+            .map(_.errorEq[Task])
         }
-        val status = Status.fromInt(testCase.code).liftTo[F]
+        val status = ZIO.fromOption(Status.fromInt(testCase.code)).orElseFail {
+          new IllegalArgumentException(
+            s"Invalid status code ${testCase.code}"
+          )
+        }
 
         status.flatMap { status =>
-          val app = HttpApp[F] { req =>
-            val body: fs2.Stream[F, Byte] =
-              testCase.body
-                .map { body =>
-                  fs2.Stream
-                    .emit(body)
-                    .through(fs2.text.utf8.encode)
-                }
-                .getOrElse(fs2.Stream.empty)
+          val app = HttpApp.collectZIO { case req =>
+            val body = testCase.body
 
-            val headers =
-              testCase.headers.map(_.toList).foldMap(Headers(_))
+            val headers = testCase.headers.map(_.toList).foldMap { headers =>
+              Headers(headers.map { case (k, v) =>
+                Header.Custom(k, v)
+              })
+            }
 
-            req.body.compile.drain.as(
-              Response[F](status)
-                .withBodyStream(body)
-                .withHeaders(headers)
-            )
+            req.body.asString
+              .as(
+                Response(
+                  status = status,
+                  body = body.map(Body.fromString(_)).getOrElse(Body.empty)
+                )
+                  .addHeaders(headers)
+              )
+              .mapBoth(Response.fromThrowable, identity)
           }
 
-          reverseRoutes[Alg](app).use { client =>
-            val doc = testCase.params.getOrElse(Document.obj())
+          reverseRoutes[Alg](app).flatMap { client =>
+            val doc: Document = testCase.params.getOrElse(Document.obj())
             buildResult match {
               case Left(onError) =>
-                val res: F[O] = service
+                val res: Task[O] = service
                   .toPolyFunction[R](client)
                   .apply(endpoint.wrap(dummyInput))
                 res
-                  .map { _ => assert.success }
+                  .as(assert.success)
                   .recoverWith { case ex: Throwable => onError(doc, ex) }
               case Right(onOutput) =>
                 onOutput(doc).flatMap { expectedOutput =>
-                  val res: F[O] = service
+                  val res: Task[O] = service
                     .toPolyFunction[R](client)
                     .apply(endpoint.wrap(dummyInput))
 
@@ -221,15 +153,16 @@ private[compliancetests] class ClientHttpComplianceTestCase[
                 }
             }
           }
+
         }
       }
     )
   }
 
-  def allClientTests(): List[ComplianceTest[F]] = {
+  def allClientTests(): List[ComplianceTest[Task]] = {
     def toResponse[I, E, O, SE, SO, A](
         endpoint: service.Endpoint[I, E, O, SE, SO]
-    ) = {
+    ): List[ComplianceTest[Task]] = {
       endpoint.error.toList
         .flatMap { errorschema =>
           errorschema.alternatives.flatMap { errorAlt =>

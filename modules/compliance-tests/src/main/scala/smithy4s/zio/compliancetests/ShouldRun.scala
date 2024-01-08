@@ -1,4 +1,3 @@
-
 package smithy4s.zio.compliancetests
 
 sealed trait ShouldRun

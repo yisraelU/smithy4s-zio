@@ -212,7 +212,7 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
                     requests: Map[String, Chain[Request]],
                     nextResponses: Map[String, Response]
                   ) {
-    def lastRequest(key: String): Task[Request] = 
+    def lastRequest(key: String): Task[Request] =
       ZIO.fromOption(requests
       .get(key)
       .flatMap(_.lastOption)).orElseFail(new Throwable(s"Found no request matching $key"))
@@ -226,7 +226,7 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
     def prepResponse(key: String, response: Response) =
       this.copy(nextResponses = nextResponses + (key -> response))
 
-    def getResponse(key: String): Task[Response] = 
+    def getResponse(key: String): Task[Response] =
       ZIO.fromOption(nextResponses.get(key)).orElseFail(new Throwable(s"Found no response matching $key"))
   }
 
@@ -299,5 +299,5 @@ abstract class PizzaClientSpec extends ZIOSpecDefault {
     else resource.orElse(retryResource(resource, max - 1))
 
 }
- 
-*/
+
+ */
