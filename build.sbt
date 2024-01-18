@@ -177,27 +177,13 @@ lazy val transformers = (project in file("modules/transformers"))
     Compile / resourceDirectory := sourceDirectory.value / "resources"
   )
 
-// fetch smithy4s
-lazy val cmd =
-  ("cs" :: "install" :: "--channel" :: "https://disneystreaming.github.io/coursier.json" :: "smithy4s" :: Nil).!!
 
-def isSmithy4sInstalled = Def.task {
-  List("which", "smithy4s").!!
-}
-
-def transformModel = Def.task {
-  val transforms = (transformers / Compile / fullClasspathAsJars).value
-    .map(_.data)
-  val s = (streams).value
-  val args =
-    if (transforms.isEmpty) List.empty
-    else List("--transformers", transforms.mkString(","))
-  val cmd = ("smithy4s" :: "transform-model" :: args)
-  println(cmd)
-  cmd.!!
-}
 def dumpModel(config: Configuration) =
   Def.task {
+    // fetch smithy4s
+    lazy val cmd =
+      ("cs" :: "install" :: "--channel" :: "https://disneystreaming.github.io/coursier.json" :: "smithy4s" :: Nil).!!
+
     val transforms = (config / smithy4sModelTransformers).value
 
     import sjsonnew._
