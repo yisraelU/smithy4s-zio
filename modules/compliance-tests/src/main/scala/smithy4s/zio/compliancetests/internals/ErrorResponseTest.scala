@@ -32,9 +32,9 @@ private[compliancetests] final case class ErrorResponseTest[A, E](
         .map { e =>
           (dispatcher(e), dispatchThrowable(throwable)) match {
             case (Some(expected), Some(result)) =>
-              assert.eql(result, expected)
+              asserts.eql(result, expected)
             case _ =>
-              assert.fail(
+              asserts.fail(
                 s"Could not decode error response to known model: $throwable"
               )
           }

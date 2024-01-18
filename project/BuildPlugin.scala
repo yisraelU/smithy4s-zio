@@ -146,18 +146,4 @@ object BuildPlugin extends AutoPlugin {
     "-Xfatal-warnings" // Fail the compilation if there are any warnings.
   )
 
-  lazy val compilerOptions2_12_Only =
-    // These are unrecognized for Scala 2.13.
-    Seq(
-      "-Xfuture", // Turn on future language features.
-      "-Xlint:by-name-right-associative", // By-name parameter of right associative operator.
-      "-Xlint:nullary-override", // Warn when non-nullary `def f()' overrides nullary `def f'.
-      "-Xlint:unsound-match", // Pattern match may not be typesafe.
-      "-Yno-adapted-args", // Do not adapt an argument list (either by inserting () or creating a tuple) to match the receiver.
-      "-Ypartial-unification", // Enable partial unification in type constructor inference
-      "-Ywarn-inaccessible", // Warn about inaccessible types in method signatures.
-      "-Ywarn-infer-any", // Warn when a type argument is inferred to be `Any`.
-      "-Ywarn-nullary-override", // Warn when non-nullary `def f()' overrides nullary `def f'.
-      "-Ywarn-nullary-unit" // Warn when nullary methods return Unit.
-    )
 }

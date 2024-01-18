@@ -2,7 +2,6 @@ package smithy4s.zio.compliancetests
 
 import smithy4s.{Service, ShapeTag}
 import smithy4s.kinds.FunctorAlgebra
-import smithy4s.zio.http.HttpRoutes
 import zio.Task
 
 /* A construct encapsulating the action of turning an algebra implementation into

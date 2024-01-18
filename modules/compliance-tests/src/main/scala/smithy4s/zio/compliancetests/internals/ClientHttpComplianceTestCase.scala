@@ -7,7 +7,12 @@ import smithy.test.*
 import smithy4s.http.HttpContractError
 import smithy4s.zio.compliancetests.TestConfig.*
 import smithy4s.zio.compliancetests.internals.eq.EqSchemaVisitor
-import smithy4s.zio.compliancetests.{ComplianceTest, ReverseRouter, headerMonoid, matchRequest}
+import smithy4s.zio.compliancetests.{
+  ComplianceTest,
+  ReverseRouter,
+  headerMonoid,
+  matchRequest
+}
 import smithy4s.{Document, Service}
 import zio.http.{Body, Header, Headers, HttpApp, Request, Response, Status, URL}
 import zio.{Promise, Task, ZIO, durationInt}
@@ -136,7 +141,7 @@ private[compliancetests] class ClientHttpComplianceTestCase[
                   .toPolyFunction[R](client)
                   .apply(endpoint.wrap(dummyInput))
                 res
-                  .as(assert.success)
+                  .as(asserts.success)
                   .recoverWith { case ex: Throwable => onError(doc, ex) }
               case Right(onOutput) =>
                 onOutput(doc).flatMap { expectedOutput =>
@@ -145,7 +150,7 @@ private[compliancetests] class ClientHttpComplianceTestCase[
                     .apply(endpoint.wrap(dummyInput))
 
                   res.map { output =>
-                    assert.eql(
+                    asserts.eql(
                       output,
                       expectedOutput
                     )

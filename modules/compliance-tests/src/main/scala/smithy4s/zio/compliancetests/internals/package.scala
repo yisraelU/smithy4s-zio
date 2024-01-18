@@ -60,7 +60,7 @@ package object internals {
       response: Response
   ): ZIO[Any, Throwable, ComplianceResult] = {
     response.body.asString.map(message =>
-      assert.fail(
+      asserts.fail(
         s"Expected either an IntendedShortCircuit error or a 5xx response, but got a response with status ${response.status} and message ${message}"
       )
     )

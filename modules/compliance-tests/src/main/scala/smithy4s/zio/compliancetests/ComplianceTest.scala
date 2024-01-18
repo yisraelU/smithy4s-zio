@@ -18,6 +18,7 @@ package smithy4s.zio.compliancetests
 
 import smithy4s.ShapeId
 import smithy4s.zio.compliancetests.ComplianceTest.ComplianceResult
+import zio.test.{Assertion, Spec, TestResult}
 
 case class ComplianceTest[F[_]](
     id: String,
@@ -31,5 +32,5 @@ case class ComplianceTest[F[_]](
 }
 
 object ComplianceTest {
-  type ComplianceResult = cats.data.ValidatedNel[String, Unit]
+  type ComplianceResult = TestResult
 }

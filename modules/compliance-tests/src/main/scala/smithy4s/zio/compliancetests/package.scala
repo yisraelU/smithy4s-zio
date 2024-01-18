@@ -3,9 +3,13 @@ package smithy4s.zio
 import cats.{Eq, Monoid}
 import smithy.test.HttpRequestTestCase
 import smithy4s.zio.compliancetests.ComplianceTest.ComplianceResult
-import smithy4s.zio.compliancetests.internals.assert.*
-import smithy4s.zio.compliancetests.internals.{assert, parseQueryParams}
+import smithy4s.zio.compliancetests.internals.asserts.*
+import smithy4s.zio.compliancetests.internals.{asserts, parseQueryParams}
 import cats.syntax.all.*
+import smithy4s.zio.compliancetests.internals.asserts.testCase.{
+  checkHeaders,
+  checkQueryParameters
+}
 import zio.{Chunk, Promise, Task, ZIO, durationInt}
 import zio.http.{
   Body,
@@ -15,6 +19,7 @@ import zio.http.{
   Method,
   QueryParams,
   Request,
+  Routes,
   URL
 }
 
@@ -22,6 +27,8 @@ import java.util.concurrent.TimeoutException
 import zio.interop.catz.core.*
 
 package object compliancetests {
+
+  type HttpRoutes = Routes[Any, Throwable]
 
   private[compliancetests] def makeRequest(
       baseUri: URL,
@@ -108,7 +115,7 @@ package object compliancetests {
         expectedPathSegments.toList,
         "path test :"
       )
-    val queryAssert: ComplianceResult = assert.testCase.checkQueryParameters(
+    val queryAssert: ComplianceResult = checkQueryParameters(
       testCase,
       expectedUrl.queryParams.map
     )
@@ -118,7 +125,7 @@ package object compliancetests {
       "method test :"
     )
     val ioAsserts = (resolvedHostAssert ++ List(
-      assert.testCase.checkHeaders(testCase, request.headers),
+      checkHeaders(testCase, request.headers),
       pathAssert,
       queryAssert,
       methodAssert
@@ -141,10 +148,10 @@ package object compliancetests {
     inputPromise.await
       .timeoutFail(new TimeoutException())(1.second)
       .map { foundInput =>
-        assert.eql(foundInput, testModel)
+        asserts.eql(foundInput, testModel)
       }
       .catchSome { case _: TimeoutException =>
-        ZIO.succeed(assert.fail(timeOutMessage))
+        ZIO.succeed(asserts.fail(timeOutMessage))
       }
   }
 

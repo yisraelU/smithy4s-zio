@@ -5,7 +5,9 @@ import cats.implicits.catsSyntaxSemigroup
 import smithy.test.*
 import smithy4s.codecs.PayloadError
 import smithy4s.kinds.*
+import smithy4s.zio.compliancetests.ComplianceTest.ComplianceResult
 import smithy4s.zio.compliancetests.TestConfig.*
+import smithy4s.zio.compliancetests.internals.asserts.testResultMonoid
 import smithy4s.zio.compliancetests.internals.eq.EqSchemaVisitor
 import smithy4s.zio.compliancetests.{
   ComplianceTest,
@@ -14,8 +16,9 @@ import smithy4s.zio.compliancetests.{
   runCompare
 }
 import smithy4s.{Document, Service}
-import zio.http.{Response, URL}
+import zio.http.{Headers, Response, Status, URL}
 import zio.interop.catz.concurrentInstance
+import zio.test.TestResult
 import zio.{IO, Promise, Task, ZIO}
 private[compliancetests] class ServerHttpComplianceTestCase[
     F[_],
@@ -139,23 +142,25 @@ private[compliancetests] class ServerHttpComplianceTestCase[
 
         routes(fakeImpl)(amendedService)
           .flatMap { server =>
-            server.sandbox.toHttpApp
-              .runZIO(syntheticRequest)
-              .flatMap { resp =>
-                resp.body.asString
-                  .map { body =>
-                    (body, resp.status, resp.headers)
-                  }
-              }
+            val x: ZIO[Any, Throwable, (String, Status, Headers)] = {
+              server.sandbox.toHttpApp
+                .runZIO(syntheticRequest)
+                .flatMap { resp =>
+                  resp.body.asString
+                    .map { body =>
+                      (body, resp.status, resp.headers)
+                    }
+                }
+            }
+            x
               .map { case (actualBody, status, headers) =>
-                assert
+                val body: ComplianceResult = asserts
                   .bodyEql(actualBody, testCase.body, testCase.bodyMediaType)
-                  .map { bodyAssert =>
-                    bodyAssert |+|
-                      assert.testCase.checkHeaders(testCase, headers) |+|
-                      assert.eql(status.code, testCase.code)
-                  }
+                body |+|
+                  asserts.testCase.checkHeaders(testCase, headers) |+|
+                  asserts.eql(status.code, testCase.code)
               }
+
           }
       }
     )
