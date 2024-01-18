@@ -201,7 +201,7 @@ private[compliancetests] class ServerHttpComplianceTestCase[
         .get(HttpRequestTests)
         .map(_.value)
         .getOrElse(Nil)
-        .filter(_.protocol == protocolTag.id)
+       // .filter(_.protocol == protocolTag.id)
         .filter(tc => tc.appliesTo.forall(_ == AppliesTo.SERVER))
         .map(tc => serverRequestTest(endpoint, tc))
 
@@ -209,7 +209,7 @@ private[compliancetests] class ServerHttpComplianceTestCase[
         .get(HttpResponseTests)
         .map(_.value)
         .getOrElse(Nil)
-        .filter(_.protocol == protocolTag.id)
+      //  .filter(_.protocol == protocolTag.id)
         .filter(tc => tc.appliesTo.forall(_ == AppliesTo.SERVER))
         .map(tc => serverResponseTest(endpoint, tc))
 

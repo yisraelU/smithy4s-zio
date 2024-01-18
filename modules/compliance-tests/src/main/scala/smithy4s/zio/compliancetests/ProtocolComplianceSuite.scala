@@ -99,8 +99,8 @@ abstract class ProtocolComplianceSuite extends ZIOSpecDefault {
 
   private[smithy4s] def fileFromEnv(key: String): Task[Path] = {
 
-
-    ZIO.attempt(Option(System.getenv(key)))
+    ZIO
+      .attempt(Option(System.getenv(key)))
       .flatMap(
         {
           ZIO

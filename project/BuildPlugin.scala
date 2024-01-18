@@ -1,62 +1,19 @@
-import sbt.AutoPlugin
-import scalafix.sbt.ScalafixPlugin.autoImport._
-import xerial.sbt.Sonatype.SonatypeKeys._
-import sbt._
-import sbt.Keys._
-import com.jsuereth.sbtpgp.PgpKeys._
-import sbt.internal.LogManager
-import sbt.internal.util.BufferedAppender
-import java.io.PrintStream
-import sbt.internal.ProjectMatrix
-import sbtprojectmatrix.ProjectMatrixPlugin.autoImport.virtualAxes
-import org.scalajs.sbtplugin.ScalaJSPlugin
-import scala.scalanative.sbtplugin.ScalaNativePlugin
-import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport.scalaJSLinkerConfig
-import org.scalajs.linker.interface.ModuleKind
-import org.scalajs.jsenv.nodejs.NodeJSEnv
-import com.github.sbt.git.SbtGit.git
-import java.time.OffsetDateTime
+import sbt.*
+import sbt.Keys.*
 
 object BuildPlugin extends AutoPlugin {
 
-  val Scala212 = "2.12.18"
-  val Scala213 = "2.13.10"
-  val Scala3 = "3.3.1"
 
-  sealed trait Platform
-
-  case object JSPlatform extends Platform
-
-  case object NativePlatform extends Platform
-
-  case object JVMPlatform extends Platform
-
-  lazy val jvmDimSettings = simpleJVMLayout
-  lazy val nativeDimSettings = simpleNativeLayout ++ Seq(
-    Test / fork := false
+  lazy val doNotPublishArtifact = Seq(
+    publish / skip := true,
+    publish := {},
+    publishArtifact := false,
+    Compile / packageDoc / publishArtifact := false,
+    Compile / packageSrc / publishArtifact := false,
+    Compile / packageBin / publishArtifact := false
   )
 
-  lazy val simpleJSLayout = simpleLayout(JSPlatform)
-  lazy val simpleJVMLayout = simpleLayout(JVMPlatform)
-  lazy val simpleNativeLayout = simpleLayout(NativePlatform)
 
-  // Mill-like simple layout
-  def simpleLayout(
-      platform: Platform,
-      catsEffect: Boolean = false
-  ): Seq[Setting[_]] = {
-
-    val baseDir = Def.setting {
-      sourceDirectory.value.getParentFile
-    }
-
-    val platformSuffix = Def.setting {
-      platform match {
-        case JVMPlatform    => Seq("-jvm", "-jvm-native", "-jvm-js")
-        case JSPlatform     => Seq("-js", "-jvm-js", "-js-native")
-        case NativePlatform => Seq("-native", "-jvm-native", "-js-native")
-      }
-    }
 
     val scalaVersionSuffix = Def
       .setting {
@@ -68,32 +25,6 @@ object BuildPlugin extends AutoPlugin {
         }
       }
 
-    val crossCompilationDirs = Def.setting {
-      val empty = Seq("")
-
-      // god forbid we ever have to put files in these folders
-      val crissCross = for {
-        platform <- platformSuffix.value ++ empty
-        version <- scalaVersionSuffix.value ++ empty
-      } yield s"src$platform$version"
-      crissCross
-    }
-
-    Seq(
-      Compile / unmanagedSourceDirectories := Seq(
-        baseDir.value / "src"
-      ) ++ crossCompilationDirs.value.map(baseDir.value / _),
-      Compile / unmanagedResourceDirectories := Seq(
-        baseDir.value / "resources"
-      ),
-      Test / unmanagedSourceDirectories := Seq(
-        baseDir.value / "test" / "src"
-      ) ++ crossCompilationDirs.value.map(baseDir.value / "test" / _),
-      Test / unmanagedResourceDirectories := Seq(
-        baseDir.value / "test" / "resources"
-      )
-    )
-  }
 
   lazy val compilerPlugins = Seq(
     libraryDependencies ++= {
