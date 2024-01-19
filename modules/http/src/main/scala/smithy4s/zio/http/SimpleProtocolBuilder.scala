@@ -23,10 +23,10 @@ abstract class SimpleProtocolBuilder[P](
   ): ServiceBuilder[Alg] = new ServiceBuilder(service)
 
   def routes[Alg[_[_, _, _, _, _]]](
-              impl: FunctorAlgebra[Alg, Task]
-            )(implicit
-              service: smithy4s.Service[Alg]
-            ): RouterBuilder[Alg, P] = {
+      impl: FunctorAlgebra[Alg, Task]
+  )(implicit
+      service: smithy4s.Service[Alg]
+  ): RouterBuilder[Alg, P] = {
     new RouterBuilder[Alg, P](
       protocolTag,
       simpleProtocolCodecs,

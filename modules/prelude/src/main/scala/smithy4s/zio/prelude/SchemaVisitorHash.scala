@@ -55,7 +55,6 @@ final class SchemaVisitorHash(
       key: Schema[K],
       value: Schema[V]
   ): Hash[Map[K, V]] = {
-    implicit val keyHash: Hash[K] = self(key)
     implicit val valueHash: Hash[V] = self(value)
     Hash[Map[K, V]]
   }
@@ -159,7 +158,7 @@ final class SchemaVisitorHash(
 
     val altHashU: AltHash[U] = dispatch.compile(precompiler)
     new Hash[U] {
-      def checkEqual(x: U, y: U): Boolean = altHashU.equals(x, y)
+      def checkEqual(x: U, y: U): Boolean = altHashU.checkEquals(x, y)
       def hash(x: U): Int = altHashU.hash(x)
     }
   }
