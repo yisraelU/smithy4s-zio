@@ -2,7 +2,7 @@ package smithy4s.zio.http
 
 import smithy4s.zio.http.internal.EffectOps
 import smithy4s.{Endpoint, Service}
-import zio.{Task, ZIO}
+import zio.Task
 
 object ServerEndpointMiddleware {
 
