@@ -16,13 +16,12 @@ import smithy4s.example.{
 import smithy4s.kinds.PolyFunction5
 import smithy4s.Service
 import zio.http.Request
-import zio.{IO, Scope, Task, ZIO}
+import zio.{Scope, Task, ZIO}
 import zio.test.{
   Assertion,
   Spec,
   TestEnvironment,
   ZIOSpecDefault,
-  assertTrue,
   assertZIO
 }
 

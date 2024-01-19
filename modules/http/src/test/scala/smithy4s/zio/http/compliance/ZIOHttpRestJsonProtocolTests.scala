@@ -42,7 +42,7 @@ object ZIOHttpRestJsonProtocolTests extends ProtocolComplianceSuite {
         borrowedTests.simpleRestJsonBorrowedTests
           .getOrElse(ShapeId("aws.protocols", "restJson1"), AllowRules.empty)
           .filterRules(rule =>
-            !(weaver.Platform.isJS && jsDisallowed.exists(rule.id.matches))
+              jsDisallowed.exists(rule.id.matches)
           )
       }
       .map { decodedRules => (c: compliancetests.ComplianceTest[Task]) =>
