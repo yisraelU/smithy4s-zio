@@ -98,7 +98,7 @@ final class SchemaVisitorHash(
       }
 
       def checkEqual(l: S, r: S): Boolean = {
-        hashInstances.forall(_.equals(l, r))
+        hashInstances.forall(_.equal(l, r))
       }
     }
   }
@@ -148,7 +148,7 @@ final class SchemaVisitorHash(
             altA.project.lift(u) match {
               case None => false // U is not an A.
               case Some(a2) =>
-                hashA.equals(a, a2) // U is an A, we delegate the comparison
+                hashA.equal(a, a2) // U is an A, we delegate the comparison
             }
           override def hash(a: A): Int = {
             combineHash(hashA.hash(a), labelHash)
@@ -186,7 +186,7 @@ final class SchemaVisitorHash(
       override def hash(x: A): Int = hashA.value.hash(x)
 
       override protected def checkEqual(l: A, r: A): Boolean =
-        hashA.value.equals(l, r)
+        hashA.value.equal(l, r)
     }
   }
 
