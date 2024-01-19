@@ -273,7 +273,7 @@ object HashVisitorSpec extends zio.test.ZIOSpecDefault {
 object HashTestUtils {
   implicit val recursiveOptionEqual: Equal[RecursiveFoo] = {
     (l: RecursiveFoo, r: RecursiveFoo) =>
-      Equal[Option[RecursiveFoo]].equals(l.foo, r.foo)
+      Equal[Option[RecursiveFoo]].equal(l.foo, r.foo)
   }
   implicit val recursiveOptionHash: Hash[RecursiveFoo] = {
     new Hash[RecursiveFoo] {
@@ -288,7 +288,7 @@ object HashTestUtils {
           l: RecursiveFoo,
           r: RecursiveFoo
       ): Boolean =
-        Equal[RecursiveFoo].equals(l, r)
+        Equal[RecursiveFoo].equal(l, r)
     }
   }
 

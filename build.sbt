@@ -40,7 +40,7 @@ lazy val prelude = (project in file("modules/prelude"))
   .settings(
     name := s"$projectPrefix-prelude",
     libraryDependencies ++= Seq(
-      Dependencies.Smithy4s.core,
+      Dependencies.Smithy4s.core.value,
       Dependencies.ZIO.prelude,
       Dependencies.ZIO.schema,
       Dependencies.ZIO.test,
@@ -54,7 +54,7 @@ lazy val schema = (project in file("modules/schema"))
   .settings(
     name := s"$projectPrefix-schema",
     libraryDependencies ++= Seq(
-      Dependencies.Smithy4s.core,
+      Dependencies.Smithy4s.core.value,
       Dependencies.ZIO.schema,
       Dependencies.ZIO.test,
       Dependencies.ZIO.testSbt,
@@ -67,10 +67,10 @@ lazy val `compliance-tests` = (project in file("modules/compliance-tests"))
   .settings(
     name := s"$projectPrefix-compliance-test",
     libraryDependencies ++= Seq(
-      Dependencies.Smithy4s.core,
-      Dependencies.Smithy4s.json,
-      Dependencies.Smithy4s.tests,
-      Dependencies.Smithy4s.dynamic,
+      Dependencies.Smithy4s.core.value,
+      Dependencies.Smithy4s.json.value,
+      Dependencies.Smithy4s.tests.value,
+      Dependencies.Smithy4s.dynamic.value,
       Dependencies.Circe.parser,
       Dependencies.ZIO.catsInterop,
       Dependencies.Fs2Data.xml.value,
@@ -85,40 +85,30 @@ lazy val `compliance-tests` = (project in file("modules/compliance-tests"))
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
   .enablePlugins(Smithy4sCodegenPlugin)
+
 lazy val http = (project in file("modules/http"))
   .dependsOn(
-    scenarios,
+    scenarios % "test->compile",
     `compliance-tests` % "test->compile",
-    transformers
+    transformers % "test->test"
   )
   .settings(
     name := s"$projectPrefix-http",
     libraryDependencies ++= Seq(
-      Dependencies.Smithy4s.core,
-      Dependencies.Smithy4s.json,
-      Dependencies.Smithy4s.http4s,
-      Dependencies.Alloy.core % Test,
-      Dependencies.Smithy.testTraits % Test,
-      Dependencies.Alloy.`protocol-tests` ,
+      Dependencies.Smithy4s.core.value,
+      Dependencies.Smithy4s.json.value,
+      Dependencies.Smithy4s.http4s.value,
       Dependencies.Typelevel.vault.value,
+      Dependencies.Alloy.core % Test,
       Dependencies.ZIO.http,
       Dependencies.ZIO.test,
       Dependencies.ZIO.testSbt,
-      Dependencies.Smithy4s.tests,
-    Dependencies.Smithy.build % Test,
+      Dependencies.Smithy.build % Test
     ),
     Test / complianceTestDependencies := Seq(
       Dependencies.Alloy.`protocol-tests`
     ),
     (Test / smithy4sModelTransformers) := List("ProtocolTransformer"),
-    Test / smithy4sAllowedNamespaces := List("smithy.test","aws","smithy4s.example.guides.auth",
-      "aws.api",
-      "aws.auth",
-      "aws.customizations",
-      "aws.protocols",
-      "aws.protocoltests"
-    ),
-
     (Test / resourceGenerators) := Seq(dumpModel(Test).taskValue),
     (Test / fork) := true,
     (Test / envVars) ++= {
@@ -142,7 +132,7 @@ lazy val scenarios = (project in file("modules/test-scenarios"))
     name := s"$projectPrefix-tests",
     libraryDependencies ++= {
       Seq(
-        Dependencies.Smithy4s.core
+        Dependencies.Smithy4s.core.value
       )
     },
     Compile / smithy4sInputDirs := Seq(sourceDirectory.value / "smithy"),
@@ -156,12 +146,13 @@ lazy val examples = (project in file("modules/examples"))
     name := s"$projectPrefix-examples",
     fork / run := true,
     libraryDependencies ++= Seq(
-      Dependencies.Smithy4s.http4s,
+      Dependencies.Smithy4s.http4s.value,
       Dependencies.Http4s.emberServer.value,
       Dependencies.ZIO.catsInterop
-    )
+    ),
+    Compile / smithy4sAllowedNamespaces := List("example.todo")
   )
-  .dependsOn(http, prelude)
+  .dependsOn(http)
   .enablePlugins(Smithy4sCodegenPlugin)
 
 lazy val transformers = (project in file("modules/transformers"))
@@ -176,7 +167,6 @@ lazy val transformers = (project in file("modules/transformers"))
     ),
     Compile / resourceDirectory := sourceDirectory.value / "resources"
   )
-
 
 def dumpModel(config: Configuration) =
   Def.task {
@@ -216,14 +206,14 @@ def dumpModel(config: Configuration) =
       )
     val s = (config / streams).value
 
-    lazy val modelTransformersCp = (transformers / Compile / fullClasspathAsJars).value
-      .map(_.data)
+    lazy val modelTransformersCp =
+      (transformers / Compile / fullClasspathAsJars).value
+        .map(_.data)
 
-
-    val localJars =  modelTransformersCp.filter(_.isFile).map(_.getAbsolutePath)
+    val localJars = modelTransformersCp.filter(_.isFile).map(_.getAbsolutePath)
     val localJarsArg =
-        if (localJars.isEmpty) List.empty
-        else List("--local-jars", localJars.mkString(","))
+      if (localJars.isEmpty) List.empty
+      else List("--local-jars", localJars.mkString(","))
     val args =
       if (transforms.isEmpty) List.empty
       else List("--transformers", transforms.mkString(","))
@@ -240,8 +230,8 @@ def dumpModel(config: Configuration) =
             ) { case ((changed, deps), outputs) =>
               if (changed || outputs.isEmpty) {
                 val cmd = ("smithy4s" :: "dump-model" :: deps ::: allArgs)
-                  println(cmd)
-                  val res = cmd.!!
+                println(cmd)
+                val res = cmd.!!
 
                 val file =
                   (config / resourceManaged).value / "compliance-tests.json"

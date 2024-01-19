@@ -18,7 +18,6 @@ import smithy4s.zio.compliancetests.{
 import smithy4s.{Document, Service}
 import zio.http.{Headers, Response, Status, URL}
 import zio.interop.catz.concurrentInstance
-import zio.test.TestResult
 import zio.{IO, Promise, Task, ZIO}
 private[compliancetests] class ServerHttpComplianceTestCase[
     F[_],
@@ -201,7 +200,7 @@ private[compliancetests] class ServerHttpComplianceTestCase[
         .get(HttpRequestTests)
         .map(_.value)
         .getOrElse(Nil)
-       // .filter(_.protocol == protocolTag.id)
+        // .filter(_.protocol == protocolTag.id)
         .filter(tc => tc.appliesTo.forall(_ == AppliesTo.SERVER))
         .map(tc => serverRequestTest(endpoint, tc))
 
@@ -209,7 +208,7 @@ private[compliancetests] class ServerHttpComplianceTestCase[
         .get(HttpResponseTests)
         .map(_.value)
         .getOrElse(Nil)
-      //  .filter(_.protocol == protocolTag.id)
+        //  .filter(_.protocol == protocolTag.id)
         .filter(tc => tc.appliesTo.forall(_ == AppliesTo.SERVER))
         .map(tc => serverResponseTest(endpoint, tc))
 

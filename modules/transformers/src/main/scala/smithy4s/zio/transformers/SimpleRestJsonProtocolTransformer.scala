@@ -7,7 +7,12 @@ import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.node.Node
 import software.amazon.smithy.model.shapes.{ModelSerializer, Shape, ShapeId}
 import software.amazon.smithy.model.traits.Trait
-import software.amazon.smithy.protocoltests.traits.{HttpRequestTestCase, HttpRequestTestsTrait, HttpResponseTestCase, HttpResponseTestsTrait}
+import software.amazon.smithy.protocoltests.traits.{
+  HttpRequestTestCase,
+  HttpRequestTestsTrait,
+  HttpResponseTestCase,
+  HttpResponseTestsTrait
+}
 
 import java.util.function.BiFunction
 import scala.jdk.CollectionConverters.{CollectionHasAsScala, SeqHasAsJava}
@@ -22,7 +27,9 @@ final class SimpleRestJsonProtocolTransformer extends ProjectionTransformer {
       (_: Shape, theTrait: Trait) => {
         theTrait match {
           case _: RestJson1Trait => {
-            println("RestJson1Trait--------------------------------------------")
+            println(
+              "RestJson1Trait--------------------------------------------"
+            )
             new SimpleRestJsonTrait()
           }
           case c: HttpRequestTestsTrait =>
@@ -37,8 +44,7 @@ final class SimpleRestJsonProtocolTransformer extends ProjectionTransformer {
                     req.toBuilder
                       .protocol(ShapeId.from("alloy#simpleRestJson"))
                       .build()
-                  }
-                  else req
+                  } else req
               }.asJava
             )
           case c: HttpResponseTestsTrait =>
@@ -48,19 +54,23 @@ final class SimpleRestJsonProtocolTransformer extends ProjectionTransformer {
                 case res: HttpResponseTestCase =>
                   if (
                     res.getProtocol == ShapeId.from("aws.protocols#restJson1")
-                  )
-                    {println("RestJson1Trait inb tests")
+                  ) {
+                    println("RestJson1Trait inb tests")
                     res.toBuilder
                       .protocol(ShapeId.from("alloy#simpleRestJson"))
-                      .build()}
-                  else res
+                      .build()
+                  } else res
               }.asJava
             )
           case _ => theTrait
         }
       }
 
-    println(Node.prettyPrintJson(ModelSerializer.builder().build.serialize(ctx.getModel())))
+    println(
+      Node.prettyPrintJson(
+        ModelSerializer.builder().build.serialize(ctx.getModel())
+      )
+    )
 
     ctx.getTransformer().mapTraits(ctx.getModel(), traitMapper)
   }

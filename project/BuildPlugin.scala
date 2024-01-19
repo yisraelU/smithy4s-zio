@@ -3,7 +3,6 @@ import sbt.Keys.*
 
 object BuildPlugin extends AutoPlugin {
 
-
   lazy val doNotPublishArtifact = Seq(
     publish / skip := true,
     publish := {},
@@ -13,18 +12,15 @@ object BuildPlugin extends AutoPlugin {
     Compile / packageBin / publishArtifact := false
   )
 
-
-
-    val scalaVersionSuffix = Def
-      .setting {
-        scalaBinaryVersion.value match {
-          case "2.11" => Seq("-2", "-2.11")
-          case "2.12" => Seq("-2", "-2.12")
-          case "2.13" => Seq("-2", "-2.13")
-          case _      => Seq("-3")
-        }
+  val scalaVersionSuffix = Def
+    .setting {
+      scalaBinaryVersion.value match {
+        case "2.11" => Seq("-2", "-2.11")
+        case "2.12" => Seq("-2", "-2.12")
+        case "2.13" => Seq("-2", "-2.13")
+        case _      => Seq("-3")
       }
-
+    }
 
   lazy val compilerPlugins = Seq(
     libraryDependencies ++= {

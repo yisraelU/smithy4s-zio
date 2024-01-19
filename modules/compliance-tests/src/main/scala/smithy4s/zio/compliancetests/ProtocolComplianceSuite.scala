@@ -9,7 +9,6 @@ import zio.test.*
 import zio.{Scope, Task, ZIO}
 
 import java.nio.file.{Path, Paths}
-import scala.jdk.CollectionConverters.MapHasAsScala
 
 abstract class ProtocolComplianceSuite extends ZIOSpecDefault {
 
