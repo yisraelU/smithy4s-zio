@@ -17,11 +17,16 @@ abstract class SimpleProtocolBuilder[P](
 )(implicit
     protocolTag: ShapeTag[P]
 ) {
-  def routes[Alg[_[_, _, _, _, _]]](
-      impl: FunctorAlgebra[Alg, Task]
-  )(implicit
+
+  def apply[Alg[_[_, _, _, _, _]]](
       service: smithy4s.Service[Alg]
-  ): RouterBuilder[Alg, P] = {
+  ): ServiceBuilder[Alg] = new ServiceBuilder(service)
+
+  def routes[Alg[_[_, _, _, _, _]]](
+              impl: FunctorAlgebra[Alg, Task]
+            )(implicit
+              service: smithy4s.Service[Alg]
+            ): RouterBuilder[Alg, P] = {
     new RouterBuilder[Alg, P](
       protocolTag,
       simpleProtocolCodecs,
@@ -32,16 +37,16 @@ abstract class SimpleProtocolBuilder[P](
     )
   }
 
-  def apply[Alg[_[_, _, _, _, _]]](
-      service: smithy4s.Service[Alg]
-  ): ServiceBuilder[Alg] = new ServiceBuilder(service)
-
   class ServiceBuilder[
       Alg[_[_, _, _, _, _]]
   ] private[http] (val service: smithy4s.Service[Alg]) {
     self =>
 
-    def routes(impl: FunctorAlgebra[Alg, Task]): RouterBuilder[Alg, P] =
+    def routes(
+        impl: FunctorAlgebra[Alg, Task]
+    )(implicit
+        service: smithy4s.Service[Alg]
+    ): RouterBuilder[Alg, P] = {
       new RouterBuilder[Alg, P](
         protocolTag,
         simpleProtocolCodecs,
@@ -50,6 +55,7 @@ abstract class SimpleProtocolBuilder[P](
         PartialFunction.empty,
         Endpoint.Middleware.noop
       )
+    }
 
     def client(client: Client) =
       new ClientBuilder[Alg, P](simpleProtocolCodecs, client, service)

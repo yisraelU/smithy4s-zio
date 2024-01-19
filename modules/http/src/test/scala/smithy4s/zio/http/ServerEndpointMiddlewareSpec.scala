@@ -1,36 +1,18 @@
-/*/*
- *  Copyright 2021-2023 Disney Streaming
- *
- *  Licensed under the Tomorrow Open Source Technology License, Version 1.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *     https://disneystreaming.github.io/TOST-1.0.txt
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
+/*
+package smithy4s.zio.http
 
-package smithy4s
-package http4s
 
-import cats.Eq
-import cats.data.OptionT
-import cats.effect.IO
-import cats.effect.Resource
-import cats.implicits._
+
+import cats.implicits.*
 import fs2.Collector
-import org.http4s.HttpApp
-import org.http4s.Uri
-import org.http4s._
-import org.http4s.client.Client
-import smithy4s.example.hello._
-import weaver._
+import smithy4s.Hints
+import smithy4s.example.hello.*
+import zio.{Scope, Task, ZIO}
+import zio.http.Request.post
+import zio.http.{Body, HttpApp, Method, Request, URL}
+import zio.test.{Assertion, Spec, TestEnvironment, TestResult, ZIOSpecDefault}
 
-object ServerEndpointMiddlewareSpec extends SimpleIOSuite {
+object ServerEndpointMiddlewareSpec extends ZIOSpecDefault {
 
   private implicit val greetingEq: Eq[Greeting] = Eq.fromUniversalEquals
   private implicit val throwableEq: Eq[Throwable] = Eq.fromUniversalEquals
@@ -39,28 +21,29 @@ object ServerEndpointMiddlewareSpec extends SimpleIOSuite {
         "Expected to recover via flatmapError or mapError"
       )
 
+  override def spec: Spec[TestEnvironment with Scope, Any] =
+    suite("middleware testing") {
   test("server - middleware can throw and mapped / flatmapped") {
-    val middleware = new ServerEndpointMiddleware.Simple[IO]() {
+    val middleware = new ServerEndpointMiddleware.Simple[Task]() {
       def prepareWithHints(
           serviceHints: Hints,
           endpointHints: Hints
-      ): HttpApp[IO] => HttpApp[IO] = { inputApp =>
-        HttpApp[IO] { _ => IO.raiseError(new MiddlewareException) }
+      ): HttpApp[Any] => HttpApp[Any] = { inputApp =>
+        HttpApp[Any] { _ => ZIO.fail(new MiddlewareException }
       }
     }
-    def runOnService(service: HttpRoutes[IO]): IO[Expectations] =
-      service(Request[IO](Method.POST, Uri.unsafeFromString("/bob")))
-        .flatMap(res => OptionT.pure(expect.eql(res.status.code, 599)))
-        .getOrElse(
-          failure("unable to run request")
-        )
+    def runOnService(service: HttpRoutes): ZIO[Any, Nothing, TestResult] = {
+      service.sandbox.toHttpApp.runZIO(post( "/bob", Body.empty))
+        .map(res =>  zio.test.assert(res.status.code)(Assertion.equalTo(599)))
+    }
+
 
     val pureCheck = runOnService(
-      SimpleRestJsonBuilder
+      SimpleRestJsonBuilder(HelloImpl)
         .routes(HelloImpl)
         .middleware(middleware)
         .flatMapErrors { case _: MiddlewareException =>
-          IO.pure(SpecificServerError())
+          Task.pure(SpecificServerError())
         }
         .make
         .toOption
@@ -78,26 +61,27 @@ object ServerEndpointMiddlewareSpec extends SimpleIOSuite {
         .get
     )
     List(throwCheck, pureCheck).combineAll
+  ???
   }
 
   test("server - middleware can catch spec error") {
-    val catchSpecErrorMiddleware = new ServerEndpointMiddleware.Simple[IO]() {
+    val catchSpecErrorMiddleware = new ServerEndpointMiddleware.Simple[Task]() {
       def prepareWithHints(
           serviceHints: Hints,
           endpointHints: Hints
-      ): HttpApp[IO] => HttpApp[IO] = { inputApp =>
-        HttpApp[IO] { req =>
+      ): HttpApp[Any] => HttpApp[Any] = { inputApp =>
+        HttpApp[Any] { req =>
           inputApp(req).handleError { case _: SpecificServerError =>
-            Response[IO]()
+            Response[Any()
           }
         }
       }
     }
 
     SimpleRestJsonBuilder
-      .routes(new HelloWorldService[IO] {
-        def hello(name: String, town: Option[String]): IO[Greeting] =
-          IO.raiseError(
+      .routes(new HelloWorldService[Task] {
+        def hello(name: String, town: Option[String]): Task[Greeting] =
+          ZIO.fail(
             SpecificServerError(Some("to be caught in middleware"))
           )
       })
@@ -105,29 +89,29 @@ object ServerEndpointMiddlewareSpec extends SimpleIOSuite {
       .make
       .toOption
       .get
-      .apply(Request[IO](Method.POST, Uri.unsafeFromString("/bob")))
+      .apply(Request[](Method.POST, Uri.unsafeFromString("/bob")))
       // would be 599 w/o the middleware
       .flatMap(res => OptionT.pure(expect.eql(res.status.code, 200)))
       .getOrElse(
         failure("unable to run request")
       )
-  }
+  },
 
   test("server - middleware is applied") {
     serverMiddlewareTest(
       shouldFailInMiddleware = true,
-      Request[IO](Method.POST, Uri.unsafeFromString("/bob")),
+      Request(Method.POST, Uri.unsafeFromString("/bob")),
       response =>
         IO.pure(expect.eql(response.status, Status.InternalServerError))
     )
-  }
+  },
 
   test(
     "server - middleware allows passing through to underlying implementation"
   ) {
     serverMiddlewareTest(
       shouldFailInMiddleware = false,
-      Request[IO](Method.POST, Uri.unsafeFromString("/bob")),
+      Request(Method.POST, Uri.unsafeFromString("/bob")),
       response => {
         response.body.compile
           .to(Collector.supportsArray(Array))
@@ -138,7 +122,7 @@ object ServerEndpointMiddlewareSpec extends SimpleIOSuite {
           }
       }
     )
-  }
+  },
 
   test("client - middleware is applied") {
     clientMiddlewareTest(
@@ -149,6 +133,7 @@ object ServerEndpointMiddlewareSpec extends SimpleIOSuite {
         }
     )
   }
+      ,
 
   test("client - send request through middleware") {
     clientMiddlewareTest(
@@ -159,10 +144,11 @@ object ServerEndpointMiddlewareSpec extends SimpleIOSuite {
         }
     )
   }
+    }
 
   private def serverMiddlewareTest(
       shouldFailInMiddleware: Boolean,
-      request: Request[IO],
+      request: Request,
       expect: Response[IO] => IO[Expectations]
   )(implicit pos: SourceLocation): IO[Expectations] = {
     val service =
@@ -186,7 +172,7 @@ object ServerEndpointMiddlewareSpec extends SimpleIOSuite {
       shouldFailInMiddleware: Boolean,
       expect: HelloWorldService[IO] => IO[Expectations]
   ): IO[Expectations] = {
-    val serviceNoMiddleware: HttpApp[IO] =
+    val serviceNoMiddleware: HttpApp[Any] =
       SimpleRestJsonBuilder
         .routes(HelloImpl)
         .make
@@ -220,8 +206,8 @@ object ServerEndpointMiddlewareSpec extends SimpleIOSuite {
     def prepareWithHints(
         serviceHints: Hints,
         endpointHints: Hints
-    ): HttpApp[IO] => HttpApp[IO] = { inputApp =>
-      HttpApp[IO] { request =>
+    ): HttpApp[Any] => HttpApp[Any] = { inputApp =>
+      HttpApp[Any] { request =>
         val hasTag: (Hints, String) => Boolean = (hints, tagName) =>
           hints.get[smithy.api.Tags].exists(_.value.contains(tagName))
         // check for tags in hints to test that proper hints are sent into the prepare method
@@ -270,4 +256,4 @@ object ServerEndpointMiddlewareSpec extends SimpleIOSuite {
   }
 
 }
- */
+*/
