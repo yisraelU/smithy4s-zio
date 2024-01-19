@@ -285,7 +285,7 @@ object EqualVisitorSpec extends zio.test.ZIOSpecDefault {
 object EqualTestUtils {
   implicit val recursiveOptionEqual: Equal[RecursiveFoo] = {
     (l: RecursiveFoo, r: RecursiveFoo) =>
-      Equal[Option[RecursiveFoo]].equals(l.foo, r.foo)
+      Equal[Option[RecursiveFoo]].equal(l.foo, r.foo)
   }
 
   def getTimestamp: Timestamp = {
