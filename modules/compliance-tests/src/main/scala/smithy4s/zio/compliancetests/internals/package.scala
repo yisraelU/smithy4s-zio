@@ -120,9 +120,10 @@ package object internals {
     }
 
     val multimap =
-      headers.headers.foldLeft(Map.empty[CharSequence, List[CharSequence]]) {
-        case (acc, Header.Custom(key, newValue)) =>
-          acc + append(acc, key, newValue)
+      headers.headers.iterator.foldLeft(
+        Map.empty[CharSequence, List[CharSequence]]
+      ) { case (acc, header) =>
+        acc + append(acc, header.headerName, header.renderedValue)
       }
     multimap.collect {
       case (key, value :: Nil) => (key, value)
