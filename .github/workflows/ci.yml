@@ -47,7 +47,7 @@ jobs:
         run: sbt '++ ${{ matrix.scala }}' test
 
       - name: Compress target directories
-        run: tar cf targets.tar modules/examples/target target modules/test-scenarios/target modules/transformers/target modules/schema/target modules/compliance-tests/target modules/prelude/target modules/http/target project/target
+        run: tar cf targets.tar modules/examples/target target modules/test-scenarios/target modules/docs/target modules/transformers/target modules/schema/target modules/compliance-tests/target modules/prelude/target modules/http/target project/target
 
       - name: Upload target directories
         uses: actions/upload-artifact@v4
