@@ -207,7 +207,7 @@ def dumpModel(config: Configuration) =
         hash => hash.file
       )
     val s = (config / streams).value
-
+    val _ = cmd
     lazy val modelTransformersCp =
       (transformers / Compile / fullClasspathAsJars).value
         .map(_.data)
