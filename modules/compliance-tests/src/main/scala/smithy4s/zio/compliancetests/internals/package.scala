@@ -75,6 +75,7 @@ package object internals {
           urlDecoder(v)
         )
       case Array(k) => (k, "")
+      case _        => throw new IllegalArgumentException("Invalid query")
     }
   }
 

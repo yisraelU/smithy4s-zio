@@ -2,7 +2,7 @@ package smithy4s.zio.http
 
 import smithy4s.zio.http.internal.EffectOps
 import smithy4s.{Endpoint, Service}
-import zio.Task
+import zio.{Task, ZIO}
 
 object ServerEndpointMiddleware {
 
@@ -24,6 +24,8 @@ object ServerEndpointMiddleware {
           case scala.util.control.NonFatal(other) if f.isDefinedAt(other) =>
             f(other).flatMap(ZIO.die(_))
         }*/
+
+        f.andThen(_.flatMap(ZIO.die(_)))
         // todo pending error mapping added to Routes
         routes
       }
