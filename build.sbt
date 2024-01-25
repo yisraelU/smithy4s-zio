@@ -7,10 +7,22 @@ import java.io.File
 import sys.process.*
 import scala.collection.Seq
 
+
+lazy val installCoursier = taskKey[Unit]("Download and install Coursier")
+
+ThisBuild /installCoursier := {
+  val coursierCommand = s"curl -fLo cs  https://github.com/coursier/coursier/releases/latest/download/coursier"
+
+  val result = Process(coursierCommand).#||(Process("chmod +x cs")).#||(Process(s"mv cs /usr/local/bin/")).!!
+
+}
+
+
 ThisBuild / version := "0.1.0-SNAPSHOT"
 Global / onChangedBuildSource := ReloadOnSourceChanges
 ThisBuild / tlCiHeaderCheck := false
 ThisBuild / tlFatalWarnings := false
+ThisBuild / githubWorkflowCheck := false
 ThisBuild / scalaVersion := "2.13.12"
 addCommandAlias(
   "fmt",
@@ -173,6 +185,7 @@ lazy val transformers = (project in file("modules/transformers"))
 def dumpModel(config: Configuration) =
   Def.task {
     // fetch smithy4s
+
     lazy val cmd =
       ("cs" :: "install" :: "--channel" :: "https://disneystreaming.github.io/coursier.json" :: "smithy4s" :: Nil).!!
 
@@ -207,6 +220,7 @@ def dumpModel(config: Configuration) =
         hash => hash.file
       )
     val s = (config / streams).value
+    val cs = installCoursier.value
     val _ = cmd
     lazy val modelTransformersCp =
       (transformers / Compile / fullClasspathAsJars).value
