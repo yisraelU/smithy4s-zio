@@ -1,11 +1,11 @@
 package smithy4s.zio.compliancetests.internals.eq
 
 import cats.implicits.toFoldableOps
-import smithy4s.*
+import smithy4s._
 import smithy4s.capability.EncoderK
-import cats.syntax.all.*
-import smithy4s.schema.{Schema, *}
-import smithy4s.zio.compliancetests.internals.eq.Smithy4sEqInstances.*
+import cats.syntax.all._
+import smithy4s.schema.{Schema, _}
+import smithy4s.zio.compliancetests.internals.eq.Smithy4sEqInstances._
 import cats.{Eq, Monoid}
 
 import java.util.UUID

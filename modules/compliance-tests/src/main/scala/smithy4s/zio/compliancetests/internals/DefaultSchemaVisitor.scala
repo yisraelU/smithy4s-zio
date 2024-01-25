@@ -1,9 +1,9 @@
 package smithy4s.zio.compliancetests.internals
 
 import smithy4s.Document.DNull
-import smithy4s.schema.*
-import smithy4s.schema.Primitive.*
-import smithy4s.{Schema, *}
+import smithy4s.schema._
+import smithy4s.schema.Primitive._
+import smithy4s.{Schema, _}
 import cats.Id
 import java.util.UUID
 

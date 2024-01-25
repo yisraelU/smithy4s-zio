@@ -21,7 +21,7 @@ import smithy4s.{
   UnsupportedProtocolError,
   checkProtocol
 }
-import zio.http.*
+import zio.http._
 import zio.{IO, Task, ZIO}
 
 class RouterBuilder[

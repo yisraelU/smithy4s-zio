@@ -5,7 +5,7 @@ import smithy4s.{Hints, Service, ShapeId}
 import smithy4s.schema.Schema
 import smithy4s.zio.compliancetests.ComplianceTest.ComplianceResult
 import zio.ZIO
-import zio.http.{Header, Headers, Request, Response}
+import zio.http.{Headers, Request, Response}
 
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets

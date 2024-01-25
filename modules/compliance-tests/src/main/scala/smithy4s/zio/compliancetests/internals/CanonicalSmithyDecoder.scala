@@ -1,11 +1,11 @@
 package smithy4s.zio.compliancetests.internals
 
-import smithy4s.Document.*
+import smithy4s.Document._
 import smithy4s.codecs.PayloadError
-import smithy4s.internals.*
-import smithy4s.schema.*
-import smithy4s.schema.Primitive.*
-import smithy4s.{Schema, *}
+import smithy4s.internals._
+import smithy4s.schema._
+import smithy4s.schema.Primitive._
+import smithy4s.{Schema, _}
 
 object CanonicalSmithyDecoder {
 

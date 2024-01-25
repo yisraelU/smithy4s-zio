@@ -2,11 +2,11 @@ package smithy4s.zio.compliancetests.internals
 
 import cats.Eq
 import cats.kernel.Monoid
-import cats.syntax.all.*
+import cats.syntax.all._
 import io.circe.Json
-import io.circe.parser.*
+import io.circe.parser._
 import smithy.test.{HttpRequestTestCase, HttpResponseTestCase}
-import smithy4s.zio.compliancetests.ComplianceTest.*
+import smithy4s.zio.compliancetests.ComplianceTest._
 import zio.http.{Headers, QueryParams}
 import zio.test.{TestResult, assertTrue}
 

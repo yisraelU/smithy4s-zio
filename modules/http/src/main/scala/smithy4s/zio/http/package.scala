@@ -5,7 +5,7 @@ import org.typelevel.vault.Key
 import smithy4s.Endpoint
 import smithy4s.http.PathParams
 import zio.Task
-import zio.http.*
+import zio.http._
 
 package object http {
   type HttpRoutes = Routes[Any, Throwable]

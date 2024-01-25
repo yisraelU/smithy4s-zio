@@ -2,11 +2,11 @@ package smithy4s.zio.compliancetests.internals
 
 import cats.Eq
 import cats.implicits.catsSyntaxSemigroup
-import smithy.test.*
+import smithy.test._
 import smithy4s.codecs.PayloadError
-import smithy4s.kinds.*
+import smithy4s.kinds._
 import smithy4s.zio.compliancetests.ComplianceTest.ComplianceResult
-import smithy4s.zio.compliancetests.TestConfig.*
+import smithy4s.zio.compliancetests.TestConfig._
 import smithy4s.zio.compliancetests.internals.asserts.testResultMonoid
 import smithy4s.zio.compliancetests.internals.eq.EqSchemaVisitor
 import smithy4s.zio.compliancetests.{
@@ -27,7 +27,7 @@ private[compliancetests] class ServerHttpComplianceTestCase[
     serviceInstance: Service[Alg]
 ) {
 
-  import router.*
+  import router._
 
   private[compliancetests] val originalService: Service[Alg] = serviceInstance
   private val baseUri = URL.decode("http://localhost/").toOption.get

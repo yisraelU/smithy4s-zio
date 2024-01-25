@@ -1,11 +1,11 @@
 package smithy4s.zio.compliancetests
 
-import smithy4s.codecs.*
+import smithy4s.codecs._
 import smithy4s.dynamic.DynamicSchemaIndex
 import smithy4s.dynamic.DynamicSchemaIndex.load
 import smithy4s.dynamic.model.Model
 import smithy4s.{Blob, Document, Schema, ShapeId}
-import zio.test.*
+import zio.test._
 import zio.{Scope, Task, ZIO}
 
 import java.nio.file.{Path, Paths}
@@ -16,7 +16,7 @@ abstract class ProtocolComplianceSuite extends ZIOSpecDefault {
 
   def allTests(dsi: DynamicSchemaIndex): List[ComplianceTest[Task]]
 
-  override def spec: Spec[TestEnvironment & Scope, Any] = {
+  override def spec: Spec[TestEnvironment with Scope, Any] = {
     suite("Protocol Compliance Tests") {
       makeTests()
     }

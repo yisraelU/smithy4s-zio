@@ -2,10 +2,10 @@ package smithy4s.zio.compliancetests.internals
 
 import cats.Eq
 import cats.effect.Async
-import cats.syntax.all.*
-import smithy.test.*
+import cats.syntax.all._
+import smithy.test._
 import smithy4s.http.HttpContractError
-import smithy4s.zio.compliancetests.TestConfig.*
+import smithy4s.zio.compliancetests.TestConfig._
 import smithy4s.zio.compliancetests.internals.eq.EqSchemaVisitor
 import smithy4s.zio.compliancetests.{
   ComplianceTest,
@@ -24,7 +24,7 @@ private[compliancetests] class ClientHttpComplianceTestCase[
 ](reverseRouter: ReverseRouter, serviceInstance: Service[Alg])(implicit
     ce: Async[Task]
 ) {
-  import reverseRouter.*
+  import reverseRouter._
   private val baseUri = URL.decode("http://localhost/").toOption.get
   private[compliancetests] implicit val service: Service[Alg] = serviceInstance
 

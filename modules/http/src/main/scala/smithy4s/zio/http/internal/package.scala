@@ -11,7 +11,7 @@ import smithy4s.http.{
   HttpUri => Smithy4sHttpUri,
   HttpUriScheme => Smithy4sHttpUriScheme
 }
-import zio.http.*
+import zio.http._
 import zio.stream.ZStream
 import zio.{Chunk, IO, Task, ZIO}
 

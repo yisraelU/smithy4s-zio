@@ -3,7 +3,7 @@ package smithy4s.zio.compliancetests.internals.eq
 import smithy4s.{Blob, Document, Timestamp}
 import cats.Eq
 import cats.kernel.instances.StaticMethods
-import cats.syntax.all.*
+import cats.syntax.all._
 trait Smithy4sEqInstances {
   implicit def arrayEq[A: Eq]: Eq[Array[A]] = (x: Array[A], y: Array[A]) =>
     x.zip(y).forall { case (a, b) => a === b }

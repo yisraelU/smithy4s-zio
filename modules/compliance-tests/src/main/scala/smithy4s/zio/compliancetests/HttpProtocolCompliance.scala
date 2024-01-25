@@ -33,7 +33,7 @@ object HttpProtocolCompliance {
     ).allServerTests()
 
   def clientAndServerTests[Alg[_[_, _, _, _, _]]](
-      router: Router & ReverseRouter,
+      router: Router with ReverseRouter,
       service: Service[Alg]
   ): List[ComplianceTest[Task]] =
     clientTests(router, service) ++ serverTests(router, service)

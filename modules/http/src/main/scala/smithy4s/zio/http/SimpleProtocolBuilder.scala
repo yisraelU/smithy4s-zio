@@ -5,7 +5,7 @@ import smithy4s.zio.http.builders.client.ClientBuilder
 import smithy4s.zio.http.builders.server.RouterBuilder
 import smithy4s.{Endpoint, ShapeTag}
 import zio.Task
-import zio.http.*
+import zio.http._
 
 /**
  * Abstract construct helping the construction of routers and clients
