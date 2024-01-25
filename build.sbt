@@ -7,16 +7,18 @@ import java.io.File
 import sys.process.*
 import scala.collection.Seq
 
-
 lazy val installCoursier = taskKey[Unit]("Download and install Coursier")
 
-ThisBuild /installCoursier := {
-  val coursierCommand = s"curl -fLo cs  https://github.com/coursier/coursier/releases/latest/download/coursier"
+ThisBuild / installCoursier := {
+  val coursierCommand =
+    s"curl -fLo cs  https://github.com/coursier/coursier/releases/latest/download/coursier"
 
-  val result = Process(coursierCommand).#||(Process("chmod +x cs")).#||(Process(s"mv cs /usr/local/bin/")).!!
+  val result = Process(coursierCommand)
+    .#||(Process("chmod +x cs"))
+    .#||(Process(s"mv cs /usr/local/bin/"))
+    .!!
 
 }
-
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 Global / onChangedBuildSource := ReloadOnSourceChanges
