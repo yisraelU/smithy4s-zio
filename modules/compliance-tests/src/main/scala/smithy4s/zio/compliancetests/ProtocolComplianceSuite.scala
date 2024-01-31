@@ -131,7 +131,7 @@ abstract class ProtocolComplianceSuite extends ZIOSpecDefault {
     shouldRun match {
       case ShouldRun.No => Spec.empty
       case ShouldRun.Yes =>
-        test(tc.show)(tc.run)
+        test(tc.show)(tc.run) @@ TestAspect.withLiveClock
       case ShouldRun.NotSure => Spec.empty
       /*   tc.run
             .map(assertion => unsureWhetherShouldSucceed(tc, assertion))*/

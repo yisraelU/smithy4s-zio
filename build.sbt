@@ -1,24 +1,11 @@
 import sbt.Project.projectToRef
-import smithy4s.codegen.Smithy4sCodegenPlugin
+import smithy4s.codegen.{DumpModelArgs, Smithy4sCodegenPlugin}
 
 import _root_.java.util.stream.Collectors
 import java.nio.file.Files
 import java.io.File
 import sys.process.*
 import scala.collection.Seq
-
-lazy val installCoursier = taskKey[Unit]("Download and install Coursier")
-
-ThisBuild / installCoursier := {
-  val coursierCommand =
-    s"curl -fLo cs  https://github.com/coursier/coursier/releases/latest/download/coursier"
-
-  val result = Process(coursierCommand)
-    .#||(Process("chmod +x cs"))
-    .#||(Process(s"mv cs /usr/local/bin/"))
-    .!!
-
-}
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 Global / onChangedBuildSource := ReloadOnSourceChanges
@@ -119,7 +106,7 @@ lazy val http = (project in file("modules/http"))
       Dependencies.ZIO.http,
       Dependencies.ZIO.test,
       Dependencies.ZIO.testSbt,
-      Dependencies.Smithy.build % Test
+     // Dependencies.Smithy.build % Test
     ),
     Test / complianceTestDependencies := Seq(
       Dependencies.Alloy.`protocol-tests`
@@ -186,13 +173,6 @@ lazy val transformers = (project in file("modules/transformers"))
 
 def dumpModel(config: Configuration) =
   Def.task {
-    // fetch smithy4s
-
-    lazy val cmd =
-      ("cs" :: "install" :: "--channel" :: "https://disneystreaming.github.io/coursier.json" :: "smithy4s" :: Nil).!!
-
-    val transforms = (config / smithy4sModelTransformers).value
-
     import sjsonnew._
     import BasicJsonProtocol._
     import sbt.FileInfo
@@ -222,21 +202,12 @@ def dumpModel(config: Configuration) =
         hash => hash.file
       )
     val s = (config / streams).value
-    val cs = installCoursier.value
-    val _ = cmd
     lazy val modelTransformersCp =
       (transformers / Compile / fullClasspathAsJars).value
         .map(_.data)
+    val transforms = (config / smithy4sModelTransformers).value
+    val localJars = modelTransformersCp.filter(_.isFile).toList
 
-    val localJars = modelTransformersCp.filter(_.isFile).map(_.getAbsolutePath)
-    val localJarsArg =
-      if (localJars.isEmpty) List.empty
-      else List("--local-jars", localJars.mkString(","))
-    val args =
-      if (transforms.isEmpty) List.empty
-      else List("--transformers", transforms.mkString(","))
-
-    val allArgs = localJarsArg ::: args
     val cached =
       Tracked.inputChanged[List[String], Seq[File]](
         s.cacheStoreFactory.make("input")
@@ -247,10 +218,14 @@ def dumpModel(config: Configuration) =
               s.cacheStoreFactory.make("output")
             ) { case ((changed, deps), outputs) =>
               if (changed || outputs.isEmpty) {
-                val cmd = ("smithy4s" :: "dump-model" :: deps ::: allArgs)
-                println(cmd)
-                val res = cmd.!!
-
+                val dumpModelArgs = DumpModelArgs(
+                  List.empty,
+                  List.empty,
+                  deps,
+                  transforms,
+                  localJars.map(_.toPath).map(os.Path(_))
+                )
+                val res = smithy4s.codegen.Codegen.dumpModel(dumpModelArgs)
                 val file =
                   (config / resourceManaged).value / "compliance-tests.json"
                 IO.write(file, res)
@@ -263,15 +238,12 @@ def dumpModel(config: Configuration) =
         }
       }
 
-    val trackedFiles = List(
-      "--dependencies",
+    val trackedFiles =
       (config / complianceTestDependencies).?.value
         .getOrElse(Seq.empty)
         .map { moduleId =>
           s"${moduleId.organization}:${moduleId.name}:${moduleId.revision}"
-        }
-        .mkString(",")
-    )
+        }.toList
 
     cached(trackedFiles)
 
