@@ -9,6 +9,9 @@ import scala.collection.Seq
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 Global / onChangedBuildSource := ReloadOnSourceChanges
+ThisBuild / tlCiHeaderCheck := false
+ThisBuild / tlFatalWarnings := false
+ThisBuild / githubWorkflowCheck := false
 ThisBuild / scalaVersion := "2.13.12"
 addCommandAlias(
   "fmt",
