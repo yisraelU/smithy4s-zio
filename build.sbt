@@ -9,9 +9,6 @@ import scala.collection.Seq
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 Global / onChangedBuildSource := ReloadOnSourceChanges
-ThisBuild / tlCiHeaderCheck := false
-ThisBuild / tlFatalWarnings := false
-ThisBuild / githubWorkflowCheck := false
 ThisBuild / scalaVersion := "2.13.12"
 addCommandAlias(
   "fmt",
@@ -105,8 +102,8 @@ lazy val http = (project in file("modules/http"))
       Dependencies.Alloy.core % Test,
       Dependencies.ZIO.http,
       Dependencies.ZIO.test,
-      Dependencies.ZIO.testSbt,
-     // Dependencies.Smithy.build % Test
+      Dependencies.ZIO.testSbt
+      // Dependencies.Smithy.build % Test
     ),
     Test / complianceTestDependencies := Seq(
       Dependencies.Alloy.`protocol-tests`
@@ -243,7 +240,8 @@ def dumpModel(config: Configuration) =
         .getOrElse(Seq.empty)
         .map { moduleId =>
           s"${moduleId.organization}:${moduleId.name}:${moduleId.revision}"
-        }.toList
+        }
+        .toList
 
     cached(trackedFiles)
 

@@ -7,47 +7,25 @@ ThisBuild / scmInfo := Some(
     "scm:git@github.com:yisraelu/smithy4s-zio.git"
   )
 )
-ThisBuild / githubWorkflowJavaVersions := List(JavaSpec.temurin("11"))
-ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
-ThisBuild / githubWorkflowPublishTargetBranches := Seq(
-  RefPredicate.StartsWith(Ref.Tag("v")),
-  RefPredicate.Equals(Ref.Branch("main"))
-)
 
-ThisBuild / githubWorkflowPublish := Seq(
-  WorkflowStep.Sbt(
-    commands = List("ci-release"),
-    name = Some("Publish project"),
-    env = Map(
-      "PGP_PASSPHRASE" -> "${{ secrets.PGP_PASSPHRASE }}",
-      "PGP_SECRET" -> "${{ secrets.PGP_SECRET }}",
-      "SONATYPE_PASSWORD" -> "${{ secrets.SONATYPE_PASSWORD }}",
-      "SONATYPE_USERNAME" -> "${{ secrets.SONATYPE_USERNAME }}"
+inThisBuild(
+  List(
+    organization := "io.github.yisraelu.smithy4s-zio",
+    homepage := Some(url("https://github.com/smithy4s-zio")),
+    description := "ZIO bindings for Smithy4s",
+    // Alternatively License.Apache2 see https://github.com/sbt/librarymanagement/blob/develop/core/src/main/scala/sbt/librarymanagement/License.scala
+    licenses := List(
+      "Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")
+    ),
+    developers := List(
+      Developer(
+        id = "yisraelu",
+        name = "Yisrael Union",
+        email = "ysrlunion@gmail.com",
+        url = url("https://github.com/yisraelu")
+      )
     )
   )
 )
-
-ThisBuild / developers := List(
-  Developer(
-    id = "yisraelu",
-    name = "Yisrael Union",
-    email = "ysrlunion@gmail.com",
-    url = url("https://github.com/yisraelu")
-  )
-)
-
-ThisBuild / description := "ZIO bindings for Smithy4s"
-ThisBuild / licenses := List(
-  "Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt")
-)
-ThisBuild / homepage := Some(url("https://github.com/yisraelu/smithy4s-zio"))
-
-// Remove all additional repository other than Maven Central from POM
-ThisBuild / pomIncludeRepository := { _ => false }
-ThisBuild / publishTo := {
-  val nexus = "https://s01.oss.sonatype.org/"
-  if (isSnapshot.value)
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  else Some("releases" at nexus + "service/local/staging/deploy/maven2")
-}
-ThisBuild / publishMavenStyle := true
+ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
+sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
