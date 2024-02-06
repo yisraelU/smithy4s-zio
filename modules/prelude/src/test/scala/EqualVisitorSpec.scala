@@ -247,7 +247,7 @@ object EqualVisitorSpec extends zio.test.ZIOSpecDefault {
       },
       test("union with different subtypes") {
         val foo0 = IntValue(1)
-        val foo1 = StringValue("foo")
+        StringValue("foo")
         val eq = visitor(IntOrString.schema)
         assertTrue(
           eq.equal(foo0, IntValue(1)),
@@ -270,7 +270,7 @@ object EqualVisitorSpec extends zio.test.ZIOSpecDefault {
       },
       test("int enum") {
         val foo = IntFooBar.Foo
-        val bar = IntFooBar.Bar
+        IntFooBar.Bar
         val eq = visitor(IntFooBar.schema)
         assertTrue(
           eq.equal(foo, IntFooBar.Foo),
@@ -285,7 +285,7 @@ object EqualVisitorSpec extends zio.test.ZIOSpecDefault {
 object EqualTestUtils {
   implicit val recursiveOptionEqual: Equal[RecursiveFoo] = {
     (l: RecursiveFoo, r: RecursiveFoo) =>
-      Equal[Option[RecursiveFoo]].equals(l.foo, r.foo)
+      Equal[Option[RecursiveFoo]].equal(l.foo, r.foo)
   }
 
   def getTimestamp: Timestamp = {

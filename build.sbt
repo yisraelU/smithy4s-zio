@@ -1,8 +1,20 @@
 import sbt.Project.projectToRef
+import smithy4s.codegen.{DumpModelArgs, Smithy4sCodegenPlugin}
+
+import _root_.java.util.stream.Collectors
+import java.nio.file.Files
+import java.io.File
+import sys.process.*
+import scala.collection.Seq
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 Global / onChangedBuildSource := ReloadOnSourceChanges
+ThisBuild / tlCiHeaderCheck := false
+ThisBuild / tlFatalWarnings := false
+ThisBuild / githubWorkflowCheck := false
 ThisBuild / scalaVersion := "2.13.12"
+ThisBuild / tlJdkRelease := Some(11)
+ThisBuild / tlCiDependencyGraphJob := false
 addCommandAlias(
   "fmt",
   ";scalafmtAll;scalafmtSbt;"
@@ -10,7 +22,8 @@ addCommandAlias(
 addCompilerPlugin(
   "org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full
 )
-
+val complianceTestDependencies =
+  SettingKey[Seq[ModuleID]]("complianceTestDependencies")
 val projectPrefix = "smithy4s-zio"
 
 lazy val root = project
@@ -21,16 +34,20 @@ lazy val root = project
 lazy val allModules = Seq(
   http,
   prelude,
+  schema,
   examples,
-  tests
+  scenarios,
+  `compliance-tests`,
+  transformers
 ).map(projectToRef)
 
 lazy val prelude = (project in file("modules/prelude"))
   .settings(
     name := s"$projectPrefix-prelude",
     libraryDependencies ++= Seq(
-      Dependencies.Smithy4s.core,
+      Dependencies.Smithy4s.core.value,
       Dependencies.ZIO.prelude,
+      Dependencies.ZIO.schema,
       Dependencies.ZIO.test,
       Dependencies.ZIO.testSbt,
       Dependencies.ZIO.testMagnolia
@@ -38,37 +55,199 @@ lazy val prelude = (project in file("modules/prelude"))
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
 
+lazy val schema = (project in file("modules/schema"))
+  .settings(
+    name := s"$projectPrefix-schema",
+    libraryDependencies ++= Seq(
+      Dependencies.Smithy4s.core.value,
+      Dependencies.ZIO.schema,
+      Dependencies.ZIO.test,
+      Dependencies.ZIO.testSbt,
+      Dependencies.ZIO.testMagnolia
+    ),
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+  )
+
+lazy val `compliance-tests` = (project in file("modules/compliance-tests"))
+  .settings(
+    name := s"$projectPrefix-compliance-test",
+    libraryDependencies ++= Seq(
+      Dependencies.Smithy4s.core.value,
+      Dependencies.Smithy4s.json.value,
+      Dependencies.Smithy4s.tests.value,
+      Dependencies.Smithy4s.dynamic.value,
+      Dependencies.Circe.parser,
+      Dependencies.ZIO.catsInterop,
+      Dependencies.Fs2Data.xml.value,
+      Dependencies.LiHaoyi.pprint,
+      Dependencies.ZIO.http,
+      Dependencies.ZIO.test,
+      Dependencies.ZIO.testSbt,
+      Dependencies.ZIO.testMagnolia,
+      Dependencies.Smithy.testTraits % Smithy4s
+    ),
+    Compile / smithy4sAllowedNamespaces := List("smithy.test"),
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+  )
+  .enablePlugins(Smithy4sCodegenPlugin)
+
 lazy val http = (project in file("modules/http"))
+  .dependsOn(
+    scenarios % "test->compile",
+    `compliance-tests` % "test->compile",
+    transformers % "test->test"
+  )
   .settings(
     name := s"$projectPrefix-http",
     libraryDependencies ++= Seq(
-      Dependencies.Smithy4s.core,
-      Dependencies.Smithy4s.json,
-      Dependencies.Smithy4s.http4s,
+      Dependencies.Smithy4s.core.value,
+      Dependencies.Smithy4s.json.value,
+      Dependencies.Smithy4s.http4s.value,
       Dependencies.Typelevel.vault.value,
-      Dependencies.ZIO.http
-    )
+      Dependencies.Alloy.core % Test,
+      Dependencies.ZIO.http,
+      Dependencies.ZIO.test,
+      Dependencies.ZIO.testSbt
+      // Dependencies.Smithy.build % Test
+    ),
+    Test / complianceTestDependencies := Seq(
+      Dependencies.Alloy.`protocol-tests`
+    ),
+    (Test / smithy4sModelTransformers) := List("ProtocolTransformer"),
+    (Test / resourceGenerators) := Seq(dumpModel(Test).taskValue),
+    (Test / fork) := true,
+    (Test / envVars) ++= {
+      val files: Seq[File] = {
+        (Test / resourceGenerators) {
+          _.join.map(_.flatten)
+        }.value
+      }
+      files.headOption
+        .map { file =>
+          Map("MODEL_DUMP" -> file.getAbsolutePath)
+        }
+        .getOrElse(Map.empty)
+    },
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
+  .enablePlugins(ScalafixPlugin)
 
-lazy val tests = (project in file("modules/tests"))
-  .dependsOn(http)
+lazy val scenarios = (project in file("modules/test-scenarios"))
   .settings(
     name := s"$projectPrefix-tests",
     libraryDependencies ++= {
       Seq(
-        Dependencies.Http4s.emberClient.value,
-        Dependencies.Http4s.emberServer.value,
-        Dependencies.Http4s.dsl.value,
-        Dependencies.Http4s.circe.value,
-        Dependencies.Weaver.cats.value,
-        Dependencies.Smithy4s.complianceTests
+        Dependencies.Smithy4s.core.value
       )
-    }
+    },
+    Compile / smithy4sInputDirs := Seq(sourceDirectory.value / "smithy"),
+    Compile / resourceDirectory := sourceDirectory.value / "resources",
+    Compile / smithy4sOutputDir := sourceDirectory.value / "generated"
   )
+  .enablePlugins(Smithy4sCodegenPlugin)
 
 lazy val examples = (project in file("modules/examples"))
   .settings(
-    name := s"$projectPrefix-examples"
+    name := s"$projectPrefix-examples",
+    fork / run := true,
+    libraryDependencies ++= Seq(
+      Dependencies.Smithy4s.http4s.value,
+      Dependencies.Http4s.emberServer.value,
+      Dependencies.ZIO.catsInterop
+    ),
+    Compile / smithy4sAllowedNamespaces := List("example.todo")
   )
-  .dependsOn(http, prelude)
+  .dependsOn(http)
   .enablePlugins(Smithy4sCodegenPlugin)
+
+lazy val transformers = (project in file("modules/transformers"))
+  .settings(
+    name := s"$projectPrefix-transformers",
+    libraryDependencies ++= Seq(
+      Dependencies.Smithy.model,
+      Dependencies.Smithy.build,
+      Dependencies.Smithy.testTraits,
+      Dependencies.Smithy.awsTraits,
+      Dependencies.Alloy.core
+    ),
+    Compile / resourceDirectory := sourceDirectory.value / "resources"
+  )
+
+def dumpModel(config: Configuration) =
+  Def.task {
+    import sjsonnew._
+    import BasicJsonProtocol._
+    import sbt.FileInfo
+    import sbt.HashFileInfo
+    import sbt.io.Hash
+    import scala.jdk.CollectionConverters._
+    implicit val pathFormat: JsonFormat[File] =
+      BasicJsonProtocol.projectFormat[File, HashFileInfo](
+        p => {
+          if (p.isFile()) FileInfo.hash(p)
+          else
+            // If the path is a directory, we get the hashes of all files
+            // then hash the concatenation of the hash's bytes.
+            FileInfo.hash(
+              p,
+              Hash(
+                Files
+                  .walk(p.toPath(), 2)
+                  .collect(Collectors.toList())
+                  .asScala
+                  .map(_.toFile())
+                  .map(Hash(_))
+                  .foldLeft(Array.emptyByteArray)(_ ++ _)
+              )
+            )
+        },
+        hash => hash.file
+      )
+    val s = (config / streams).value
+    lazy val modelTransformersCp =
+      (transformers / Compile / fullClasspathAsJars).value
+        .map(_.data)
+    val transforms = (config / smithy4sModelTransformers).value
+    val localJars = modelTransformersCp.filter(_.isFile).toList
+
+    val cached =
+      Tracked.inputChanged[List[String], Seq[File]](
+        s.cacheStoreFactory.make("input")
+      ) {
+        Function.untupled {
+          Tracked
+            .lastOutput[(Boolean, List[String]), Seq[File]](
+              s.cacheStoreFactory.make("output")
+            ) { case ((changed, deps), outputs) =>
+              if (changed || outputs.isEmpty) {
+                val dumpModelArgs = DumpModelArgs(
+                  List.empty,
+                  List.empty,
+                  deps,
+                  transforms,
+                  localJars.map(_.toPath).map(os.Path(_))
+                )
+                val res = smithy4s.codegen.Codegen.dumpModel(dumpModelArgs)
+                val file =
+                  (config / resourceManaged).value / "compliance-tests.json"
+                IO.write(file, res)
+                Seq(file)
+
+              } else {
+                outputs.getOrElse(Seq.empty)
+              }
+            }
+        }
+      }
+
+    val trackedFiles =
+      (config / complianceTestDependencies).?.value
+        .getOrElse(Seq.empty)
+        .map { moduleId =>
+          s"${moduleId.organization}:${moduleId.name}:${moduleId.revision}"
+        }
+        .toList
+
+    cached(trackedFiles)
+
+  }

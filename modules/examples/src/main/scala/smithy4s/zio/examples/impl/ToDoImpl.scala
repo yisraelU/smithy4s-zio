@@ -1,12 +1,13 @@
 package smithy4s.zio.examples.impl
 
-import example.todo._
+import example.todo.*
 import zio.{Task, ZIO}
+
 class ToDoImpl(database: Database[Todo], host: String)
     extends TodoService[Task] {
 
   override def healthCheck(): Task[Status] =
-    ZIO.attempt(println("All good")) *> ZIO.succeed(Status("OK"))
+    ZIO.attempt(println("All good")).as(Status("OK"))
 
   override def createTodo(
       title: Title,
@@ -27,10 +28,10 @@ class ToDoImpl(database: Database[Todo], host: String)
     } yield todo
 
   override def getTodo(id: Id): Task[Todo] = {
-    for {
-      todo <- database.get(id.value)
-      _ <- ZIO.attempt(println(todo))
-    } yield todo.get
+    database
+      .get(id.value)
+      .flatMap(ZIO.fromOption(_))
+      .orElseFail(TodoNotFound(s"Todo with id ${id.value} not found"))
   }
 
   override def updateTodo(
@@ -42,7 +43,6 @@ class ToDoImpl(database: Database[Todo], host: String)
   ): Task[Todo] = {
     for {
       todo <- database.get(id.value)
-      _ <- ZIO.attempt(println(todo))
       updatedTodo = todo.get.copy(
         title = title.getOrElse(todo.get.title),
         order = order.orElse(todo.get.order),

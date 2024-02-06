@@ -16,28 +16,31 @@ import zio.stream.ZStream
 import zio.{Chunk, IO, Task, ZIO}
 
 package object internal {
-
-  implicit val zioMonadThrowLike: MonadThrowLike[zio.Task] =
-    new MonadThrowLike[zio.Task] {
-      override def flatMap[A, B](fa: Task[A])(f: A => Task[B]): Task[B] =
+  def zioMonadThrowLike[R]: MonadThrowLike[ZIO[R, Throwable, *]] =
+    new MonadThrowLike[ZIO[R, Throwable, *]] {
+      override def flatMap[A, B](fa: ZIO[R, Throwable, A])(
+          f: A => ZIO[R, Throwable, B]
+      ): ZIO[R, Throwable, B] =
         fa.flatMap(f)
 
-      override def raiseError[A](e: Throwable): Task[A] = ZIO.fail(e)
+      override def raiseError[A](e: Throwable): ZIO[R, Throwable, A] =
+        ZIO.die(e)
 
-      override def handleErrorWith[A](fa: Task[A])(
-          f: Throwable => Task[A]
-      ): Task[A] = fa.catchAll(f)
+      override def pure[A](a: A): ZIO[R, Throwable, A] = ZIO.succeed(a)
 
-      override def pure[A](a: A): Task[A] = ZIO.succeed(a)
+      // we have already handled throwables via using a Response
+      override def handleErrorWith[A](fa: ZIO[R, Throwable, A])(
+          f: Throwable => ZIO[R, Throwable, A]
+      ): ZIO[R, Throwable, A] = fa.catchAllDefect(f)
 
-      override def zipMapAll[A](seq: IndexedSeq[Task[Any]])(
+      override def zipMapAll[A](seq: IndexedSeq[ZIO[R, Throwable, Any]])(
           f: IndexedSeq[Any] => A
-      ): Task[A] = ZIO.collectAll(seq).map(f)
+      ): ZIO[R, Throwable, A] = ZIO.collectAll(seq).map(f)
     }
 
-  implicit class EffectOps[+A](val a: A) extends AnyVal {
-    def pure: Task[A] = ZIO.succeed(a)
-    def fail[E](e: E): IO[E, A] = ZIO.fail(e)
+  implicit class EffectOps[+A, +E](private val a: A) extends AnyVal {
+    def pure: IO[E, A] = ZIO.succeed(a)
+    def fail[E1 >: E](e: E1): IO[E1, A] = ZIO.fail(e)
   }
 
   def toSmithy4sHttpRequest(req: Request): Task[Smithy4sHttpRequest[Blob]] = {
@@ -59,11 +62,11 @@ package object internal {
         headers.addHeader("Content-Length", contentLength.toString)
     }
     Request(
-      Body.fromStream(toStream(req.body)),
-      headers = updatedHeaders,
+      version = Version.`HTTP/1.1`,
       method,
       fromSmithy4sHttpUri(req.uri),
-      version = Version.`HTTP/1.1`,
+      updatedHeaders,
+      Body.fromStream(toStream(req.body)),
       remoteAddress = Option.empty
     )
   }
@@ -80,7 +83,13 @@ package object internal {
           case Scheme.WS =>
             throw new UnsupportedOperationException("Websocket not supported")
           case Scheme.WSS =>
-            throw new UnsupportedOperationException("Websocket not supported")
+            throw new UnsupportedOperationException(
+              "Secure Websocket not supported"
+            )
+          case Scheme.Custom(scheme) =>
+            throw new UnsupportedOperationException(
+              s"custom scheme $scheme is not supported"
+            )
         }
       case _ => Smithy4sHttpUriScheme.Http
     }
@@ -89,7 +98,7 @@ package object internal {
       uriScheme,
       uri.host.getOrElse("localhost"),
       uri.port,
-      uri.path.textSegments,
+      uri.path.segments,
       getQueryParams(uri),
       pathParams
     )
@@ -115,7 +124,9 @@ package object internal {
     )
   }
 
-  def toSmithy4sHttpResponse(res: Response): Task[Smithy4sHttpResponse[Blob]] =
+  def toSmithy4sHttpResponse(
+      res: Response
+  ): IO[Throwable, Smithy4sHttpResponse[Blob]] =
     collectBytes(res.body).map { blob =>
       val headers = res.headers.headers
         .map(h => CaseInsensitive(h.headerName) -> Seq(h.renderedValue))
@@ -124,7 +135,7 @@ package object internal {
     }
 
   def fromSmithy4sHttpUri(uri: Smithy4sHttpUri): URL = {
-    val path = Path.root.++(Path(uri.path.map(Path.Segment.apply).toVector))
+    val path = Path(uri.path.mkString("/")).addLeadingSlash
     val scheme = uri.scheme match {
       case Smithy4sHttpUriScheme.Https => Scheme.HTTPS
       case _                           => Scheme.HTTP
@@ -135,7 +146,7 @@ package object internal {
     val location = URL.Location.Absolute(
       scheme = scheme,
       host = uri.host,
-      port = uri.port.getOrElse(80)
+      originalPort = uri.port
     )
 
     URL(

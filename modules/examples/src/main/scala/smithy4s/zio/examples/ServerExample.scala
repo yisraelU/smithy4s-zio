@@ -4,26 +4,30 @@ import example.todo.Todo
 import example.todo.TodoServiceGen.serviceInstance
 import smithy4s.zio.examples.impl.{InMemoryDatabase, PrimaryKeyGen, ToDoImpl}
 import smithy4s.zio.http.SimpleRestJsonBuilder
-import zio.http.Server
-import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
+import zio.{ExitCode, URIO, ZIO, ZIOAppDefault}
+import com.comcast.ip4s.*
+import zio.http.{HttpApp, Server}
 
 object Main extends ZIOAppDefault {
 
-  private val port = 8081
+  private val port: Port = Port.fromInt(8091).get
 
-  val program: ZIO[Any, Throwable, Nothing] = {
+  val app: ZIO[Any, Throwable, HttpApp[Any]] = {
     for {
       _ <- zio.Console.printLine(s"Starting server on http://localhost:$port")
       keyGen = PrimaryKeyGen.default()
       db <- InMemoryDatabase.make[Todo](keyGen)
-      app <- SimpleRestJsonBuilder
+      routes <- SimpleRestJsonBuilder
         .routes(ToDoImpl(db, "http://localhost/todos"))
         .lift
-      server <- Server.serve(app.withDefaultErrorResponse)
-    } yield server
-  }.provide(Server.defaultWithPort(port))
+      app = routes.sandbox.toHttpApp
+      _ <- zio.Console.printLine(s"Starting server on http://localhost:$port")
+    } yield app
+  }
 
-  override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = {
-    program.exitCode
+  override def run: URIO[Any, ExitCode] = {
+    app
+      .flatMap(Server.serve(_).provide(Server.defaultWithPort(port.value)))
+      .exitCode
   }
 }

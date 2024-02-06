@@ -2,16 +2,15 @@ package smithy4s.zio.http
 
 import smithy4s.zio.http.internal.EffectOps
 import smithy4s.{Endpoint, Service}
-import zio.http.{EHttpApp, Http, Request, Response}
 import zio.{Task, ZIO}
 
 object ServerEndpointMiddleware {
 
-  trait Simple extends Endpoint.Middleware.Simple[EHttpApp]
+  trait Simple[F[_]] extends Endpoint.Middleware.Simple[HttpRoutes]
 
   def mapErrors(
       f: PartialFunction[Throwable, Throwable]
-  ): ServerEndpointMiddleware = flatMapErrors(f.andThen(_.pure))
+  ): ServerEndpointMiddleware = flatMapErrors(f(_).pure)
 
   def flatMapErrors(
       f: PartialFunction[Throwable, Task[Throwable]]
@@ -19,23 +18,17 @@ object ServerEndpointMiddleware {
     new ServerEndpointMiddleware {
       def prepare[Alg[_[_, _, _, _, _]]](service: Service[Alg])(
           endpoint: Endpoint[service.Operation, _, _, _, _, _]
-      ): EHttpApp => EHttpApp = http => {
-        val handler: PartialFunction[Throwable, Task[Response]] = {
-          case e @ endpoint.Error(_, _) => ZIO.fail(e)
+      ): HttpRoutes => HttpRoutes = routes => {
+        /* val fx: PartialFunction[Throwable, Task[Nothing]] = {
+          case e @ endpoint.Error(_, _) => ZIO.die(e)
           case scala.util.control.NonFatal(other) if f.isDefinedAt(other) =>
-            f(other).flatMap(ZIO.fail(_))
-        }
-        Http.collectZIO[Request] { req =>
-          http
-            .runZIO(req)
-            .mapError {
-              // todo investigate the Option parameter for error
-              case None    => new Exception("No response")
-              case Some(e) => e
-            }
-            .catchSome(handler)
+            f(other).flatMap(ZIO.die(_))
+        }*/
 
-        }
+        f.andThen(_.flatMap(ZIO.die(_)))
+        // todo pending error mapping added to Routes
+        routes
       }
     }
+
 }

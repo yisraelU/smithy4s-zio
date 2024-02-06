@@ -1,13 +1,13 @@
 package smithy4s.zio.http.internal
 
 import smithy4s.Blob
-import smithy4s.client._
+import smithy4s.client.UnaryClientCodecs
 import smithy4s.codecs.BlobEncoder
 import smithy4s.http._
 import smithy4s.json.Json
-import smithy4s.server.UnaryServerCodecs
 import smithy4s.zio.http.SimpleProtocolCodecs
-import zio.Task
+import smithy4s.zio.http.internal.ZHttpToSmithy4sClient.ResourcefulTask
+import zio.Scope
 import zio.http.{Request, Response, URL}
 
 // scalafmt: {maxColumn = 120}
@@ -40,27 +40,10 @@ private[http] class SimpleRestJsonCodecs(
     smithy4s.http.amazonErrorTypeHeader
   )
 
-  def makeServerCodecs: UnaryServerCodecs.Make[Task, Request, Response] = {
-    val baseResponse = HttpResponse(200, Map.empty, Blob.empty)
-    HttpUnaryServerCodecs
-      .builder[Task]
-      .withBodyDecoders(payloadDecoders)
-      .withSuccessBodyEncoders(payloadEncoders)
-      .withErrorBodyEncoders(payloadEncoders)
-      .withErrorTypeHeaders(errorHeaders: _*)
-      .withMetadataDecoders(Metadata.Decoder)
-      .withMetadataEncoders(Metadata.Encoder)
-      .withBaseResponse(_ => baseResponse.pure)
-      .withResponseMediaType("application/json")
-      .withWriteEmptyStructs(!_.isUnit)
-      .withRequestTransformation[Request](toSmithy4sHttpRequest)
-      .withResponseTransformation(fromSmithy4sHttpResponse(_).pure)
-      .build()
-  }
-
   def makeClientCodecs(
       url: URL
-  ): UnaryClientCodecs.Make[Task, Request, Response] = {
+  ): UnaryClientCodecs.Make[ResourcefulTask, Request, Response] = {
+    implicit val monadThrowLike = zioMonadThrowLike[Scope]
     val baseRequest = HttpRequest(HttpMethod.POST, toSmithy4sHttpUri(url, None), Map.empty, Blob.empty)
     HttpUnaryClientCodecs.builder
       .withBodyEncoders(payloadEncoders)
@@ -76,6 +59,25 @@ private[http] class SimpleRestJsonCodecs(
       .withHostPrefixInjection(hostPrefixInjection)
       .build()
 
+  }
+
+  def makeServerCodecs = {
+    implicit val monadThrowLike = zioMonadThrowLike[Any]
+    val baseResponse = HttpResponse(200, Map.empty, Blob.empty)
+
+    HttpUnaryServerCodecs.builder
+      .withBodyDecoders(payloadDecoders)
+      .withSuccessBodyEncoders(payloadEncoders)
+      .withErrorBodyEncoders(payloadEncoders)
+      .withErrorTypeHeaders(errorHeaders: _*)
+      .withMetadataDecoders(Metadata.Decoder)
+      .withMetadataEncoders(Metadata.Encoder)
+      .withBaseResponse(_ => baseResponse.pure)
+      .withResponseMediaType("application/json")
+      .withWriteEmptyStructs(!_.isUnit)
+      .withRequestTransformation[Request](toSmithy4sHttpRequest)
+      .withResponseTransformation(fromSmithy4sHttpResponse(_).pure)
+      .build()
   }
 
 }

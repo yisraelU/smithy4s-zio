@@ -3,7 +3,6 @@ package instances
 
 import smithy4s.kinds.PolyFunction
 import smithy4s.schema.Primitive
-import smithy4s.zio.prelude.instances.all.blobEquals
 import smithy4s.{Blob, ShapeId, Timestamp}
 import zio.prelude.coherent.HashOrd.derive
 import zio.prelude.{Equal, Hash}
@@ -17,7 +16,7 @@ private[instances] trait HashInstances {
       def hash(a: Blob): Int = a.hashCode()
 
       def checkEqual(l: Blob, r: Blob): Boolean =
-        Equal[Blob].equals(l, r)
+        Equal[Blob].equal(l, r)
     }
   implicit val documentHash: Hash[smithy4s.Document] =
     Hash.default

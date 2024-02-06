@@ -4,12 +4,14 @@ import cats.effect.SyncIO
 import org.typelevel.vault.Key
 import smithy4s.Endpoint
 import smithy4s.http.PathParams
-import zio.ZIO
+import zio.Task
 import zio.http._
 
 package object http {
-  type ServerEndpointMiddleware = Endpoint.Middleware[EHttpApp]
+  type HttpRoutes = Routes[Any, Throwable]
   type ClientEndpointMiddleware = Endpoint.Middleware[Client]
+  type ServerEndpointMiddleware = Endpoint.Middleware[HttpRoutes]
+  type SimpleHandler = Request => Task[Response]
 
   private val pathParamsKey: String =
     Key.newKey[SyncIO, PathParams].unsafeRunSync().hashCode().toString
@@ -21,11 +23,21 @@ package object http {
   private def deserializePathParams(pathParamsString: String): PathParams = {
     pathParamsString
       .split("&")
+      .filterNot(_.isEmpty)
       .map { param =>
-        val Array(key, value) = param.split("=")
-        key -> value
+        {
+          param.split("=", 2) match {
+            case Array(key, value) => key -> value
+            case Array(k)          => (k, "")
+            case _ =>
+              throw new Exception(
+                s"Invalid path params string: $pathParamsString"
+              )
+          }
+        }
       }
       .toMap
+
   }
   def tagRequest(req: Request, pathParams: PathParams): Request = {
     val serializedPathParams = serializePathParams(pathParams)
@@ -37,12 +49,5 @@ package object http {
       req.removeHeader(pathParamsKey),
       pathParamsString.map(deserializePathParams)
     )
-  }
-
-  implicit class AppOps[A, E](eff: ZIO[A, Option[E], Response]) {
-    def orNotFound: ZIO[A, E, Response] = eff.unsome.map {
-      case None        => Response.status(Status.NotFound)
-      case Some(value) => value
-    }
   }
 }

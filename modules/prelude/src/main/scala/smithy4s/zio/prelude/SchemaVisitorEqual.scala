@@ -48,7 +48,6 @@ final class SchemaVisitorEqual(
       key: Schema[K],
       value: Schema[V]
   ): Equal[Map[K, V]] = {
-    implicit val eK = self(key)
     implicit val eV = self(value)
     Equal[Map[K, V]]
   }
