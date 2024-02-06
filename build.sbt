@@ -14,6 +14,7 @@ ThisBuild / tlFatalWarnings := false
 ThisBuild / githubWorkflowCheck := false
 ThisBuild / scalaVersion := "2.13.12"
 ThisBuild / tlJdkRelease := Some(11)
+ThisBuild / tlCiDependencyGraphJob := false
 addCommandAlias(
   "fmt",
   ";scalafmtAll;scalafmtSbt;"
