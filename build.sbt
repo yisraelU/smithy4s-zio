@@ -38,8 +38,17 @@ lazy val allModules = Seq(
   examples,
   scenarios,
   `compliance-tests`,
+  `codegen-cli`,
   transformers
 ).map(projectToRef)
+
+lazy val `codegen-cli` = (project in file("modules/codegen-cli"))
+  .settings(
+    name := s"$projectPrefix-cli",
+      libraryDependencies ++= Seq(
+      Dependencies.Smithy4s.`codegen-cli`.value
+    ),
+  )
 
 lazy val prelude = (project in file("modules/prelude"))
   .settings(
@@ -95,7 +104,8 @@ lazy val http = (project in file("modules/http"))
   .dependsOn(
     scenarios % "test->compile",
     `compliance-tests` % "test->compile",
-    transformers % "test->test"
+    `codegen-cli` % "test",
+    transformers % "test -> compile"
   )
   .settings(
     name := s"$projectPrefix-http",
@@ -108,7 +118,6 @@ lazy val http = (project in file("modules/http"))
       Dependencies.ZIO.http,
       Dependencies.ZIO.test,
       Dependencies.ZIO.testSbt
-      // Dependencies.Smithy.build % Test
     ),
     Test / complianceTestDependencies := Seq(
       Dependencies.Alloy.`protocol-tests`
@@ -116,6 +125,7 @@ lazy val http = (project in file("modules/http"))
     (Test / smithy4sModelTransformers) := List("ProtocolTransformer"),
     (Test / resourceGenerators) := Seq(dumpModel(Test).taskValue),
     (Test / fork) := true,
+    Test / parallelExecution := false,
     (Test / envVars) ++= {
       val files: Seq[File] = {
         (Test / resourceGenerators) {
@@ -173,8 +183,17 @@ lazy val transformers = (project in file("modules/transformers"))
     Compile / resourceDirectory := sourceDirectory.value / "resources"
   )
 
-def dumpModel(config: Configuration) =
+
+def dumpModel(config: Configuration): Def.Initialize[Task[Seq[File]]] =
   Def.task {
+    val dumpModelCp = (`codegen-cli` / Compile / fullClasspath).value
+      .map(_.data)
+
+    val modelTransformersCp = (transformers / Compile / fullClasspath).value.map(_.data)
+    val transforms = (config / smithy4sModelTransformers).value
+
+    val cp = (if (transforms.isEmpty) dumpModelCp else dumpModelCp ++ modelTransformersCp).map(_.getAbsolutePath()).mkString(":")
+
     import sjsonnew._
     import BasicJsonProtocol._
     import sbt.FileInfo
@@ -204,11 +223,6 @@ def dumpModel(config: Configuration) =
         hash => hash.file
       )
     val s = (config / streams).value
-    lazy val modelTransformersCp =
-      (transformers / Compile / fullClasspathAsJars).value
-        .map(_.data)
-    val transforms = (config / smithy4sModelTransformers).value
-    val localJars = modelTransformersCp.filter(_.isFile).toList
 
     val cached =
       Tracked.inputChanged[List[String], Seq[File]](
@@ -220,16 +234,9 @@ def dumpModel(config: Configuration) =
               s.cacheStoreFactory.make("output")
             ) { case ((changed, deps), outputs) =>
               if (changed || outputs.isEmpty) {
-                val dumpModelArgs = DumpModelArgs(
-                  List.empty,
-                  List.empty,
-                  deps,
-                  transforms,
-                  localJars.map(_.toPath).map(os.Path(_))
-                )
-                val res = smithy4s.codegen.Codegen.dumpModel(dumpModelArgs)
-                val file =
-                  (config / resourceManaged).value / "compliance-tests.json"
+                val args =  if(transforms.isEmpty) List.empty else List("--transformers", transforms.mkString(","))
+                val res = ("java" :: "-cp" :: cp :: "smithy4s.codegen.cli.Main" :: "dump-model" :: deps ::: args ).!!
+                val file = (config / resourceManaged).value / "compliance-tests.json"
                 IO.write(file, res)
                 Seq(file)
 
@@ -240,14 +247,15 @@ def dumpModel(config: Configuration) =
         }
       }
 
-    val trackedFiles =
+    val trackedFiles = List(
+      "--dependencies",
       (config / complianceTestDependencies).?.value
         .getOrElse(Seq.empty)
         .map { moduleId =>
           s"${moduleId.organization}:${moduleId.name}:${moduleId.revision}"
         }
-        .toList
+        .mkString(",")
+    )
 
     cached(trackedFiles)
-
   }
