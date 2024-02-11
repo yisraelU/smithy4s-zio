@@ -45,9 +45,9 @@ lazy val allModules = Seq(
 lazy val `codegen-cli` = (project in file("modules/codegen-cli"))
   .settings(
     name := s"$projectPrefix-cli",
-      libraryDependencies ++= Seq(
+    libraryDependencies ++= Seq(
       Dependencies.Smithy4s.`codegen-cli`.value
-    ),
+    )
   )
 
 lazy val prelude = (project in file("modules/prelude"))
@@ -183,16 +183,19 @@ lazy val transformers = (project in file("modules/transformers"))
     Compile / resourceDirectory := sourceDirectory.value / "resources"
   )
 
-
 def dumpModel(config: Configuration): Def.Initialize[Task[Seq[File]]] =
   Def.task {
     val dumpModelCp = (`codegen-cli` / Compile / fullClasspath).value
       .map(_.data)
 
-    val modelTransformersCp = (transformers / Compile / fullClasspath).value.map(_.data)
+    val modelTransformersCp =
+      (transformers / Compile / fullClasspath).value.map(_.data)
     val transforms = (config / smithy4sModelTransformers).value
 
-    val cp = (if (transforms.isEmpty) dumpModelCp else dumpModelCp ++ modelTransformersCp).map(_.getAbsolutePath()).mkString(":")
+    val cp = (if (transforms.isEmpty) dumpModelCp
+              else dumpModelCp ++ modelTransformersCp)
+      .map(_.getAbsolutePath())
+      .mkString(":")
 
     import sjsonnew._
     import BasicJsonProtocol._
@@ -234,9 +237,13 @@ def dumpModel(config: Configuration): Def.Initialize[Task[Seq[File]]] =
               s.cacheStoreFactory.make("output")
             ) { case ((changed, deps), outputs) =>
               if (changed || outputs.isEmpty) {
-                val args =  if(transforms.isEmpty) List.empty else List("--transformers", transforms.mkString(","))
-                val res = ("java" :: "-cp" :: cp :: "smithy4s.codegen.cli.Main" :: "dump-model" :: deps ::: args ).!!
-                val file = (config / resourceManaged).value / "compliance-tests.json"
+                val args =
+                  if (transforms.isEmpty) List.empty
+                  else List("--transformers", transforms.mkString(","))
+                val res =
+                  ("java" :: "-cp" :: cp :: "smithy4s.codegen.cli.Main" :: "dump-model" :: deps ::: args).!!
+                val file =
+                  (config / resourceManaged).value / "compliance-tests.json"
                 IO.write(file, res)
                 Seq(file)
 

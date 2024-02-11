@@ -38,9 +38,9 @@ object Dependencies {
     val core = Def.setting(
       "com.disneystreaming.smithy4s" %% "smithy4s-core" % version.value
     )
-     val `codegen-cli` = Def.setting(
-       "com.disneystreaming.smithy4s" %% "smithy4s-codegen-cli" % version.value
-     )
+    val `codegen-cli` = Def.setting(
+      "com.disneystreaming.smithy4s" %% "smithy4s-codegen-cli" % version.value
+    )
     val json = Def.setting(
       "com.disneystreaming.smithy4s" %% "smithy4s-json" % version.value
     )
