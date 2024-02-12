@@ -14,7 +14,6 @@ import software.amazon.smithy.protocoltests.traits.{
 }
 import java.util.function.BiFunction
 import scala.jdk.CollectionConverters.{CollectionHasAsScala, SeqHasAsJava}
-
 final class SimpleRestJsonProtocolTransformer extends ProjectionTransformer {
   override def getName: String = "ProtocolTransformer"
 
