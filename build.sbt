@@ -154,7 +154,7 @@ lazy val scenarios = (project in file("modules/test-scenarios"))
     Compile / resourceDirectory := sourceDirectory.value / "resources",
     Compile / smithy4sOutputDir := sourceDirectory.value / "generated"
   )
-  .enablePlugins(Smithy4sCodegenPlugin)
+  .enablePlugins(Smithy4sCodegenPlugin, NoPublishPlugin)
 
 lazy val examples = (project in file("modules/examples"))
   .settings(
@@ -168,7 +168,7 @@ lazy val examples = (project in file("modules/examples"))
     Compile / smithy4sAllowedNamespaces := List("example.todo")
   )
   .dependsOn(http)
-  .enablePlugins(Smithy4sCodegenPlugin)
+  .enablePlugins(Smithy4sCodegenPlugin, NoPublishPlugin)
 
 lazy val transformers = (project in file("modules/transformers"))
   .settings(
