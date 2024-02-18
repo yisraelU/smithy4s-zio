@@ -7,11 +7,10 @@ import java.io.File
 import sys.process.*
 import scala.collection.Seq
 
-ThisBuild / version := "0.1.0-SNAPSHOT"
 Global / onChangedBuildSource := ReloadOnSourceChanges
 ThisBuild / tlCiHeaderCheck := false
 ThisBuild / tlFatalWarnings := false
-ThisBuild / tlBaseVersion := "0.0.1"
+ThisBuild / tlBaseVersion := "0.1"
 ThisBuild / scalaVersion := "2.13.12"
 ThisBuild / tlJdkRelease := Some(11)
 ThisBuild / tlCiDependencyGraphJob := false
