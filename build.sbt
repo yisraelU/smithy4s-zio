@@ -11,6 +11,7 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 ThisBuild / tlCiHeaderCheck := false
 ThisBuild / tlFatalWarnings := false
 ThisBuild / tlBaseVersion := "0.1"
+ThisBuild / sonatypeProfileName := "io.github.yisraelu"
 ThisBuild / scalaVersion := "2.13.12"
 ThisBuild / tlJdkRelease := Some(11)
 ThisBuild / tlCiDependencyGraphJob := false
