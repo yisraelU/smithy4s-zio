@@ -10,7 +10,7 @@ ThisBuild / scmInfo := Some(
 
 inThisBuild(
   List(
-    organization := "io.github.yisraelu.smithy4s-zio",
+    organization := "io.github.yisraelu",
     homepage := Some(url("https://github.com/smithy4s-zio")),
     description := "ZIO bindings for Smithy4s",
     // Alternatively License.Apache2 see https://github.com/sbt/librarymanagement/blob/develop/core/src/main/scala/sbt/librarymanagement/License.scala
