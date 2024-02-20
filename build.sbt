@@ -12,6 +12,7 @@ ThisBuild / tlCiHeaderCheck := false
 ThisBuild / tlFatalWarnings := false
 ThisBuild / tlCiMimaBinaryIssueCheck := false
 ThisBuild / tlBaseVersion := "0.0"
+ThisBuild / tlCiReleaseBranches := Seq("main")
 ThisBuild / sonatypeProfileName := "io.github.yisraelu"
 ThisBuild / scalaVersion := "2.13.12"
 ThisBuild / tlJdkRelease := Some(11)
