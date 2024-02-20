@@ -1,66 +1,25 @@
-#mill
-out
-
 # sbt
-lib_managed
-project/project
-target
+target/
+project/plugins/project/
+boot/
+lib_managed/
+src_managed/
 
-# Eclipse
-.cache*
-.classpath
-.project
-.scala_dependencies
-.settings
-.target
-.worksheet
+# vim
+*.sw?
 
-# IntelliJ
-.idea
-.idea_modules
-*.iml
+# intellij
+.idea/
 
-# ENSIME
-.ensime
-.ensime_lucene
-.ensime_cache
+# ignore [ce]tags files
+tags
 
-# Mac
-.DS_Store
-
-# Akka Persistence
-journal
-snapshots
-
-# Log files
-*.log
-
-#Floobits
-.floo
-
-# Local Dynamo DB
-dynamodb_lib
-*.db
-
-# Node
-node_modules
-website/translated_docs
-website/build/
-website/yarn.lock
-website/node_modules
-website/i18n/*
-
-.bloop
+# metals
+.metals/
+.bsp/
+.bloop/
+metals.sbt
 .vscode
-.history
-.metals
-project/metals.sbt
-.ammonite
 
-# Version file
-version
-
-# BSP files
-.bsp
-
-.direnv
+# npm
+node_modules/
