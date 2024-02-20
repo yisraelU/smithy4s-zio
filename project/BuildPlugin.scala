@@ -3,8 +3,6 @@ import sbt.Keys.*
 
 object BuildPlugin extends AutoPlugin {
 
-
-
   val scalaVersionSuffix = Def
     .setting {
       scalaBinaryVersion.value match {

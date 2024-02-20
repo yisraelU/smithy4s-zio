@@ -21,9 +21,9 @@ addCompilerPlugin(
 val complianceTestDependencies =
   SettingKey[Seq[ModuleID]]("complianceTestDependencies")
 val projectPrefix = "smithy4s-zio"
-lazy val docs =
+/*lazy val docs =
   project.in(file("modules/site")).enablePlugins(TypelevelSitePlugin)
-
+ */
 lazy val root = project
   .in(file("."))
   .aggregate(allModules: _*)
