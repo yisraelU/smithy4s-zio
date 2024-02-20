@@ -8,15 +8,10 @@ import sys.process.*
 import scala.collection.Seq
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
-ThisBuild / tlCiHeaderCheck := false
-ThisBuild / tlFatalWarnings := false
-ThisBuild / tlCiMimaBinaryIssueCheck := false
-ThisBuild / tlBaseVersion := "0.0"
-ThisBuild / tlCiReleaseBranches := Seq("main")
-ThisBuild / sonatypeProfileName := "io.github.yisraelu"
-ThisBuild / scalaVersion := "2.13.12"
-ThisBuild / tlJdkRelease := Some(11)
-ThisBuild / tlCiDependencyGraphJob := false
+val Scala213 = "2.13.12"
+ThisBuild / crossScalaVersions := Seq(Scala213, "3.3.1")
+ThisBuild / scalaVersion := Scala213 // the default Scala
+
 addCommandAlias(
   "fmt",
   ";scalafmtAll;scalafmtSbt;"

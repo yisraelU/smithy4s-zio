@@ -1,31 +1,26 @@
-ThisBuild / organization := "io.github.yisraelu.smithy4s-zio"
-ThisBuild / versionScheme := Some("early-semver")
+import scala.collection.immutable.Seq
 
-ThisBuild / scmInfo := Some(
-  ScmInfo(
-    url("https://github.com/yisraelu/smithy4s-zio"),
-    "scm:git@github.com:yisraelu/smithy4s-zio.git"
-  )
+ThisBuild / tlBaseVersion := "0.0" // your current series x.y
+
+ThisBuild / organization := "io.github.yisraelu"
+ThisBuild / organizationName := "yisraelu"
+ThisBuild / description := "ZIO bindings for Smithy4s"
+ThisBuild / startYear := Some(2023)
+ThisBuild / licenses := Seq(License.Apache2)
+ThisBuild / developers := List(
+  // your GitHub handle and name
+  tlGitHubDev("yisraelu", "Yisrael Union")
 )
 
-inThisBuild(
-  List(
-    organization := "io.github.yisraelu",
-    homepage := Some(url("https://github.com/smithy4s-zio")),
-    description := "ZIO bindings for Smithy4s",
-    // Alternatively License.Apache2 see https://github.com/sbt/librarymanagement/blob/develop/core/src/main/scala/sbt/librarymanagement/License.scala
-    licenses := List(
-      "Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")
-    ),
-    developers := List(
-      Developer(
-        id = "yisraelu",
-        name = "Yisrael Union",
-        email = "ysrlunion@gmail.com",
-        url = url("https://github.com/yisraelu")
-      )
-    )
-  )
-)
-ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
-sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
+// publish to s01.oss.sonatype.org (set to true to publish to oss.sonatype.org instead)
+ThisBuild / tlSonatypeUseLegacyHost := false
+
+// publish website from this branch
+ThisBuild / tlSitePublishBranch := Some("main")
+
+ThisBuild / tlCiHeaderCheck := false
+ThisBuild / tlFatalWarnings := false
+ThisBuild / tlCiMimaBinaryIssueCheck := false
+ThisBuild / sonatypeProfileName := "io.github.yisraelu"
+ThisBuild / tlJdkRelease := Some(11)
+ThisBuild / tlCiDependencyGraphJob := false
