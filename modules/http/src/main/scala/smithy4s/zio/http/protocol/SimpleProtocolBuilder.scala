@@ -1,11 +1,11 @@
-package smithy4s.zio.http
+package smithy4s.zio.http.protocol
 
 import smithy4s.kinds.FunctorAlgebra
-import smithy4s.zio.http.builders.client.ClientBuilder
-import smithy4s.zio.http.builders.server.RouterBuilder
+import smithy4s.zio.http.internal.builders.client.ClientBuilder
+import smithy4s.zio.http.internal.builders.server.RouterBuilder
 import smithy4s.{Endpoint, ShapeTag}
 import zio.Task
-import zio.http._
+import zio.http.*
 
 /**
  * Abstract construct helping the construction of routers and clients
@@ -62,5 +62,3 @@ abstract class SimpleProtocolBuilder[P](
 
   }
 }
-
-object SimpleProtocolBuilder {}

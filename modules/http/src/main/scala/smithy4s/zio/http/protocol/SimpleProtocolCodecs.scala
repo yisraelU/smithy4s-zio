@@ -1,4 +1,4 @@
-package smithy4s.zio.http
+package smithy4s.zio.http.protocol
 
 import smithy4s.client.*
 import smithy4s.server.UnaryServerCodecs

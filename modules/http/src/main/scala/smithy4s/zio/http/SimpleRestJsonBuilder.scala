@@ -1,5 +1,7 @@
 package smithy4s.zio.http
 
+import smithy4s.zio.http.protocol.SimpleProtocolBuilder
+
 object SimpleRestJsonBuilder extends SimpleRestJsonBuilder(1024, false, true)
 
 class SimpleRestJsonBuilder private (

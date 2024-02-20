@@ -1,19 +1,15 @@
-package smithy4s.zio.http.builders.server
+package smithy4s.zio.http.internal.builders.server
 
 import smithy4s.http.HttpUnaryServerRouter
 import smithy4s.kinds.FunctorAlgebra
 import smithy4s.zio.http.internal.{
+  tagRequest,
   toSmithy4sHttpMethod,
   toSmithy4sHttpUri,
   zioMonadThrowLike
 }
-import smithy4s.zio.http.{
-  HttpRoutes,
-  ServerEndpointMiddleware,
-  SimpleHandler,
-  SimpleProtocolCodecs,
-  tagRequest
-}
+import smithy4s.zio.http.protocol.SimpleProtocolCodecs
+import smithy4s.zio.http.{HttpRoutes, ServerEndpointMiddleware, SimpleHandler}
 import smithy4s.{
   Bijection,
   Endpoint,
@@ -21,7 +17,7 @@ import smithy4s.{
   UnsupportedProtocolError,
   checkProtocol
 }
-import zio.http._
+import zio.http.*
 import zio.{IO, Task, ZIO}
 
 class RouterBuilder[
