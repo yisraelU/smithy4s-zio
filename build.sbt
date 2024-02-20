@@ -47,6 +47,7 @@ lazy val `codegen-cli` = (project in file("modules/codegen-cli"))
       Dependencies.Smithy4s.`codegen-cli`.value
     )
   )
+  .enablePlugins(NoPublishPlugin)
 
 lazy val prelude = (project in file("modules/prelude"))
   .settings(
@@ -96,7 +97,7 @@ lazy val `compliance-tests` = (project in file("modules/compliance-tests"))
     Compile / smithy4sAllowedNamespaces := List("smithy.test"),
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
-  .enablePlugins(Smithy4sCodegenPlugin)
+  .enablePlugins(Smithy4sCodegenPlugin, NoPublishPlugin)
 
 lazy val http = (project in file("modules/http"))
   .dependsOn(
@@ -180,6 +181,7 @@ lazy val transformers = (project in file("modules/transformers"))
     ),
     Compile / resourceDirectory := sourceDirectory.value / "resources"
   )
+  .enablePlugins(NoPublishPlugin)
 
 def dumpModel(config: Configuration): Def.Initialize[Task[Seq[File]]] =
   Def.task {
