@@ -129,37 +129,14 @@ abstract class ProtocolComplianceSuite extends ZIOSpecDefault {
   ): Spec[Any, Throwable] = {
     val shouldRun = rule(tc)
     shouldRun match {
-      case ShouldRun.No  => Spec.empty
-      case ShouldRun.Yes => Spec.empty
-      // test(tc.show)(tc.run) @@ TestAspect.withLiveClock
+      case ShouldRun.No => Spec.empty
+      case ShouldRun.Yes =>
+        test(tc.show)(tc.run) @@ TestAspect.withLiveClock @@ TestAspect.parallel
       case ShouldRun.NotSure => Spec.empty
-      /*   tc.run
-            .map(assertion => unsureWhetherShouldSucceed(tc, assertion))*/
+      //  test(tc.show)(tc.run) @@ TestAspect.withLiveClock @@ TestAspect.ignore
     }
 
   }
-
-  /*  def unsureWhetherShouldSucceed(
-                                  test: ComplianceTest[Task],
-                                  res: ComplianceTest.ComplianceResult
-                                ): TestResult = {
-    val results = assert(())(res)
-    if(results.isFailure) {
-      Spec.
-
-    }
-      throw new weaver.CanceledException(
-          Some(failures.head),
-          weaver.SourceLocation.fromContext
-        )
-
-    case Right(_) => Spec.
-        throw new weaver.IgnoredException(
-          Some("Passing unknown spec"),
-          weaver.SourceLocation.fromContext
-        )
-    }*/
-
 }
 
 // brought over from weaver https://github.com/disneystreaming/weaver-test/blob/d5489c994ecbe84f267550fb84c25c9fba473d70/modules/core/src/weaver/Filters.scala#L5

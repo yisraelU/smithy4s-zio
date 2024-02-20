@@ -100,7 +100,7 @@ package object internal {
       uriScheme,
       uri.host.getOrElse("localhost"),
       uri.port,
-      uri.path.segments,
+      uri.path.segments.map(java.net.URLDecoder.decode(_, "UTF-8")),
       getQueryParams(uri),
       pathParams
     )

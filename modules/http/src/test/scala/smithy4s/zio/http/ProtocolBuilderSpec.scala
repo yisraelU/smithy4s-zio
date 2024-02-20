@@ -2,7 +2,7 @@ package smithy4s.zio.http
 
 import alloy.SimpleRestJson
 import smithy4s.example.{PizzaAdminServiceGen, WeatherGen}
-import smithy4s.zio.http.internal.builders.client.ClientBuilder
+import smithy4s.zio.http.builders.client.ClientBuilder
 import zio.http.Client
 import zio.test.{Assertion, Spec, TestEnvironment, ZIOSpecDefault, assertZIO}
 import zio.{Scope, ZEnvironment, ZIO, ZLayer}

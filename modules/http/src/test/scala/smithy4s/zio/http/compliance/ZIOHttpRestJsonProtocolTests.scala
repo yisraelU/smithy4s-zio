@@ -41,7 +41,6 @@ object ZIOHttpRestJsonProtocolTests extends ProtocolComplianceSuite {
       .map { borrowedTests =>
         borrowedTests.simpleRestJsonBorrowedTests
           .getOrElse(ShapeId("aws.protocols", "restJson1"), AllowRules.empty)
-          .filterRules(rule => jsDisallowed.exists(rule.id.matches))
       }
       .map { decodedRules => (c: compliancetests.ComplianceTest[Task]) =>
         if (c.show.contains("alloy")) ShouldRun.Yes

@@ -111,7 +111,6 @@ lazy val http = (project in file("modules/http"))
     libraryDependencies ++= Seq(
       Dependencies.Smithy4s.core.value,
       Dependencies.Smithy4s.json.value,
-      Dependencies.Smithy4s.http4s.value,
       Dependencies.Typelevel.vault.value,
       Dependencies.Alloy.core % Test,
       Dependencies.ZIO.http,

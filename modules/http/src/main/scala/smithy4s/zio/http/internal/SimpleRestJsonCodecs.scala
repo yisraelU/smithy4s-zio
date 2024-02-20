@@ -5,7 +5,8 @@ import smithy4s.client.UnaryClientCodecs
 import smithy4s.codecs.BlobEncoder
 import smithy4s.http.*
 import smithy4s.json.Json
-import smithy4s.zio.http.{ResourcefulTask, SimpleProtocolCodecs}
+import smithy4s.zio.http.ResourcefulTask
+import smithy4s.zio.http.protocol.SimpleProtocolCodecs
 import zio.Scope
 import zio.http.{Request, Response, URL}
 
