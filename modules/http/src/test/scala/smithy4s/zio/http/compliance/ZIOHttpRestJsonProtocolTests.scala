@@ -22,12 +22,6 @@ import java.nio.file.Path
 
 object ZIOHttpRestJsonProtocolTests extends ProtocolComplianceSuite {
 
-  // in particular around floating-point precision.
-  private val jsDisallowed = Set(
-    "RestJsonInputWithHeadersAndAllParams",
-    "RestJsonHttpRequestLabelEscaping"
-  )
-
   override def allRules(
       dsi: DynamicSchemaIndex
   ): Task[compliancetests.ComplianceTest[Task] => compliancetests.ShouldRun] = {

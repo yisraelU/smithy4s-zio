@@ -12,8 +12,8 @@ val Scala213 = "2.13.12"
 ThisBuild / scalaVersion := Scala213 // the default Scala
 
 addCommandAlias(
-  "fmt",
-  ";scalafmtAll;scalafmtSbt;"
+  "lint",
+  ";scalafmtAll;scalafmtSbt;scalafixAll;"
 )
 addCompilerPlugin(
   "org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full
