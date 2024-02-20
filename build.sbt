@@ -9,7 +9,6 @@ import scala.collection.Seq
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 val Scala213 = "2.13.12"
-ThisBuild / crossScalaVersions := Seq(Scala213, "3.3.1")
 ThisBuild / scalaVersion := Scala213 // the default Scala
 
 addCommandAlias(
