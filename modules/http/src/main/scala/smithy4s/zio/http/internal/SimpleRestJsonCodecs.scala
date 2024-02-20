@@ -3,10 +3,9 @@ package smithy4s.zio.http.internal
 import smithy4s.Blob
 import smithy4s.client.UnaryClientCodecs
 import smithy4s.codecs.BlobEncoder
-import smithy4s.http._
+import smithy4s.http.*
 import smithy4s.json.Json
-import smithy4s.zio.http.SimpleProtocolCodecs
-import smithy4s.zio.http.internal.ZHttpToSmithy4sClient.ResourcefulTask
+import smithy4s.zio.http.{ResourcefulTask, SimpleProtocolCodecs}
 import zio.Scope
 import zio.http.{Request, Response, URL}
 

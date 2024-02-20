@@ -4,10 +4,11 @@ import cats.effect.SyncIO
 import org.typelevel.vault.Key
 import smithy4s.Endpoint
 import smithy4s.http.PathParams
-import zio.Task
-import zio.http._
+import zio.{Scope, Task, ZIO}
+import zio.http.*
 
 package object http {
+  type ResourcefulTask[Output] = ZIO[Scope, Throwable, Output]
   type HttpRoutes = Routes[Any, Throwable]
   type ClientEndpointMiddleware = Endpoint.Middleware[Client]
   type ServerEndpointMiddleware = Endpoint.Middleware[HttpRoutes]

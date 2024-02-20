@@ -2,7 +2,6 @@ package smithy4s.zio.http
 
 import smithy4s.client.*
 import smithy4s.server.UnaryServerCodecs
-import smithy4s.zio.http.internal.ZHttpToSmithy4sClient.ResourcefulTask
 import zio.Task
 import zio.http.{Request, Response, URL}
 

@@ -1,9 +1,12 @@
 package smithy4s.zio.http.builders.client
 
 import smithy4s.client.UnaryClientCompiler
-import smithy4s.zio.http.internal.ZHttpToSmithy4sClient.ResourcefulTask
 import smithy4s.zio.http.internal.{ZHttpToSmithy4sClient, zioMonadThrowLike}
-import smithy4s.zio.http.{ClientEndpointMiddleware, SimpleProtocolCodecs}
+import smithy4s.zio.http.{
+  ClientEndpointMiddleware,
+  ResourcefulTask,
+  SimpleProtocolCodecs
+}
 import smithy4s.{Endpoint, ShapeTag, UnsupportedProtocolError, checkProtocol}
 import zio.http.{Client, Response, URL}
 import zio.{IO, Scope, ZIO}

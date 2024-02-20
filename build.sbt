@@ -141,6 +141,11 @@ lazy val http = (project in file("modules/http"))
   )
   .enablePlugins(ScalafixPlugin)
 
+lazy val docs = project
+  .in(file("site"))
+  .enablePlugins(TypelevelSitePlugin)
+  .dependsOn(examples)
+
 lazy val scenarios = (project in file("modules/test-scenarios"))
   .settings(
     name := s"$projectPrefix-tests",
@@ -164,7 +169,7 @@ lazy val examples = (project in file("modules/examples"))
       Dependencies.Http4s.emberServer.value,
       Dependencies.ZIO.catsInterop
     ),
-    Compile / smithy4sAllowedNamespaces := List("example.todo")
+    Compile / smithy4sAllowedNamespaces := List("example.todo", "example.hello")
   )
   .dependsOn(http)
   .enablePlugins(Smithy4sCodegenPlugin, NoPublishPlugin)
