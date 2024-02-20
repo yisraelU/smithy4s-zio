@@ -8,15 +8,9 @@ import sys.process.*
 import scala.collection.Seq
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
-ThisBuild / tlCiHeaderCheck := false
-ThisBuild / tlFatalWarnings := false
-ThisBuild / tlCiMimaBinaryIssueCheck := false
-ThisBuild / tlBaseVersion := "0.0"
-ThisBuild / tlCiReleaseBranches := Seq("main")
-ThisBuild / sonatypeProfileName := "io.github.yisraelu"
-ThisBuild / scalaVersion := "2.13.12"
-ThisBuild / tlJdkRelease := Some(11)
-ThisBuild / tlCiDependencyGraphJob := false
+val Scala213 = "2.13.12"
+ThisBuild / scalaVersion := Scala213 // the default Scala
+
 addCommandAlias(
   "fmt",
   ";scalafmtAll;scalafmtSbt;"
@@ -27,7 +21,9 @@ addCompilerPlugin(
 val complianceTestDependencies =
   SettingKey[Seq[ModuleID]]("complianceTestDependencies")
 val projectPrefix = "smithy4s-zio"
-
+/*lazy val docs =
+  project.in(file("modules/site")).enablePlugins(TypelevelSitePlugin)
+ */
 lazy val root = project
   .in(file("."))
   .aggregate(allModules: _*)
@@ -51,6 +47,7 @@ lazy val `codegen-cli` = (project in file("modules/codegen-cli"))
       Dependencies.Smithy4s.`codegen-cli`.value
     )
   )
+  .enablePlugins(NoPublishPlugin)
 
 lazy val prelude = (project in file("modules/prelude"))
   .settings(
@@ -100,7 +97,7 @@ lazy val `compliance-tests` = (project in file("modules/compliance-tests"))
     Compile / smithy4sAllowedNamespaces := List("smithy.test"),
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
-  .enablePlugins(Smithy4sCodegenPlugin)
+  .enablePlugins(Smithy4sCodegenPlugin, NoPublishPlugin)
 
 lazy val http = (project in file("modules/http"))
   .dependsOn(
@@ -184,6 +181,7 @@ lazy val transformers = (project in file("modules/transformers"))
     ),
     Compile / resourceDirectory := sourceDirectory.value / "resources"
   )
+  .enablePlugins(NoPublishPlugin)
 
 def dumpModel(config: Configuration): Def.Initialize[Task[Seq[File]]] =
   Def.task {

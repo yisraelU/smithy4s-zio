@@ -49,7 +49,7 @@ object asserts {
     assertTrue(result.contains(expected))
       .??(
         s"$prefix the result value: ${pprint.apply(result)} contains the expected TestCase value ${pprint
-          .apply(expected)}."
+            .apply(expected)}."
       )
 
   }
@@ -100,7 +100,7 @@ object asserts {
   ): ComplianceResult = {
     assertTrue(result === testCase).??(
       s"$prefix the result value: ${pprint.apply(result)} is equal to the expected TestCase value ${pprint
-        .apply(testCase)}."
+          .apply(testCase)}."
     )
   }
 
@@ -202,15 +202,19 @@ object asserts {
 
     expected
       .map {
-        _.toList.collect { case (key, value) =>
-          headers.get(key) match {
-            case Some(v) if v == value => success
-            case Some(v) =>
-              asserts.fail(s"Header $key has value `$v` but expected `$value`")
-            case None =>
-              fail(s"Header $key is missing in the request.")
+        _.toList
+          .collect { case (key, value) =>
+            headers.get(key) match {
+              case Some(v) if v == value => success
+              case Some(v) =>
+                asserts.fail(
+                  s"Header $key has value `$v` but expected `$value`"
+                )
+              case None =>
+                fail(s"Header $key is missing in the request.")
+            }
           }
-        }.combineAll
+          .combineAll
       }
       .getOrElse {
         success

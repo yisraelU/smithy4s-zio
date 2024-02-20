@@ -3,15 +3,6 @@ import sbt.Keys.*
 
 object BuildPlugin extends AutoPlugin {
 
-  lazy val doNotPublishArtifact = Seq(
-    publish / skip := true,
-    publish := {},
-    publishArtifact := false,
-    Compile / packageDoc / publishArtifact := false,
-    Compile / packageSrc / publishArtifact := false,
-    Compile / packageBin / publishArtifact := false
-  )
-
   val scalaVersionSuffix = Def
     .setting {
       scalaBinaryVersion.value match {

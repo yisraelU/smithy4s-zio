@@ -58,6 +58,10 @@ jobs:
         if: matrix.java == 'temurin@11' && matrix.os == 'ubuntu-latest'
         run: sbt '++ ${{ matrix.scala }}' scalafmtCheckAll 'project /' scalafmtSbtCheck
 
+      - name: Check scalafix lints
+        if: matrix.java == 'temurin@11' && matrix.os == 'ubuntu-latest'
+        run: sbt '++ ${{ matrix.scala }}' 'scalafixAll --check'
+
       - name: Test
         run: sbt '++ ${{ matrix.scala }}' test
 
@@ -67,11 +71,11 @@ jobs:
 
       - name: Make target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
-        run: mkdir -p target modules/codegen-cli/target modules/transformers/target modules/schema/target modules/compliance-tests/target modules/prelude/target modules/http/target project/target
+        run: mkdir -p target modules/schema/target modules/prelude/target modules/http/target project/target
 
       - name: Compress target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
-        run: tar cf targets.tar target modules/codegen-cli/target modules/transformers/target modules/schema/target modules/compliance-tests/target modules/prelude/target modules/http/target project/target
+        run: tar cf targets.tar target modules/schema/target modules/prelude/target modules/http/target project/target
 
       - name: Upload target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
