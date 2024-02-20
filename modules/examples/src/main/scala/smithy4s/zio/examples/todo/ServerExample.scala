@@ -1,12 +1,16 @@
-package smithy4s.zio.examples
+package smithy4s.zio.examples.todo
 
+import com.comcast.ip4s.*
 import example.todo.Todo
 import example.todo.TodoServiceGen.serviceInstance
-import smithy4s.zio.examples.impl.{InMemoryDatabase, PrimaryKeyGen, ToDoImpl}
+import smithy4s.zio.examples.todo.impl.{
+  InMemoryDatabase,
+  PrimaryKeyGen,
+  ToDoImpl
+}
 import smithy4s.zio.http.SimpleRestJsonBuilder
-import zio.{ExitCode, URIO, ZIO, ZIOAppDefault}
-import com.comcast.ip4s.*
 import zio.http.{HttpApp, Server}
+import zio.{ExitCode, URIO, ZIO, ZIOAppDefault}
 
 object Main extends ZIOAppDefault {
 

@@ -1,4 +1,4 @@
-package smithy4s.zio.examples
+package smithy4s.zio.examples.todo
 
 import example.todo.TodoServiceGen
 import smithy4s.zio.http.SimpleRestJsonBuilder

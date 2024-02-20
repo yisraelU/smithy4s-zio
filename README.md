@@ -1,25 +1,15 @@
 
 # Smithy4s-Zio
 
+### Introduction
 - A few small libs based off the great [Smithy4s](https://disneystreaming.github.io/smithy4s/) to enable integration with ZIO ecosystem.
 
+### Credits
+- This project is based completely off the [http4s](https://http4s.org/) integration in Smithy4s.
+
 #### Keep in mind this is WIP
- 
-## notes
 
-## Published Modules
-  - ZIO Http
-    - ZIO Http Client and Server implementations for the [`alloy#simpleRestJsonProtocol`](https://github.com/disneystreaming/alloy)
-    - an opinionated rest-like protocol using json over http
-  - ZIO Prelude 
-    - Automatic derivation of the following Typeclasses for Smithy4s generated schemas 
-      - Debug
-      - Hash
-      - Equals
-  - ZIO Schema for automatic derivation of ZIO Schema for Smithy Models
+### Documentation
 
 
-## Usage of ZIO Http Smithy4s integration
-  - see example client and server in `example` module
-  - 
   

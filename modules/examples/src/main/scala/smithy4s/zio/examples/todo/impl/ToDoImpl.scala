@@ -1,4 +1,4 @@
-package smithy4s.zio.examples.impl
+package smithy4s.zio.examples.todo.impl
 
 import example.todo.*
 import zio.{Task, ZIO}
