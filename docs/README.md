@@ -41,6 +41,91 @@ The snapshot version is available via the Sonatype snapshots repository: ```@SNA
 
 ### Http Server and Client Quickstart (borrows from Smithy4s example)   
 
+
+Below is a quick example of smithy4s in action.
+This page does not provide much explanation or detail. For more information on various aspects of smithy4s, read through the other sections of this documentation site.
+
+
+This section will get you started with a simple `sbt` module that enables smithy4s code generation.
+
+### project/plugins.sbt
+
+Add the `smithy4s-sbt-codegen` plugin to your build.
+
+```scala
+addSbtPlugin("com.disneystreaming.smithy4s" % "smithy4s-sbt-codegen" % "<version>")
+```
+
+### build.sbt
+
+Enable the plugin in your project, add the smithy and zio-http dependencies.
+
+```scala
+import smithy4s.codegen.Smithy4sCodegenPlugin
+
+val example = project
+  .in(file("modules/example"))
+  .enablePlugins(Smithy4sCodegenPlugin)
+  .settings(
+    libraryDependencies ++= Seq(
+      "io.github.yisraelu" %% "smithy4s-zio-http" % "@VERSION@"
+    )
+  )
+```
+
+## Smithy content
+
+Now is the time to add some Smithy shapes to see what code generation can do for you. Following the setup above, the location for the Smithy content will change depending on what build tool you used.
+
+Now let's define an API in Smithy. Create the following file:
+
+- You'll write in `modules/example/src/main/smithy/ExampleService.smithy`.
+
+And add the content below:
+
+```kotlin
+namespace smithy4s.hello
+
+use alloy#simpleRestJson
+
+@simpleRestJson
+service HelloWorldService {
+  version: "1.0.0",
+  operations: [Hello]
+}
+
+@http(method: "POST", uri: "/{name}", code: 200)
+operation Hello {
+  input: Person,
+  output: Greeting
+}
+
+structure Person {
+  @httpLabel
+  @required
+  name: String,
+
+  @httpQuery("town")
+  town: String
+}
+
+structure Greeting {
+  @required
+  message: String
+}
+```
+
+The Scala code corresponding to this smithy file will be generated the next time you compile your project.
+
+## Using the generated code
+
+Now, let's use the generated code by the service. You need to create a scala file at the following location:
+
+-  `modules/example/src/main/scala/Main.scala`
+
+Implement your service by extending the generated Service trait. Wire up routes into server.
+
+
 ```scala mdoc:silent
 import example.hello._
 import zio.{Task, ZIO,ZIOAppDefault, ExitCode, URIO}
