@@ -85,6 +85,10 @@
     <li class="level1 nav-leaf"><a href="#notes">Notes</a></li>
     <li class="level1 nav-leaf"><a href="#usage">Usage</a></li>
     <li class="level1 nav-leaf"><a href="#http-server-and-client-quickstart-borrows-from-smithy4s-example">Http Server and Client Quickstart (borrows from Smithy4s example)</a></li>
+    <li class="level1 nav-leaf"><a href="#project-plugins-sbt">project/plugins.sbt</a></li>
+    <li class="level1 nav-leaf"><a href="#build-sbt">build.sbt</a></li>
+    <li class="level1 nav-leaf"><a href="#smithy-content">Smithy content</a></li>
+    <li class="level1 nav-leaf"><a href="#using-the-generated-code">Using the generated code</a></li>
     <li class="level1 nav-leaf"><a href="#run-service">Run Service</a></li>
     <li class="level1 nav-leaf"><a href="#client-example">Client Example</a></li>
   </ul>
@@ -157,9 +161,74 @@
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="identifier">libraryDependencies</span><span> ++= </span><span class="type-name">Seq</span><span>(
   </span><span class="string-literal">&quot;io.github.yisraelu&quot;</span><span> %% </span><span class="string-literal">&quot;smithy4s-zio-http&quot;</span><span> % </span><span class="string-literal">&quot;0.0.1&quot;</span><span>
 )</span></code></pre>
-        <p>The snapshot version is available via the Sonatype snapshots repository: <code>0.0.1-1-b246a08-SNAPSHOT.</code></p>
+        <p>The snapshot version is available via the Sonatype snapshots repository: <code>0.0.1-2-3318bba-SNAPSHOT.</code></p>
         
         <h3 id="http-server-and-client-quickstart-borrows-from-smithy4s-example" class="section"><a class="anchor-link left" href="#http-server-and-client-quickstart-borrows-from-smithy4s-example"><i class="icofont-laika link">&#xef71;</i></a>Http Server and Client Quickstart (borrows from Smithy4s example)</h3>
+        <p>Below is a quick example of smithy4s in action.
+        This page does not provide much explanation or detail. For more information on various aspects of smithy4s, read through the other sections of this documentation site.</p>
+        <p>This section will get you started with a simple <code>sbt</code> module that enables smithy4s code generation.</p>
+        
+        <h3 id="project-plugins-sbt" class="section"><a class="anchor-link left" href="#project-plugins-sbt"><i class="icofont-laika link">&#xef71;</i></a>project/plugins.sbt</h3>
+        <p>Add the <code>smithy4s-sbt-codegen</code> plugin to your build.</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="identifier">addSbtPlugin</span><span>(</span><span class="string-literal">&quot;com.disneystreaming.smithy4s&quot;</span><span> % </span><span class="string-literal">&quot;smithy4s-sbt-codegen&quot;</span><span> % </span><span class="string-literal">&quot;&lt;version&gt;&quot;</span><span>)</span></code></pre>
+        
+        <h3 id="build-sbt" class="section"><a class="anchor-link left" href="#build-sbt"><i class="icofont-laika link">&#xef71;</i></a>build.sbt</h3>
+        <p>Enable the plugin in your project, add the smithy and zio-http dependencies.</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">smithy4s</span><span>.</span><span class="identifier">codegen</span><span>.</span><span class="type-name">Smithy4sCodegenPlugin</span><span>
+
+</span><span class="keyword">val</span><span> </span><span class="identifier">example</span><span> = </span><span class="identifier">project</span><span>
+  .</span><span class="identifier">in</span><span>(</span><span class="identifier">file</span><span>(</span><span class="string-literal">&quot;modules/example&quot;</span><span>))
+  .</span><span class="identifier">enablePlugins</span><span>(</span><span class="type-name">Smithy4sCodegenPlugin</span><span>)
+  .</span><span class="identifier">settings</span><span>(
+    </span><span class="identifier">libraryDependencies</span><span> ++= </span><span class="type-name">Seq</span><span>(
+      </span><span class="string-literal">&quot;io.github.yisraelu&quot;</span><span> %% </span><span class="string-literal">&quot;smithy4s-zio-http&quot;</span><span> % </span><span class="string-literal">&quot;0.0.1&quot;</span><span>
+    )
+  )</span></code></pre>
+        
+        <h2 id="smithy-content" class="section"><a class="anchor-link left" href="#smithy-content"><i class="icofont-laika link">&#xef71;</i></a>Smithy content</h2>
+        <p>Now is the time to add some Smithy shapes to see what code generation can do for you. Following the setup above, the location for the Smithy content will change depending on what build tool you used.</p>
+        <p>Now let&#39;s define an API in Smithy. Create the following file:</p>
+        <ul>
+          <li>You&#39;ll write in <code>modules/example/src/main/smithy/ExampleService.smithy</code>.</li>
+        </ul>
+        <p>And add the content below:</p>
+        <pre><code class="kotlin">namespace smithy4s.hello
+
+use alloy#simpleRestJson
+
+@simpleRestJson
+service HelloWorldService {
+  version: &quot;1.0.0&quot;,
+  operations: [Hello]
+}
+
+@http(method: &quot;POST&quot;, uri: &quot;/{name}&quot;, code: 200)
+operation Hello {
+  input: Person,
+  output: Greeting
+}
+
+structure Person {
+  @httpLabel
+  @required
+  name: String,
+
+  @httpQuery(&quot;town&quot;)
+  town: String
+}
+
+structure Greeting {
+  @required
+  message: String
+}</code></pre>
+        <p>The Scala code corresponding to this smithy file will be generated the next time you compile your project.</p>
+        
+        <h2 id="using-the-generated-code" class="section"><a class="anchor-link left" href="#using-the-generated-code"><i class="icofont-laika link">&#xef71;</i></a>Using the generated code</h2>
+        <p>Now, let&#39;s use the generated code by the service. You need to create a scala file at the following location:</p>
+        <ul>
+          <li><code>modules/example/src/main/scala/Main.scala</code></li>
+        </ul>
+        <p>Implement your service by extending the generated Service trait. Wire up routes into server.</p>
         <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">example</span><span>.</span><span class="identifier">hello</span><span>.</span><span class="identifier">_</span><span>
 </span><span class="keyword">import</span><span> </span><span class="identifier">zio</span><span>.{</span><span class="type-name">Task</span><span>, </span><span class="type-name">ZIO</span><span>,</span><span class="type-name">ZIOAppDefault</span><span>, </span><span class="type-name">ExitCode</span><span>, </span><span class="type-name">URIO</span><span>}
 </span><span class="keyword">import</span><span> </span><span class="identifier">zio</span><span>.</span><span class="identifier">http</span><span>.</span><span class="identifier">_</span><span>
