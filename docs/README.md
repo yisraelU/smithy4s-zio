@@ -7,6 +7,10 @@
 ### Credits
 - This project is based completely off the [http4s](https://http4s.org/) integration in Smithy4s.
 
+### Compliance Tests - wip
+- This project is tested using the [Smithy Protocol Compliance Tests](https://smithy.io/2.0/additional-specs/http-protocol-compliance-tests.html) for the `alloy#simpleRestJson` protocol.
+- Currently all Server tests pass
+
 ### Published Modules
   - Http for the [ZIO Http](https://zio.dev/http/) library
     - ZIO Http Client and Server implementations for the [`alloy#simpleRestJsonProtocol`](https://github.com/disneystreaming/alloy)
@@ -101,7 +105,7 @@ object ClientImpl extends ZIOAppDefault {
       client <- ZIO.service[Client]
       helloClient <- SimpleRestJsonBuilder(HelloWorldService)
         .client(client)
-        .uri(url)
+        .url(url)
         .lift
     } yield helloClient
   }
