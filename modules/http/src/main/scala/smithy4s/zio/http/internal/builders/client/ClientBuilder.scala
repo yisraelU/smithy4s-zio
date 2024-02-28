@@ -2,11 +2,8 @@ package smithy4s.zio.http.builders.client
 
 import smithy4s.client.UnaryClientCompiler
 import smithy4s.zio.http.internal.{ZHttpToSmithy4sClient, zioMonadThrowLike}
-import smithy4s.zio.http.{
-  ClientEndpointMiddleware,
-  ResourcefulTask,
-  SimpleProtocolCodecs
-}
+import smithy4s.zio.http.protocol.SimpleProtocolCodecs
+import smithy4s.zio.http.{ClientEndpointMiddleware, ResourcefulTask}
 import smithy4s.{Endpoint, ShapeTag, UnsupportedProtocolError, checkProtocol}
 import zio.http.{Client, Response, URL}
 import zio.{IO, Scope, ZIO}
@@ -24,12 +21,12 @@ class ClientBuilder[
     middleware: ClientEndpointMiddleware = Endpoint.Middleware.noop[Client]
 )(implicit protocolTag: ShapeTag[P]) {
 
-  def uri(uri: URL): ClientBuilder[Alg, P] =
+  def url(url: URL): ClientBuilder[Alg, P] =
     new ClientBuilder[Alg, P](
       simpleProtocolCodecs,
       this.client,
       this.service,
-      uri,
+      url,
       this.middleware
     )
 

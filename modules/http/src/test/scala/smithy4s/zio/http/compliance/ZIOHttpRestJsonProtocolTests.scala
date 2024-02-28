@@ -22,12 +22,6 @@ import java.nio.file.Path
 
 object ZIOHttpRestJsonProtocolTests extends ProtocolComplianceSuite {
 
-  // in particular around floating-point precision.
-  private val jsDisallowed = Set(
-    "RestJsonInputWithHeadersAndAllParams",
-    "RestJsonHttpRequestLabelEscaping"
-  )
-
   override def allRules(
       dsi: DynamicSchemaIndex
   ): Task[compliancetests.ComplianceTest[Task] => compliancetests.ShouldRun] = {
@@ -41,7 +35,6 @@ object ZIOHttpRestJsonProtocolTests extends ProtocolComplianceSuite {
       .map { borrowedTests =>
         borrowedTests.simpleRestJsonBorrowedTests
           .getOrElse(ShapeId("aws.protocols", "restJson1"), AllowRules.empty)
-          .filterRules(rule => jsDisallowed.exists(rule.id.matches))
       }
       .map { decodedRules => (c: compliancetests.ComplianceTest[Task]) =>
         if (c.show.contains("alloy")) ShouldRun.Yes

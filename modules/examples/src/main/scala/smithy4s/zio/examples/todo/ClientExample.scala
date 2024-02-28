@@ -12,7 +12,7 @@ object ClientExample extends ZIOAppDefault {
       client <- ZIO.service[Client]
       clientService <- SimpleRestJsonBuilder(TodoServiceGen)
         .client(client)
-        .uri(url)
+        .url(url)
         .lift
     } yield clientService
   }

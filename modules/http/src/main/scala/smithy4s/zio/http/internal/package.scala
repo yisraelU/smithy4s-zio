@@ -1,17 +1,19 @@
 package smithy4s.zio.http
 
+import cats.effect.SyncIO
+import org.typelevel.vault.Key
 import smithy4s.Blob
 import smithy4s.capability.MonadThrowLike
 import smithy4s.http.{
   CaseInsensitive,
   HttpMethod,
   PathParams,
-  HttpRequest => Smithy4sHttpRequest,
-  HttpResponse => Smithy4sHttpResponse,
-  HttpUri => Smithy4sHttpUri,
-  HttpUriScheme => Smithy4sHttpUriScheme
+  HttpRequest as Smithy4sHttpRequest,
+  HttpResponse as Smithy4sHttpResponse,
+  HttpUri as Smithy4sHttpUri,
+  HttpUriScheme as Smithy4sHttpUriScheme
 }
-import zio.http._
+import zio.http.*
 import zio.stream.ZStream
 import zio.{Chunk, IO, Task, ZIO}
 
@@ -72,10 +74,10 @@ package object internal {
   }
 
   def toSmithy4sHttpUri(
-      uri: URL,
+      url: URL,
       pathParams: Option[PathParams] = None
   ): Smithy4sHttpUri = {
-    val uriScheme = uri.scheme match {
+    val uriScheme = url.scheme match {
       case Some(scheme) =>
         scheme match {
           case Scheme.HTTP  => Smithy4sHttpUriScheme.Http
@@ -96,10 +98,10 @@ package object internal {
 
     Smithy4sHttpUri(
       uriScheme,
-      uri.host.getOrElse("localhost"),
-      uri.port,
-      uri.path.segments,
-      getQueryParams(uri),
+      url.host.getOrElse("localhost"),
+      url.port,
+      url.path.segments.map(s => s.replace("+", "%2b")).map(URLCodec.decode),
+      getQueryParams(url),
       pathParams
     )
   }
@@ -221,4 +223,46 @@ package object internal {
     req.headers.toList.groupBy(_.headerName).map { case (k, v) =>
       (CaseInsensitive(k), v.map(_.renderedValue))
     }
+
+  private val pathParamsKey: String =
+    Key.newKey[SyncIO, PathParams].unsafeRunSync().hashCode().toString
+
+  private def serializePathParams(pathParams: PathParams): String = {
+    pathParams
+      .map { case (key, value) => s"$key=${URLCodec.encode(value)}" }
+      .mkString("&")
+  }
+
+  // string is already decoded from URL Encoding , so we need to handle literals which may have been escaped
+  private def deserializePathParams(pathParamsString: String): PathParams = {
+    pathParamsString
+      .split("&")
+      .filterNot(_.isEmpty)
+      .map { param =>
+        {
+          param.split("=", 2) match {
+            case Array(key, value) => key -> URLCodec.decode(value)
+            case Array(k)          => (k, "")
+            case _ =>
+              throw new Exception(
+                s"Invalid path params string: $pathParamsString"
+              )
+          }
+        }
+      }
+      .toMap
+
+  }
+  private def lookupPathParams(req: Request): (Request, Option[PathParams]) = {
+    val pathParamsString = req.headers.get(pathParamsKey)
+    (
+      req.removeHeader(pathParamsKey),
+      pathParamsString.map(deserializePathParams)
+    )
+  }
+
+  def tagRequest(req: Request, pathParams: PathParams): Request = {
+    val serializedPathParams = serializePathParams(pathParams)
+    req.addHeader(Header.Custom(pathParamsKey, serializedPathParams))
+  }
 }

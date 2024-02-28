@@ -12,8 +12,8 @@ val Scala213 = "2.13.12"
 ThisBuild / scalaVersion := Scala213 // the default Scala
 
 addCommandAlias(
-  "fmt",
-  ";scalafmtAll;scalafmtSbt;"
+  "lint",
+  ";scalafmtAll;scalafmtSbt;scalafixAll;"
 )
 addCompilerPlugin(
   "org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full
@@ -21,9 +21,7 @@ addCompilerPlugin(
 val complianceTestDependencies =
   SettingKey[Seq[ModuleID]]("complianceTestDependencies")
 val projectPrefix = "smithy4s-zio"
-/*lazy val docs =
-  project.in(file("modules/site")).enablePlugins(TypelevelSitePlugin)
- */
+
 lazy val root = project
   .in(file("."))
   .aggregate(allModules: _*)
@@ -111,7 +109,6 @@ lazy val http = (project in file("modules/http"))
     libraryDependencies ++= Seq(
       Dependencies.Smithy4s.core.value,
       Dependencies.Smithy4s.json.value,
-      Dependencies.Smithy4s.http4s.value,
       Dependencies.Typelevel.vault.value,
       Dependencies.Alloy.core % Test,
       Dependencies.ZIO.http,
