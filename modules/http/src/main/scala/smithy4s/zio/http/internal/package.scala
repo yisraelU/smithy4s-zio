@@ -228,9 +228,12 @@ package object internal {
     Key.newKey[SyncIO, PathParams].unsafeRunSync().hashCode().toString
 
   private def serializePathParams(pathParams: PathParams): String = {
-    pathParams.map { case (key, value) => s"$key=$value" }.mkString("&")
+    pathParams
+      .map { case (key, value) => s"$key=${URLCodec.encode(value)}" }
+      .mkString("&")
   }
 
+  // string is already decoded from URL Encoding , so we need to handle literals which may have been escaped
   private def deserializePathParams(pathParamsString: String): PathParams = {
     pathParamsString
       .split("&")
@@ -238,7 +241,7 @@ package object internal {
       .map { param =>
         {
           param.split("=", 2) match {
-            case Array(key, value) => key -> value
+            case Array(key, value) => key -> URLCodec.decode(value)
             case Array(k)          => (k, "")
             case _ =>
               throw new Exception(
