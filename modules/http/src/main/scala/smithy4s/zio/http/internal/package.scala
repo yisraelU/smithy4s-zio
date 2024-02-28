@@ -74,10 +74,10 @@ package object internal {
   }
 
   def toSmithy4sHttpUri(
-      uri: URL,
+      url: URL,
       pathParams: Option[PathParams] = None
   ): Smithy4sHttpUri = {
-    val uriScheme = uri.scheme match {
+    val uriScheme = url.scheme match {
       case Some(scheme) =>
         scheme match {
           case Scheme.HTTP  => Smithy4sHttpUriScheme.Http
@@ -98,10 +98,10 @@ package object internal {
 
     Smithy4sHttpUri(
       uriScheme,
-      uri.host.getOrElse("localhost"),
-      uri.port,
-      uri.path.segments.map(java.net.URLDecoder.decode(_, "UTF-8")),
-      getQueryParams(uri),
+      url.host.getOrElse("localhost"),
+      url.port,
+      url.path.segments.map(s => s.replace("+", "%2b")).map(URLCodec.decode),
+      getQueryParams(url),
       pathParams
     )
   }
@@ -253,7 +253,7 @@ package object internal {
       .toMap
 
   }
-  def lookupPathParams(req: Request): (Request, Option[PathParams]) = {
+  private def lookupPathParams(req: Request): (Request, Option[PathParams]) = {
     val pathParamsString = req.headers.get(pathParamsKey)
     (
       req.removeHeader(pathParamsKey),
