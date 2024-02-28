@@ -81,6 +81,7 @@
   <ul class="nav-list">
     <li class="level1 nav-leaf"><a href="#introduction">Introduction</a></li>
     <li class="level1 nav-leaf"><a href="#credits">Credits</a></li>
+    <li class="level1 nav-leaf"><a href="#compliance-tests-wip">Compliance Tests - wip</a></li>
     <li class="level1 nav-leaf"><a href="#published-modules">Published Modules</a></li>
     <li class="level1 nav-leaf"><a href="#notes">Notes</a></li>
     <li class="level1 nav-leaf"><a href="#usage">Usage</a></li>
@@ -113,6 +114,12 @@
         <h3 id="credits" class="section"><a class="anchor-link left" href="#credits"><i class="icofont-laika link">&#xef71;</i></a>Credits</h3>
         <ul>
           <li>This project is based completely off the <a href="https://http4s.org/">http4s</a> integration in Smithy4s.</li>
+        </ul>
+        
+        <h3 id="compliance-tests-wip" class="section"><a class="anchor-link left" href="#compliance-tests-wip"><i class="icofont-laika link">&#xef71;</i></a>Compliance Tests - wip</h3>
+        <ul>
+          <li>This project is tested using the <a href="https://smithy.io/2.0/additional-specs/http-protocol-compliance-tests.html">Smithy Protocol Compliance Tests</a> for the <code>alloy#simpleRestJson</code> protocol.</li>
+          <li>Currently all Server tests pass</li>
         </ul>
         
         <h3 id="published-modules" class="section"><a class="anchor-link left" href="#published-modules"><i class="icofont-laika link">&#xef71;</i></a>Published Modules</h3>
@@ -161,7 +168,7 @@
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="identifier">libraryDependencies</span><span> ++= </span><span class="type-name">Seq</span><span>(
   </span><span class="string-literal">&quot;io.github.yisraelu&quot;</span><span> %% </span><span class="string-literal">&quot;smithy4s-zio-http&quot;</span><span> % </span><span class="string-literal">&quot;0.0.1&quot;</span><span>
 )</span></code></pre>
-        <p>The snapshot version is available via the Sonatype snapshots repository: <code>0.0.1-2-3318bba-SNAPSHOT.</code></p>
+        <p>The snapshot version is available via the Sonatype snapshots repository: <code>0.0.1-3-a26091c-SNAPSHOT.</code></p>
         
         <h3 id="http-server-and-client-quickstart-borrows-from-smithy4s-example" class="section"><a class="anchor-link left" href="#http-server-and-client-quickstart-borrows-from-smithy4s-example"><i class="icofont-laika link">&#xef71;</i></a>Http Server and Client Quickstart (borrows from Smithy4s example)</h3>
         <p>Below is a quick example of smithy4s in action.
@@ -284,7 +291,7 @@ structure Greeting {
       </span><span class="identifier">client</span><span> &lt;- </span><span class="type-name">ZIO</span><span>.</span><span class="identifier">service</span><span>[</span><span class="type-name">Client</span><span>]
       </span><span class="identifier">helloClient</span><span> &lt;- </span><span class="type-name">SimpleRestJsonBuilder</span><span>(</span><span class="type-name">HelloWorldService</span><span>)
         .</span><span class="identifier">client</span><span>(</span><span class="identifier">client</span><span>)
-        .</span><span class="identifier">uri</span><span>(</span><span class="identifier">url</span><span>)
+        .</span><span class="identifier">url</span><span>(</span><span class="identifier">url</span><span>)
         .</span><span class="identifier">lift</span><span>
     } </span><span class="keyword">yield</span><span> </span><span class="identifier">helloClient</span><span>
   }
