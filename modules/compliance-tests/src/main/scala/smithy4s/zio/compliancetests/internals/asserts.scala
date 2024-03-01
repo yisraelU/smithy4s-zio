@@ -1,12 +1,16 @@
 package smithy4s.zio.compliancetests.internals
 
 import cats.Eq
+import cats.implicits.{
+  catsKernelStdCommutativeMonoidForMap,
+  catsKernelStdMonoidForMap
+}
 import cats.kernel.Monoid
-import cats.syntax.all._
+import cats.syntax.all.*
 import io.circe.Json
-import io.circe.parser._
+import io.circe.parser.*
 import smithy.test.{HttpRequestTestCase, HttpResponseTestCase}
-import smithy4s.zio.compliancetests.ComplianceTest._
+import smithy4s.zio.compliancetests.ComplianceTest.*
 import zio.http.{Headers, QueryParams}
 import zio.test.{TestResult, assertTrue}
 
@@ -154,23 +158,25 @@ object asserts {
       queryParameters: Map[String, Seq[String]],
       testCase: Option[List[String]]
   ): ComplianceResult = {
-    testCase.toList.flatten
+    val combined: Map[String, List[String]] = testCase.toList.flatten
       .map(QueryParams.decode(_))
-      .flatMap(_.map)
-      .collect {
-        case (key, _) if !queryParameters.contains(key) =>
-          fail(s"missing query parameter $key")
-        case (key, expectedValue) =>
-          val values = queryParameters.get(key).toList.flatten
-          if (!(values == expectedValue.toList)) {
-            fail(
-              s"query parameter $key has value ${pprint.apply(
-                  queryParameters.get(key).toList.flatten
-                )} but expected ${pprint.apply(expectedValue.toList)}"
-            )
-          } else success
-      }
+      .map(_.map.map(t => (t._1, t._2.toList)))
       .combineAll
+
+    val result = combined.foldLeft(List.empty[ComplianceResult]) {
+      case (acc, (key, _)) if !queryParameters.contains(key) =>
+        fail(s"missing query parameter $key") :: acc
+      case (acc, (key, expectedValue)) =>
+        val values = queryParameters.get(key).toList.flatten
+        if (!(values == expectedValue)) {
+          fail(s"query parameter $key has value ${pprint.apply(
+              queryParameters.get(key).toList.flatten
+            )} but expected ${pprint.apply(expectedValue)}") :: acc
+        } else success :: acc
+    }
+
+    result.combineAll
+
   }
 
   /**
