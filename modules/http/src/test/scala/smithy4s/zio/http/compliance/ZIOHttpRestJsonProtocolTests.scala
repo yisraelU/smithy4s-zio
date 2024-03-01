@@ -6,16 +6,19 @@ import smithy4s.http.HttpMediaType
 import smithy4s.kinds.FunctorAlgebra
 import smithy4s.schema.Schema
 import smithy4s.zio.compliancetests
+import smithy4s.zio.compliancetests.internals.HttpAppDriver
 import smithy4s.zio.compliancetests.{
   AllowRules,
   AlloyBorrowedTests,
   HttpRoutes,
   ProtocolComplianceSuite,
+  ReverseRouter,
   Router,
   ShouldRun
 }
-import smithy4s.zio.http.SimpleRestJsonBuilder
+import smithy4s.zio.http.{ResourcefulTask, SimpleRestJsonBuilder}
 import smithy4s.{Service, ShapeId}
+import zio.http.{Body, HttpApp, Response, URL, ZClient}
 import zio.{Task, ZIO}
 
 import java.nio.file.Path
@@ -46,7 +49,7 @@ object ZIOHttpRestJsonProtocolTests extends ProtocolComplianceSuite {
   override def allTests(
       dsi: DynamicSchemaIndex
   ): List[compliancetests.ComplianceTest[Task]] =
-    genServerTests(
+    genClientAndServerTests(
       SimpleRestJsonIntegration,
       simpleRestJsonSpec,
       pizzaSpec
@@ -68,7 +71,7 @@ object ZIOHttpRestJsonProtocolTests extends ProtocolComplianceSuite {
     ShapeId("aws.protocoltests.restjson", "RestJson")
 
   private val pizzaSpec = ShapeId("alloy.test", "PizzaAdminService")
-  object SimpleRestJsonIntegration extends Router {
+  object SimpleRestJsonIntegration extends Router with ReverseRouter {
 
     type Protocol = SimpleRestJson
     val protocolTag = alloy.SimpleRestJson
@@ -81,15 +84,23 @@ object ZIOHttpRestJsonProtocolTests extends ProtocolComplianceSuite {
     def expectedResponseType(schema: Schema[?]): HttpMediaType = HttpMediaType(
       "application/json"
     )
-    /*    override def reverseRoutes[Alg[_[_, _, _, _, _]]](routes: HttpApp[Any], testHost: Option[String])(implicit service: Service[Alg]): Task[FunctorAlgebra[Alg, Task]] = {
-
-    val baseUri = URL.decode("http://localhost").toOption.get
-    val suppliedHost =
-      testHost.flatMap(host => URL.decode(s"http://$host").toOption)
-    SimpleRestJsonBuilder(service)
-      .client(routes.)
-      .uri(suppliedHost.getOrElse(baseUri))
-  }*/
+    override def reverseRoutes[Alg[_[_, _, _, _, _]]](
+        routes: HttpApp[Any],
+        testHost: Option[String]
+    )(implicit
+        service: Service[Alg]
+    ): Task[FunctorAlgebra[Alg, ResourcefulTask]] = {
+      val driver: HttpAppDriver = new HttpAppDriver(routes)
+      val client: ZClient[Any, Body, Throwable, Response] =
+        ZClient.fromDriver(driver)
+      val baseUri = URL.decode("http://localhost").toOption.get
+      val suppliedHost =
+        testHost.flatMap(host => URL.decode(s"http://$host").toOption)
+      SimpleRestJsonBuilder(service)
+        .client(client)
+        .url(suppliedHost.getOrElse(baseUri))
+        .lift
+    }
   }
 
 }

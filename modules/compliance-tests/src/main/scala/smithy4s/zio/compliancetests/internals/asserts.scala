@@ -160,16 +160,15 @@ object asserts {
       .collect {
         case (key, _) if !queryParameters.contains(key) =>
           fail(s"missing query parameter $key")
-        case (key, expectedValue)
-            if !queryParameters
-              .get(key)
-              .toList
-              .flatten
-              .contains(expectedValue) =>
-          fail(
-            s"query parameter $key has value ${queryParameters.get(key).toList.flatten} but expected $expectedValue"
-          )
-        case _ => success
+        case (key, expectedValue) =>
+          val values = queryParameters.get(key).toList.flatten
+          if (!(values == expectedValue.toList)) {
+            fail(
+              s"query parameter $key has value ${pprint.apply(
+                  queryParameters.get(key).toList.flatten
+                )} but expected ${pprint.apply(expectedValue.toList)}"
+            )
+          } else success
       }
       .combineAll
   }

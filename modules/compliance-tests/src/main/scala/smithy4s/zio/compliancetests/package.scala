@@ -3,14 +3,14 @@ package smithy4s.zio
 import cats.{Eq, Monoid}
 import smithy.test.HttpRequestTestCase
 import smithy4s.zio.compliancetests.ComplianceTest.ComplianceResult
-import smithy4s.zio.compliancetests.internals.asserts._
+import smithy4s.zio.compliancetests.internals.asserts.*
 import smithy4s.zio.compliancetests.internals.{asserts, parseQueryParams}
-import cats.syntax.all._
+import cats.syntax.all.*
 import smithy4s.zio.compliancetests.internals.asserts.testCase.{
   checkHeaders,
   checkQueryParameters
 }
-import zio.{Chunk, Promise, Task, ZIO, durationInt}
+import zio.{Chunk, Promise, Scope, Task, ZIO, durationInt}
 import zio.http.{
   Body,
   Header,
@@ -24,11 +24,12 @@ import zio.http.{
 }
 
 import java.util.concurrent.TimeoutException
-import zio.interop.catz.core._
+import zio.interop.catz.core.*
 
 package object compliancetests {
 
   type HttpRoutes = Routes[Any, Throwable]
+  type ResourcefulTask[Output] = ZIO[Scope, Throwable, Output]
 
   private[compliancetests] def makeRequest(
       baseUri: URL,

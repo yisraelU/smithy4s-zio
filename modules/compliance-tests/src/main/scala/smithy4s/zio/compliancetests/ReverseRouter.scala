@@ -18,5 +18,5 @@ trait ReverseRouter {
   def reverseRoutes[Alg[_[_, _, _, _, _]]](
       routes: Routes[Any, Response],
       host: Option[String] = None
-  )(implicit service: Service[Alg]): Task[FunctorAlgebra[Alg, Task]]
+  )(implicit service: Service[Alg]): Task[FunctorAlgebra[Alg, ResourcefulTask]]
 }
