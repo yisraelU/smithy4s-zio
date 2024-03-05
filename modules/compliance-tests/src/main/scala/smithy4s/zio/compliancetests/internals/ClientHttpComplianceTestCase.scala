@@ -2,20 +2,22 @@ package smithy4s.zio.compliancetests.internals
 
 import cats.Eq
 import cats.effect.Async
-import cats.syntax.all._
-import smithy.test._
+import cats.syntax.all.*
+import smithy.test.*
 import smithy4s.http.HttpContractError
-import smithy4s.zio.compliancetests.TestConfig._
+import smithy4s.kinds.FunctorAlgebra
+import smithy4s.zio.compliancetests.TestConfig.*
 import smithy4s.zio.compliancetests.internals.eq.EqSchemaVisitor
 import smithy4s.zio.compliancetests.{
   ComplianceTest,
+  ResourcefulTask,
   ReverseRouter,
   headerMonoid,
   matchRequest
 }
 import smithy4s.{Document, Service}
 import zio.http.{Body, Header, Headers, HttpApp, Request, Response, Status, URL}
-import zio.{Promise, Task, ZIO, durationInt}
+import zio.{Promise, Scope, Task, ZIO, durationInt}
 
 import java.util.concurrent.TimeoutException
 
@@ -32,7 +34,7 @@ private[compliancetests] class ClientHttpComplianceTestCase[
       endpoint: service.Endpoint[I, E, O, SE, SO],
       testCase: HttpRequestTestCase
   ): ComplianceTest[Task] = {
-    type R[I_, E_, O_, SE_, SO_] = Task[O_]
+    type R[I_, E_, O_, SE_, SO_] = ResourcefulTask[O_]
     val inputFromDocument = CanonicalSmithyDecoder.fromSchema(endpoint.input)
     ComplianceTest[Task](
       testCase.id,
@@ -53,19 +55,21 @@ private[compliancetests] class ClientHttpComplianceTestCase[
               .mapBoth(Response.fromThrowable, _ => Response())
           }
 
-          reverseRoutes[Alg](app, testCase.host).flatMap { client =>
-            input
-              .flatMap { in =>
-                // avoid blocking the test forever...
-                val request = requestDeferred.await.timeoutFail(
-                  new TimeoutException("Request timed out")
-                )(1.second)
-                val output: Task[O] = service
-                  .toPolyFunction[R](client)
-                  .apply(endpoint.wrap(in))
-                output.attemptNarrow[HttpContractError].productR(request)
-              }
-              .flatMap { req => matchRequest(req, testCase, baseUri) }
+          reverseRoutes[Alg](app, testCase.host).flatMap {
+            client: FunctorAlgebra[Alg, ResourcefulTask] =>
+              input
+                .flatMap { in =>
+                  // avoid blocking the test forever...
+                  val request = requestDeferred.await.timeoutFail(
+                    new TimeoutException("Request timed out")
+                  )(1.second)
+                  val output: Task[O] = service
+                    .toPolyFunction[R](client)
+                    .apply(endpoint.wrap(in))
+                    .provide(Scope.default)
+                  output.attemptNarrow[HttpContractError].productR(request)
+                }
+                .flatMap { req => matchRequest(req, testCase, baseUri) }
           }
         }
       }
@@ -78,7 +82,7 @@ private[compliancetests] class ClientHttpComplianceTestCase[
       errorSchema: Option[ErrorResponseTest[_, E]] = None
   ): ComplianceTest[Task] = {
 
-    type R[I_, E_, O_, SE_, SO_] = Task[O_]
+    type R[I_, E_, O_, SE_, SO_] = ResourcefulTask[O_]
 
     val dummyInput = DefaultSchemaVisitor(endpoint.input)
 
@@ -140,6 +144,7 @@ private[compliancetests] class ClientHttpComplianceTestCase[
                 val res: Task[O] = service
                   .toPolyFunction[R](client)
                   .apply(endpoint.wrap(dummyInput))
+                  .provide(Scope.default)
                 res
                   .as(asserts.success)
                   .recoverWith { case ex: Throwable => onError(doc, ex) }
@@ -148,6 +153,7 @@ private[compliancetests] class ClientHttpComplianceTestCase[
                   val res: Task[O] = service
                     .toPolyFunction[R](client)
                     .apply(endpoint.wrap(dummyInput))
+                    .provide(Scope.default)
 
                   res.map { output =>
                     asserts.eql(

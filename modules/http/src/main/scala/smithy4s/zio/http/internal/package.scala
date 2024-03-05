@@ -100,7 +100,8 @@ package object internal {
       uriScheme,
       url.host.getOrElse("localhost"),
       url.port,
-      url.path.segments.map(s => s.replace("+", "%2b")).map(URLCodec.decode),
+      // we fake decoding as , we wish to have uri decoding not url decoding
+      url.path.segments.map(s => s.replace("+", "%2b")).map(URICodec.decode),
       getQueryParams(url),
       pathParams
     )
@@ -136,8 +137,8 @@ package object internal {
       Smithy4sHttpResponse(res.status.code, headers, blob)
     }
 
-  def fromSmithy4sHttpUri(uri: Smithy4sHttpUri): URL = {
-    val path = Path(uri.path.mkString("/")).addLeadingSlash
+  private def fromSmithy4sHttpUri(uri: Smithy4sHttpUri): URL = {
+    val path = Path(uri.path.map(URICodec.encode).mkString("/")).addLeadingSlash
     val scheme = uri.scheme match {
       case Smithy4sHttpUriScheme.Https => Scheme.HTTPS
       case _                           => Scheme.HTTP
@@ -229,7 +230,7 @@ package object internal {
 
   private def serializePathParams(pathParams: PathParams): String = {
     pathParams
-      .map { case (key, value) => s"$key=${URLCodec.encode(value)}" }
+      .map { case (key, value) => s"$key=${URICodec.encode(value)}" }
       .mkString("&")
   }
 
@@ -241,7 +242,7 @@ package object internal {
       .map { param =>
         {
           param.split("=", 2) match {
-            case Array(key, value) => key -> URLCodec.decode(value)
+            case Array(key, value) => key -> URICodec.decode(value)
             case Array(k)          => (k, "")
             case _ =>
               throw new Exception(
