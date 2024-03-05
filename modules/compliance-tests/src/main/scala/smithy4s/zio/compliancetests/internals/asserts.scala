@@ -14,6 +14,8 @@ import smithy4s.zio.compliancetests.ComplianceTest.*
 import zio.http.{Headers, QueryParams}
 import zio.test.{TestResult, assertTrue}
 
+import java.net.URLDecoder
+
 object asserts {
 
   // private implicit val eventsEq: Eq[XmlEvent] = Eq.fromUniversalEquals
@@ -167,7 +169,11 @@ object asserts {
       case (acc, (key, _)) if !queryParameters.contains(key) =>
         fail(s"missing query parameter $key") :: acc
       case (acc, (key, expectedValue)) =>
-        val values = queryParameters.get(key).toList.flatten
+        val values = queryParameters
+          .get(key)
+          .toList
+          .flatten
+          .map(URLDecoder.decode(_, "UTF-8"))
         if (!(values == expectedValue)) {
           fail(s"query parameter $key has value ${pprint.apply(
               queryParameters.get(key).toList.flatten

@@ -92,7 +92,9 @@ object ZIOHttpRestJsonProtocolTests extends ProtocolComplianceSuite {
     ): Task[FunctorAlgebra[Alg, ResourcefulTask]] = {
       val driver: HttpAppDriver = new HttpAppDriver(routes)
       val client: ZClient[Any, Body, Throwable, Response] =
-        ZClient.fromDriver(driver)
+        ZClient
+          .fromDriver(driver)
+
       val baseUri = URL.decode("http://localhost").toOption.get
       val suppliedHost =
         testHost.flatMap(host => URL.decode(s"http://$host").toOption)

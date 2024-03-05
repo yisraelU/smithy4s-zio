@@ -26,6 +26,8 @@ import zio.http.{
 import java.util.concurrent.TimeoutException
 import zio.interop.catz.core.*
 
+import java.net.URLDecoder
+
 package object compliancetests {
 
   type HttpRoutes = Routes[Any, Throwable]
@@ -107,7 +109,13 @@ package object compliancetests {
     val receivedPathSegments =
       request.url.path.segments
     val expectedPathSegments =
-      URL.decode(testCase.uri).toOption.get.path.segments
+      URL
+        .decode(testCase.uri)
+        .toOption
+        .get
+        .path
+        .segments
+        .map(URLDecoder.decode(_, "UTF-8"))
 
     val expectedUrl = constructUrl(baseUri, testCase)
     val pathAssert: ComplianceResult =

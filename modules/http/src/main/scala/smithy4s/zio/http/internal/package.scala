@@ -132,8 +132,8 @@ package object internal {
       Smithy4sHttpResponse(res.status.code, headers, blob)
     }
 
-  def fromSmithy4sHttpUri(uri: Smithy4sHttpUri): URL = {
-    val path = Path(uri.path.mkString("/")).addLeadingSlash
+  private def fromSmithy4sHttpUri(uri: Smithy4sHttpUri): URL = {
+    val path = Path(uri.path.map(URICodec.encode).mkString("/")).addLeadingSlash
     val scheme = uri.scheme match {
       case Smithy4sHttpUriScheme.Https => Scheme.HTTPS
       case _                           => Scheme.HTTP
