@@ -1,6 +1,6 @@
 addSbtPlugin("com.eed3si9n" % "sbt-projectmatrix" % "0.9.1")
 addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.4.6")
-addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.4.15")
+addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.4.17")
 addSbtPlugin("com.disneystreaming.smithy4s" % "smithy4s-sbt-codegen" % "0.18.8")
 addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.6.3")
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.2")
