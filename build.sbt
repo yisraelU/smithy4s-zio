@@ -16,7 +16,7 @@ addCommandAlias(
   ";scalafmtAll;scalafmtSbt;scalafixAll;"
 )
 addCompilerPlugin(
-  "org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full
+  "org.typelevel" % "kind-projector" % "0.13.3" cross CrossVersion.full
 )
 val complianceTestDependencies =
   SettingKey[Seq[ModuleID]]("complianceTestDependencies")
