@@ -1,6 +1,5 @@
 package smithy4s.zio.compliancetests.internals.eq
 
-import cats.implicits.toFoldableOps
 import smithy4s._
 import smithy4s.capability.EncoderK
 import cats.syntax.all._

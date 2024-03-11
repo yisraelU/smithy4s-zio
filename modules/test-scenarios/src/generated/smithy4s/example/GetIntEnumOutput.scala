@@ -12,12 +12,13 @@ object GetIntEnumOutput extends ShapeTag.Companion[GetIntEnumOutput] {
   val id: ShapeId = ShapeId("smithy4s.example", "GetIntEnumOutput")
 
   val hints: Hints = Hints(
-    smithy.api.Output()
+    smithy.api.Output(),
   ).lazily
 
+  // constructor using the original order from the spec
+  private def make(result: EnumResult): GetIntEnumOutput = GetIntEnumOutput(result)
+
   implicit val schema: Schema[GetIntEnumOutput] = struct(
-    EnumResult.schema.required[GetIntEnumOutput]("result", _.result)
-  ) {
-    GetIntEnumOutput.apply
-  }.withId(id).addHints(hints)
+    EnumResult.schema.required[GetIntEnumOutput]("result", _.result),
+  )(make).withId(id).addHints(hints)
 }
