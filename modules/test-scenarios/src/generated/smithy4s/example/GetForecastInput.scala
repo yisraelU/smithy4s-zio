@@ -14,8 +14,8 @@ object GetForecastInput extends ShapeTag.Companion[GetForecastInput] {
   val hints: Hints = Hints.empty
 
   implicit val schema: Schema[GetForecastInput] = struct(
-    CityId.schema.required[GetForecastInput]("cityId", _.cityId),
-  ){
+    CityId.schema.required[GetForecastInput]("cityId", _.cityId)
+  ) {
     GetForecastInput.apply
   }.withId(id).addHints(hints)
 }

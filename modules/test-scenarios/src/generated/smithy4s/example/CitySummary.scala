@@ -13,13 +13,22 @@ object CitySummary extends ShapeTag.Companion[CitySummary] {
   val id: ShapeId = ShapeId("smithy4s.example", "CitySummary")
 
   val hints: Hints = Hints(
-    smithy.api.References(List(smithy.api.Reference(resource = smithy.api.NonEmptyString("smithy4s.example#City"), ids = None, service = None, rel = None))),
+    smithy.api.References(
+      List(
+        smithy.api.Reference(
+          resource = smithy.api.NonEmptyString("smithy4s.example#City"),
+          ids = None,
+          service = None,
+          rel = None
+        )
+      )
+    )
   ).lazily
 
   implicit val schema: Schema[CitySummary] = struct(
     CityId.schema.required[CitySummary]("cityId", _.cityId),
-    string.required[CitySummary]("name", _.name),
-  ){
+    string.required[CitySummary]("name", _.name)
+  ) {
     CitySummary.apply
   }.withId(id).addHints(hints)
 }

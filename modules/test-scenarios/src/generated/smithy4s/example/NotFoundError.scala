@@ -8,20 +8,19 @@ import smithy4s.Smithy4sThrowable
 import smithy4s.schema.Schema.string
 import smithy4s.schema.Schema.struct
 
-final case class NotFoundError(name: String) extends Smithy4sThrowable {
-}
+final case class NotFoundError(name: String) extends Smithy4sThrowable {}
 
 object NotFoundError extends ShapeTag.Companion[NotFoundError] {
   val id: ShapeId = ShapeId("smithy4s.example", "NotFoundError")
 
   val hints: Hints = Hints(
     smithy.api.Error.CLIENT.widen,
-    smithy.api.HttpError(404),
+    smithy.api.HttpError(404)
   ).lazily
 
   implicit val schema: Schema[NotFoundError] = struct(
-    string.required[NotFoundError]("name", _.name),
-  ){
+    string.required[NotFoundError]("name", _.name)
+  ) {
     NotFoundError.apply
   }.withId(id).addHints(hints)
 }
