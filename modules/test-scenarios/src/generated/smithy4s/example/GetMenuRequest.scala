@@ -14,11 +14,10 @@ object GetMenuRequest extends ShapeTag.Companion[GetMenuRequest] {
 
   val hints: Hints = Hints.empty
 
+  // constructor using the original order from the spec
+  private def make(restaurant: String): GetMenuRequest = GetMenuRequest(restaurant)
+
   implicit val schema: Schema[GetMenuRequest] = struct(
-    string
-      .required[GetMenuRequest]("restaurant", _.restaurant)
-      .addHints(smithy.api.HttpLabel())
-  ) {
-    GetMenuRequest.apply
-  }.withId(id).addHints(hints)
+    string.required[GetMenuRequest]("restaurant", _.restaurant).addHints(smithy.api.HttpLabel()),
+  )(make).withId(id).addHints(hints)
 }
