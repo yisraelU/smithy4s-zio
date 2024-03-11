@@ -17,7 +17,7 @@ object Dependencies {
   }
   object Fs2Data {
     val xml: Def.Initialize[ModuleID] =
-      Def.setting("org.gnieh" %% "fs2-data-xml" % "1.9.1")
+      Def.setting("org.gnieh" %% "fs2-data-xml" % "1.10.0")
   }
   object LiHaoyi {
     val sourcecode = "com.lihaoyi" %% "sourcecode" % "0.2.7"
@@ -25,7 +25,7 @@ object Dependencies {
   }
 
   object Circe {
-    val version = "0.14.5"
+    val version = "0.14.6"
     val core = "io.circe" %% "circe-core" % version
     val parser = "io.circe" %% "circe-parser" % version
   }
@@ -56,7 +56,7 @@ object Dependencies {
   }
 
   object Smithy {
-    val smithyVersion = "1.41.1"
+    val smithyVersion = "1.45.0"
     val org = "software.amazon.smithy"
     val testTraits = org % "smithy-protocol-test-traits" % smithyVersion
     val model = org % "smithy-model" % smithyVersion
@@ -75,11 +75,11 @@ object Dependencies {
   }
 
   object ZIO {
-    val zioVersion = "2.0.19"
+    val zioVersion = "2.0.21"
     val core = "dev.zio" %% "zio" % zioVersion
     val http = "dev.zio" %% "zio-http" % "3.0.0-RC4"
-    val prelude = "dev.zio" %% "zio-prelude" % "1.0.0-RC21"
     val schema = "dev.zio" %% "zio-schema" % "0.4.17"
+    val prelude = "dev.zio" %% "zio-prelude" % "1.0.0-RC23"
     val catsInterop = "dev.zio" %% "zio-interop-cats" % "23.1.0.1"
     val test = "dev.zio" %% "zio-test" % zioVersion
     val testSbt = "dev.zio" %% "zio-test-sbt" % zioVersion % Test
