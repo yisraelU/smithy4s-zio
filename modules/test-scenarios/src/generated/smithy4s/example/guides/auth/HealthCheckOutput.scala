@@ -13,12 +13,12 @@ object HealthCheckOutput extends ShapeTag.Companion[HealthCheckOutput] {
   val id: ShapeId = ShapeId("smithy4s.example.guides.auth", "HealthCheckOutput")
 
   val hints: Hints = Hints(
-    smithy.api.Output(),
+    smithy.api.Output()
   ).lazily
 
   implicit val schema: Schema[HealthCheckOutput] = struct(
-    string.required[HealthCheckOutput]("message", _.message),
-  ){
+    string.required[HealthCheckOutput]("message", _.message)
+  ) {
     HealthCheckOutput.apply
   }.withId(id).addHints(hints)
 }

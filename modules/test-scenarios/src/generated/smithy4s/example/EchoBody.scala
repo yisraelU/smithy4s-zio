@@ -15,8 +15,10 @@ object EchoBody extends ShapeTag.Companion[EchoBody] {
   val hints: Hints = Hints.empty
 
   implicit val schema: Schema[EchoBody] = struct(
-    string.validated(smithy.api.Length(min = Some(10L), max = None)).optional[EchoBody]("data", _.data),
-  ){
+    string
+      .validated(smithy.api.Length(min = Some(10L), max = None))
+      .optional[EchoBody]("data", _.data)
+  ) {
     EchoBody.apply
   }.withId(id).addHints(hints)
 }

@@ -8,19 +8,18 @@ import smithy4s.Smithy4sThrowable
 import smithy4s.schema.Schema.string
 import smithy4s.schema.Schema.struct
 
-final case class FallbackError(error: String) extends Smithy4sThrowable {
-}
+final case class FallbackError(error: String) extends Smithy4sThrowable {}
 
 object FallbackError extends ShapeTag.Companion[FallbackError] {
   val id: ShapeId = ShapeId("smithy4s.example", "FallbackError")
 
   val hints: Hints = Hints(
-    smithy.api.Error.CLIENT.widen,
+    smithy.api.Error.CLIENT.widen
   ).lazily
 
   implicit val schema: Schema[FallbackError] = struct(
-    string.required[FallbackError]("error", _.error),
-  ){
+    string.required[FallbackError]("error", _.error)
+  ) {
     FallbackError.apply
   }.withId(id).addHints(hints)
 }

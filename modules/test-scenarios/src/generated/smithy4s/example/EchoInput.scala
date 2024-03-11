@@ -7,7 +7,11 @@ import smithy4s.ShapeTag
 import smithy4s.schema.Schema.string
 import smithy4s.schema.Schema.struct
 
-final case class EchoInput(pathParam: String, body: EchoBody, queryParam: Option[String] = None)
+final case class EchoInput(
+    pathParam: String,
+    body: EchoBody,
+    queryParam: Option[String] = None
+)
 
 object EchoInput extends ShapeTag.Companion[EchoInput] {
   val id: ShapeId = ShapeId("smithy4s.example", "EchoInput")
@@ -15,10 +19,18 @@ object EchoInput extends ShapeTag.Companion[EchoInput] {
   val hints: Hints = Hints.empty
 
   implicit val schema: Schema[EchoInput] = struct(
-    string.validated(smithy.api.Length(min = Some(10L), max = None)).required[EchoInput]("pathParam", _.pathParam).addHints(smithy.api.HttpLabel()),
-    EchoBody.schema.required[EchoInput]("body", _.body).addHints(smithy.api.HttpPayload()),
-    string.validated(smithy.api.Length(min = Some(10L), max = None)).optional[EchoInput]("queryParam", _.queryParam).addHints(smithy.api.HttpQuery("queryParam")),
-  ){
+    string
+      .validated(smithy.api.Length(min = Some(10L), max = None))
+      .required[EchoInput]("pathParam", _.pathParam)
+      .addHints(smithy.api.HttpLabel()),
+    EchoBody.schema
+      .required[EchoInput]("body", _.body)
+      .addHints(smithy.api.HttpPayload()),
+    string
+      .validated(smithy.api.Length(min = Some(10L), max = None))
+      .optional[EchoInput]("queryParam", _.queryParam)
+      .addHints(smithy.api.HttpQuery("queryParam"))
+  ) {
     EchoInput.apply
   }.withId(id).addHints(hints)
 }

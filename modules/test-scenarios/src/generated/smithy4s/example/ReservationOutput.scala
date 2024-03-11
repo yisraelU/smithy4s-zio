@@ -13,12 +13,12 @@ object ReservationOutput extends ShapeTag.Companion[ReservationOutput] {
   val id: ShapeId = ShapeId("smithy4s.example", "ReservationOutput")
 
   val hints: Hints = Hints(
-    smithy.api.Output(),
+    smithy.api.Output()
   ).lazily
 
   implicit val schema: Schema[ReservationOutput] = struct(
-    string.required[ReservationOutput]("message", _.message),
-  ){
+    string.required[ReservationOutput]("message", _.message)
+  ) {
     ReservationOutput.apply
   }.withId(id).addHints(hints)
 }
