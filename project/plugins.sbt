@@ -12,4 +12,4 @@ addSbtPlugin("org.typelevel" % "sbt-typelevel-scalafix" % "0.6.7")
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.15.0")
 addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.5.2")
 // sbt revolver
-addSbtPlugin("io.spray" % "sbt-revolver" % "0.9.1")
+addSbtPlugin("io.spray" % "sbt-revolver" % "0.10.0")
