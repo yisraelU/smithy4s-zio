@@ -13,13 +13,18 @@ object HealthResponse extends ShapeTag.Companion[HealthResponse] {
   val id: ShapeId = ShapeId("smithy4s.example", "HealthResponse")
 
   val hints: Hints = Hints(
-    smithy4s.example.FreeForm(smithy4s.Document.obj("i" -> smithy4s.Document.fromDouble(1.0d), "a" -> smithy4s.Document.fromDouble(2.0d))),
+    smithy4s.example.FreeForm(
+      smithy4s.Document.obj(
+        "i" -> smithy4s.Document.fromDouble(1.0d),
+        "a" -> smithy4s.Document.fromDouble(2.0d)
+      )
+    )
   ).lazily
 
   // constructor using the original order from the spec
   private def make(status: String): HealthResponse = HealthResponse(status)
 
   implicit val schema: Schema[HealthResponse] = struct(
-    string.required[HealthResponse]("status", _.status),
+    string.required[HealthResponse]("status", _.status)
   )(make).withId(id).addHints(hints)
 }
