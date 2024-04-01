@@ -1,10 +1,7 @@
 package smithy4s.zio.compliancetests.internals
 
 import cats.Eq
-import cats.implicits.{
-  catsKernelStdCommutativeMonoidForMap,
-  catsKernelStdMonoidForMap
-}
+import cats.implicits.catsKernelStdMonoidForMap
 import cats.kernel.Monoid
 import cats.syntax.all.*
 import io.circe.Json

@@ -1,7 +1,7 @@
 package smithy4s.zio.http.protocol
 
 import smithy4s.kinds.FunctorAlgebra
-import smithy4s.zio.http.builders.client.ClientBuilder
+import smithy4s.zio.http.internal.builders.client.ClientBuilder
 import smithy4s.zio.http.internal.builders.server.RouterBuilder
 import smithy4s.{Endpoint, ShapeTag}
 import zio.Task
