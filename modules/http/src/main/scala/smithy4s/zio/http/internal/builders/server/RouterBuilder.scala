@@ -32,10 +32,18 @@ class RouterBuilder[
     middleware: ServerEndpointMiddleware = Endpoint.Middleware.noop[HttpRoutes]
 ) {
 
-  /*  def mapErrors(
-                 fe: PartialFunction[Throwable, Throwable]
-               ): RouterBuilder[Alg, P] =
-    new RouterBuilder(service, impl, fe andThen (e => F.pure(e)), middleware)*/
+  def mapErrors(
+      fe: PartialFunction[Throwable, Throwable]
+  ): RouterBuilder[Alg, P] =
+    new RouterBuilder(
+      protocolTag,
+      simpleProtocolCodecs,
+      service,
+      impl,
+      fe andThen (e => ZIO.succeed(e)),
+      middleware
+    )
+
   def flatMapErrors(
       fe: PartialFunction[Throwable, Task[Throwable]]
   ): RouterBuilder[Alg, P] =
@@ -93,10 +101,9 @@ class RouterBuilder[
   val bijection: Bijection[HttpRoutes, SimpleHandler] =
     new Bijection[HttpRoutes, SimpleHandler] {
       override def to(httpRoutes: HttpRoutes): SimpleHandler = {
-        // cache the conversion to httpApp
-        val app: HttpApp[Any] = httpRoutes.handleError(throw _).toHttpApp
+        val sandboxed = httpRoutes.sandbox
         (
-            (req: Request) => app.apply(req)
+            (req: Request) => sandboxed.apply(req)
         ).asInstanceOf[SimpleHandler]
       }
 
