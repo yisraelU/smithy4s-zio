@@ -3,7 +3,7 @@ import smithy4s.codegen.Smithy4sCodegenPlugin.autoImport.smithy4sVersion
 
 object Dependencies {
   object Http4s {
-    val http4sVersion = Def.setting("0.23.26")
+    val http4sVersion = Def.setting("0.23.27")
 
     val circe: Def.Initialize[ModuleID] =
       Def.setting("org.http4s" %% "http4s-circe" % http4sVersion.value)
@@ -25,7 +25,7 @@ object Dependencies {
   }
 
   object Circe {
-    val version = "0.14.6"
+    val version = "0.14.7"
     val core = "io.circe" %% "circe-core" % version
     val parser = "io.circe" %% "circe-parser" % version
   }
@@ -56,7 +56,7 @@ object Dependencies {
   }
 
   object Smithy {
-    val smithyVersion = "1.47.0"
+    val smithyVersion = "1.48.0"
     val org = "software.amazon.smithy"
     val testTraits = org % "smithy-protocol-test-traits" % smithyVersion
     val model = org % "smithy-model" % smithyVersion
@@ -79,7 +79,7 @@ object Dependencies {
     val core = "dev.zio" %% "zio" % zioVersion
     val http = "dev.zio" %% "zio-http" % "3.0.0-RC4"
     val schema = "dev.zio" %% "zio-schema" % "1.1.1"
-    val prelude = "dev.zio" %% "zio-prelude" % "1.0.0-RC23"
+    val prelude = "dev.zio" %% "zio-prelude" % "1.0.0-RC24"
     val catsInterop = "dev.zio" %% "zio-interop-cats" % "23.1.0.2"
     val test = "dev.zio" %% "zio-test" % zioVersion
     val testSbt = "dev.zio" %% "zio-test-sbt" % zioVersion % Test
