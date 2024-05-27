@@ -9,14 +9,14 @@ import smithy4s.zio.examples.todo.impl.{
   ToDoImpl
 }
 import smithy4s.zio.http.SimpleRestJsonBuilder
-import zio.http.{HttpApp, Server}
+import zio.http.{Routes, Server}
 import zio.{ExitCode, URIO, ZIO, ZIOAppDefault}
 
 object Main extends ZIOAppDefault {
 
   private val port: Port = Port.fromInt(8091).get
 
-  val app: ZIO[Any, Throwable, HttpApp[Any]] = {
+  val app: ZIO[Any, Throwable, Routes[Any, Nothing]] = {
     for {
       _ <- zio.Console.printLine(s"Starting server on http://localhost:$port")
       keyGen = PrimaryKeyGen.default()
@@ -24,7 +24,7 @@ object Main extends ZIOAppDefault {
       routes <- SimpleRestJsonBuilder
         .routes(ToDoImpl(db, "http://localhost/todos"))
         .lift
-      app = routes.sandbox.toHttpApp
+      app = routes.sandbox
       _ <- zio.Console.printLine(s"Starting server on http://localhost:$port")
     } yield app
   }

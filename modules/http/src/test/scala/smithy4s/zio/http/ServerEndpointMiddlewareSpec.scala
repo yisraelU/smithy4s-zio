@@ -33,7 +33,7 @@ object ServerEndpointMiddlewareSpec extends ZIOSpecDefault {
       }
     }
     def runOnService(service: HttpRoutes): ZIO[Any, Nothing, TestResult] = {
-      service.sandbox.toHttpApp.runZIO(post( "/bob", Body.empty))
+      service.sandbox.runZIO(post( "/bob", Body.empty))
         .map(res =>  zio.test.assert(res.status.code)(Assertion.equalTo(599)))
     }
 

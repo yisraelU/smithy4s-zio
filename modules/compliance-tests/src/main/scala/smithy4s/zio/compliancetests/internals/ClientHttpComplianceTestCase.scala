@@ -63,7 +63,7 @@ private[compliancetests] class ClientHttpComplianceTestCase[
                 .flatMap(requestDeferred.succeed(_))
                 .mapBoth(Response.fromThrowable, _ => Response())
             }
-          val app = reqHandler.toHttpApp
+          val app = reqHandler.toRoutes
 
           reverseRoutes[Alg](app, testCase.host).flatMap { client =>
             input
@@ -139,7 +139,7 @@ private[compliancetests] class ClientHttpComplianceTestCase[
               )
               .mapBoth(Response.fromThrowable, identity)
           }
-        val app = reqHandler.toHttpApp
+        val app = reqHandler.toRoutes
 
         reverseRoutes[Alg](app).flatMap { client =>
           val doc: Document = testCase.params.getOrElse(Document.obj())
