@@ -68,7 +68,7 @@ package object internal {
       method,
       fromSmithy4sHttpUri(req.uri),
       updatedHeaders,
-      Body.fromStream(toStream(req.body)),
+      Body.fromStreamChunked(toStream(req.body)),
       remoteAddress = Option.empty
     )
   }
@@ -107,12 +107,7 @@ package object internal {
   }
 
   def fromSmithy4sHttpResponse(res: Smithy4sHttpResponse[Blob]): Response = {
-    val status = Status.fromInt(res.statusCode) match {
-      case Some(value) => value
-      case None =>
-        throw new RuntimeException(s"Invalid status code ${res.statusCode}")
-    }
-
+    val status = Status.fromInt(res.statusCode)
     val headers: Headers = toHeaders(res.headers)
     val updatedHeaders: Headers = {
       val contentLength = res.body.size
@@ -122,7 +117,7 @@ package object internal {
     Response(
       status,
       headers = updatedHeaders,
-      body = Body.fromStream(toStream(res.body))
+      body = Body.fromStreamChunked(toStream(res.body))
     )
   }
 

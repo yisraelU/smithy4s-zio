@@ -149,13 +149,13 @@ object HelloWorldImpl extends HelloWorldService[Task] {
 object Main extends ZIOAppDefault {
 
   val port =  Port.fromInt(9000).get
-  val app: ZIO[Any, Throwable, HttpApp[Any]] = {
+  val app:Task[Routes[Any,Response]] = {
     for {
       _ <- zio.Console.printLine(s"Starting server on http://localhost:$port")
       routes <- SimpleRestJsonBuilder
         .routes(HelloWorldImpl)
         .lift
-      app = routes.sandbox.toHttpApp
+     app = routes.sandbox   
     } yield app
   }
 

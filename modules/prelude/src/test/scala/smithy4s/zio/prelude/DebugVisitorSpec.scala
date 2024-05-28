@@ -1,11 +1,11 @@
 package smithy4s.zio.prelude
 
 import smithy4s.schema.Schema
-import smithy4s.schema.Schema._
-import smithy4s.zio.prelude.HashTestUtils._
-import smithy4s.zio.prelude.instances.all._
-import smithy4s.zio.prelude.testcases.IntOrString._
-import smithy4s.zio.prelude.testcases._
+import smithy4s.schema.Schema.*
+import smithy4s.zio.prelude.HashTestUtils.*
+import smithy4s.zio.prelude.instances.all.*
+import smithy4s.zio.prelude.testcases.*
+import smithy4s.zio.prelude.testcases.IntOrString.*
 import smithy4s.{Blob, Hints, ShapeId, Timestamp}
 import zio.Scope
 import zio.prelude.Debug

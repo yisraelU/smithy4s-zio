@@ -65,9 +65,8 @@ object ServiceBuilderZIOHttpSpec extends ZIOSpecDefault {
             .routes(serviceImpl)
             .lift
             .map { routes =>
-              routes.sandbox.toHttpApp.runZIO(Request.get("/yeap")).map {
-                response =>
-                  response.status.code == 200
+              routes.sandbox.runZIO(Request.get("/yeap")).map { response =>
+                response.status.code == 200
               }
             }
         )(Assertion.anything)
@@ -108,11 +107,12 @@ object ServiceBuilderZIOHttpSpec extends ZIOSpecDefault {
             .routes(serviceImpl)
             .lift
             .flatMap { routes =>
-              routes.sandbox.toHttpApp.runZIO(Request.get("/health")).flatMap {
-                response => response.body.asString
+              routes.sandbox.runZIO(Request.get("/health")).flatMap {
+                response =>
+                  response.body.asString.map((response.status.code, _))
               }
             }
-        )(Assertion.equalsIgnoreCase("{\"errorCode\":\"server.error\"}"))
+        )(Assertion.equalTo((500, "{\"errorCode\":\"server.error\"}")))
       }
     )
 }

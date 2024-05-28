@@ -8,12 +8,7 @@ import smithy4s.ShapeTag
 import smithy4s.schema.EnumTag
 import smithy4s.schema.Schema.enumeration
 
-sealed abstract class TheEnum(
-    _value: String,
-    _name: String,
-    _intValue: Int,
-    _hints: Hints
-) extends Enumeration.Value {
+sealed abstract class TheEnum(_value: String, _name: String, _intValue: Int, _hints: Hints) extends Enumeration.Value {
   override type EnumType = TheEnum
   override val value: String = _value
   override val name: String = _name
@@ -27,14 +22,13 @@ object TheEnum extends Enumeration[TheEnum] with ShapeTag.Companion[TheEnum] {
 
   val hints: Hints = Hints.empty
 
-  case object V2 extends TheEnum("v2", "V2", 1, Hints.empty)
   case object V1 extends TheEnum("v1", "V1", 0, Hints.empty)
+  case object V2 extends TheEnum("v2", "V2", 1, Hints.empty)
 
   val values: List[TheEnum] = List(
+    V1,
     V2,
-    V1
   )
   val tag: EnumTag[TheEnum] = EnumTag.ClosedStringEnum
-  implicit val schema: Schema[TheEnum] =
-    enumeration(tag, values).withId(id).addHints(hints)
+  implicit val schema: Schema[TheEnum] = enumeration(tag, values).withId(id).addHints(hints)
 }

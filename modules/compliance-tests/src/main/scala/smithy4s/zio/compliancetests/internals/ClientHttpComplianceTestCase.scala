@@ -2,10 +2,10 @@ package smithy4s.zio.compliancetests.internals
 
 import cats.Eq
 import cats.effect.Async
-import cats.syntax.all._
-import smithy.test._
+import cats.syntax.all.*
+import smithy.test.*
 import smithy4s.http.HttpContractError
-import smithy4s.zio.compliancetests.TestConfig._
+import smithy4s.zio.compliancetests.TestConfig.*
 import smithy4s.zio.compliancetests.internals.eq.EqSchemaVisitor
 import smithy4s.zio.compliancetests.{
   ComplianceTest,
@@ -14,7 +14,17 @@ import smithy4s.zio.compliancetests.{
   matchRequest
 }
 import smithy4s.{Document, Service}
-import zio.http.{Body, Header, Headers, HttpApp, Request, Response, Status, URL}
+import zio.http.{
+  Body,
+  Handler,
+  Header,
+  Headers,
+  Request,
+  Response,
+  Status,
+  URL,
+  handler
+}
 import zio.{Promise, Task, ZIO, durationInt}
 
 import java.util.concurrent.TimeoutException
@@ -46,12 +56,14 @@ private[compliancetests] class ClientHttpComplianceTestCase[
           .liftTo[Task]
 
         Promise.make[Nothing, Request].flatMap { requestDeferred =>
-          val app: HttpApp[Any] = HttpApp.collectZIO { case req =>
-            req.body.asChunk
-              .map(chunk => req.copy(body = zio.http.Body.fromChunk(chunk)))
-              .flatMap(requestDeferred.succeed(_))
-              .mapBoth(Response.fromThrowable, _ => Response())
-          }
+          val reqHandler: Handler[Any, Response, Request, Response] =
+            handler { req: Request =>
+              req.body.asChunk
+                .map(chunk => req.copy(body = zio.http.Body.fromChunk(chunk)))
+                .flatMap(requestDeferred.succeed(_))
+                .mapBoth(Response.fromThrowable, _ => Response())
+            }
+          val app = reqHandler.toRoutes
 
           reverseRoutes[Alg](app, testCase.host).flatMap { client =>
             input
@@ -106,14 +118,9 @@ private[compliancetests] class ClientHttpComplianceTestCase[
             .left
             .map(_.errorEq[Task])
         }
-        val status = ZIO.fromOption(Status.fromInt(testCase.code)).orElseFail {
-          new IllegalArgumentException(
-            s"Invalid status code ${testCase.code}"
-          )
-        }
 
-        status.flatMap { status =>
-          val app = HttpApp.collectZIO { case req =>
+        val reqHandler: Handler[Any, Response, Request, Response] =
+          handler { req: Request =>
             val body = testCase.body
 
             val headers = testCase.headers.map(_.toList).foldMap { headers =>
@@ -125,40 +132,39 @@ private[compliancetests] class ClientHttpComplianceTestCase[
             req.body.asString
               .as(
                 Response(
-                  status = status,
+                  status = Status.fromInt(testCase.code),
                   body = body.map(Body.fromString(_)).getOrElse(Body.empty)
                 )
                   .addHeaders(headers)
               )
               .mapBoth(Response.fromThrowable, identity)
           }
+        val app = reqHandler.toRoutes
 
-          reverseRoutes[Alg](app).flatMap { client =>
-            val doc: Document = testCase.params.getOrElse(Document.obj())
-            buildResult match {
-              case Left(onError) =>
+        reverseRoutes[Alg](app).flatMap { client =>
+          val doc: Document = testCase.params.getOrElse(Document.obj())
+          buildResult match {
+            case Left(onError) =>
+              val res: Task[O] = service
+                .toPolyFunction[R](client)
+                .apply(endpoint.wrap(dummyInput))
+              res
+                .as(asserts.success)
+                .recoverWith { case ex: Throwable => onError(doc, ex) }
+            case Right(onOutput) =>
+              onOutput(doc).flatMap { expectedOutput =>
                 val res: Task[O] = service
                   .toPolyFunction[R](client)
                   .apply(endpoint.wrap(dummyInput))
-                res
-                  .as(asserts.success)
-                  .recoverWith { case ex: Throwable => onError(doc, ex) }
-              case Right(onOutput) =>
-                onOutput(doc).flatMap { expectedOutput =>
-                  val res: Task[O] = service
-                    .toPolyFunction[R](client)
-                    .apply(endpoint.wrap(dummyInput))
 
-                  res.map { output =>
-                    asserts.eql(
-                      output,
-                      expectedOutput
-                    )
-                  }
+                res.map { output =>
+                  asserts.eql(
+                    output,
+                    expectedOutput
+                  )
                 }
-            }
+              }
           }
-
         }
       }
     )
