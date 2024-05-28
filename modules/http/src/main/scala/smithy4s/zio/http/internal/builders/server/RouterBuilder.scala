@@ -101,9 +101,9 @@ class RouterBuilder[
   val bijection: Bijection[HttpRoutes, SimpleHandler] =
     new Bijection[HttpRoutes, SimpleHandler] {
       override def to(httpRoutes: HttpRoutes): SimpleHandler = {
-        val sandboxed = httpRoutes.sandbox
+        val absolved = httpRoutes.handleError(throw _)
         (
-            (req: Request) => sandboxed.apply(req)
+            (req: Request) => absolved.runZIO(req)
         ).asInstanceOf[SimpleHandler]
       }
 
