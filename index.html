@@ -168,7 +168,7 @@
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="identifier">libraryDependencies</span><span> ++= </span><span class="type-name">Seq</span><span>(
   </span><span class="string-literal">&quot;io.github.yisraelu&quot;</span><span> %% </span><span class="string-literal">&quot;smithy4s-zio-http&quot;</span><span> % </span><span class="string-literal">&quot;0.0.2&quot;</span><span>
 )</span></code></pre>
-        <p>The snapshot version is available via the Sonatype snapshots repository: <code>0.0.2-22-8901bf4-SNAPSHOT.</code></p>
+        <p>The snapshot version is available via the Sonatype snapshots repository: <code>0.0.2-24-bc8a8bc-SNAPSHOT.</code></p>
         
         <h3 id="http-server-and-client-quickstart-borrows-from-smithy4s-example" class="section"><a class="anchor-link left" href="#http-server-and-client-quickstart-borrows-from-smithy4s-example"><i class="icofont-laika link">&#xef71;</i></a>Http Server and Client Quickstart (borrows from Smithy4s example)</h3>
         <p>Below is a quick example of smithy4s in action.
@@ -254,13 +254,13 @@ structure Greeting {
 </span><span class="keyword">object</span><span> </span><span class="type-name">Main</span><span> </span><span class="keyword">extends</span><span> </span><span class="type-name">ZIOAppDefault</span><span> {
 
   </span><span class="keyword">val</span><span> </span><span class="identifier">port</span><span> =  </span><span class="type-name">Port</span><span>.</span><span class="identifier">fromInt</span><span>(</span><span class="number-literal">9000</span><span>).</span><span class="identifier">get</span><span>
-  </span><span class="keyword">val</span><span> </span><span class="identifier">app</span><span>: </span><span class="type-name">ZIO</span><span>[</span><span class="type-name">Any</span><span>, </span><span class="type-name">Throwable</span><span>, </span><span class="type-name">HttpApp</span><span>[</span><span class="type-name">Any</span><span>]] = {
+  </span><span class="keyword">val</span><span> </span><span class="identifier">app</span><span>:</span><span class="type-name">Task</span><span>[</span><span class="type-name">Routes</span><span>[</span><span class="type-name">Any</span><span>,</span><span class="type-name">Response</span><span>]] = {
     </span><span class="keyword">for</span><span> {
       </span><span class="identifier">_</span><span> &lt;- </span><span class="identifier">zio</span><span>.</span><span class="type-name">Console</span><span>.</span><span class="identifier">printLine</span><span>(</span><span class="string-literal">s&quot;Starting server on http://localhost:</span><span class="substitution">$port</span><span class="string-literal">&quot;</span><span>)
       </span><span class="identifier">routes</span><span> &lt;- </span><span class="type-name">SimpleRestJsonBuilder</span><span>
         .</span><span class="identifier">routes</span><span>(</span><span class="type-name">HelloWorldImpl</span><span>)
         .</span><span class="identifier">lift</span><span>
-      </span><span class="identifier">app</span><span> = </span><span class="identifier">routes</span><span>.</span><span class="identifier">sandbox</span><span>.</span><span class="identifier">toHttpApp</span><span>
+     </span><span class="identifier">app</span><span> = </span><span class="identifier">routes</span><span>.</span><span class="identifier">sandbox</span><span>   
     } </span><span class="keyword">yield</span><span> </span><span class="identifier">app</span><span>
   }
 
