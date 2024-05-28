@@ -2,7 +2,7 @@ package smithy4s.zio.prelude
 
 package testcases
 
-import smithy4s.schema.Schema._
+import smithy4s.schema.Schema.*
 import smithy4s.schema.Schema
 import smithy4s.ShapeId
 
@@ -13,10 +13,10 @@ object IntOrInt {
 
   val schema: Schema[IntOrInt] = {
     val intValue0 = int.oneOf[IntOrInt]("intValue0", IntValue0(_)) {
-      case IntValue0(int) => int
+      case IntValue0(i) => i
     }
     val intValue1 = int.oneOf[IntOrInt]("intValue1", IntValue1(_)) {
-      case IntValue1(int) => int
+      case IntValue1(i) => i
     }
     union(intValue0, intValue1).reflective
   }.withId(ShapeId("", "IntOrInt"))

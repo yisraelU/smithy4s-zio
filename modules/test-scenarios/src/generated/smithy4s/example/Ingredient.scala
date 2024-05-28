@@ -8,12 +8,7 @@ import smithy4s.ShapeTag
 import smithy4s.schema.EnumTag
 import smithy4s.schema.Schema.enumeration
 
-sealed abstract class Ingredient(
-    _value: String,
-    _name: String,
-    _intValue: Int,
-    _hints: Hints
-) extends Enumeration.Value {
+sealed abstract class Ingredient(_value: String, _name: String, _intValue: Int, _hints: Hints) extends Enumeration.Value {
   override type EnumType = Ingredient
   override val value: String = _value
   override val name: String = _name
@@ -22,26 +17,22 @@ sealed abstract class Ingredient(
   override def enumeration: Enumeration[EnumType] = Ingredient
   @inline final def widen: Ingredient = this
 }
-object Ingredient
-    extends Enumeration[Ingredient]
-    with ShapeTag.Companion[Ingredient] {
+object Ingredient extends Enumeration[Ingredient] with ShapeTag.Companion[Ingredient] {
   val id: ShapeId = ShapeId("smithy4s.example", "Ingredient")
 
   val hints: Hints = Hints.empty
 
-  case object TOMATO extends Ingredient("Tomato", "TOMATO", 3, Hints.empty)
+  case object MUSHROOM extends Ingredient("Mushroom", "MUSHROOM", 0, Hints.empty)
   case object CHEESE extends Ingredient("Cheese", "CHEESE", 1, Hints.empty)
   case object SALAD extends Ingredient("Salad", "SALAD", 2, Hints.empty)
-  case object MUSHROOM
-      extends Ingredient("Mushroom", "MUSHROOM", 0, Hints.empty)
+  case object TOMATO extends Ingredient("Tomato", "TOMATO", 3, Hints.empty)
 
   val values: List[Ingredient] = List(
-    TOMATO,
+    MUSHROOM,
     CHEESE,
     SALAD,
-    MUSHROOM
+    TOMATO,
   )
   val tag: EnumTag[Ingredient] = EnumTag.ClosedStringEnum
-  implicit val schema: Schema[Ingredient] =
-    enumeration(tag, values).withId(id).addHints(hints)
+  implicit val schema: Schema[Ingredient] = enumeration(tag, values).withId(id).addHints(hints)
 }

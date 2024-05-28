@@ -69,7 +69,7 @@ private[compliancetests] class ServerHttpComplianceTestCase[
         routes(fakeImpl)(originalService)
           .flatMap { server =>
             // todo will change to run routes without sandboxing
-            server.sandbox.toHttpApp
+            server.sandbox
               .runZIO(makeRequest(baseUri, testCase))
               .flatMap((response: Response) => {
                 if (response.status.isError)
@@ -142,7 +142,7 @@ private[compliancetests] class ServerHttpComplianceTestCase[
         routes(fakeImpl)(amendedService)
           .flatMap { server =>
             val x: ZIO[Any, Throwable, (String, Status, Headers)] = {
-              server.sandbox.toHttpApp
+              server.sandbox
                 .runZIO(syntheticRequest)
                 .flatMap { resp =>
                   resp.body.asString
