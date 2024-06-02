@@ -87,7 +87,7 @@ object Dependencies {
   }
   object Typelevel {
     val vault: Def.Initialize[ModuleID] =
-      Def.setting("org.typelevel" %% "vault" % "3.5.0")
+      Def.setting("org.typelevel" %% "vault" % "3.6.0")
   }
 
 }
