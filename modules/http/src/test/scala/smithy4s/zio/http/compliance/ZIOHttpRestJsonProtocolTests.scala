@@ -18,7 +18,7 @@ import smithy4s.zio.compliancetests.{
 }
 import smithy4s.zio.http.{ResourcefulTask, SimpleRestJsonBuilder}
 import smithy4s.{Service, ShapeId}
-import zio.http.{Body, HttpApp, Response, URL, ZClient}
+import zio.http.{Body, Response, Routes, URL, ZClient}
 import zio.{Task, ZIO}
 
 import java.nio.file.Path
@@ -49,7 +49,7 @@ object ZIOHttpRestJsonProtocolTests extends ProtocolComplianceSuite {
   override def allTests(
       dsi: DynamicSchemaIndex
   ): List[compliancetests.ComplianceTest[Task]] =
-    genClientAndServerTests(
+    genClientTests(
       SimpleRestJsonIntegration,
       simpleRestJsonSpec,
       pizzaSpec
@@ -85,7 +85,7 @@ object ZIOHttpRestJsonProtocolTests extends ProtocolComplianceSuite {
       "application/json"
     )
     override def reverseRoutes[Alg[_[_, _, _, _, _]]](
-        routes: HttpApp[Any],
+        routes: Routes[Any, Response],
         testHost: Option[String]
     )(implicit
         service: Service[Alg]

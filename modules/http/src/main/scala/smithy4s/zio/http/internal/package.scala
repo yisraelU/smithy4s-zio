@@ -26,14 +26,14 @@ package object internal {
         fa.flatMap(f)
 
       override def raiseError[A](e: Throwable): ZIO[R, Throwable, A] =
-        ZIO.die(e)
+        ZIO.fail(e)
 
       override def pure[A](a: A): ZIO[R, Throwable, A] = ZIO.succeed(a)
 
       // we have already handled throwables via using a Response
       override def handleErrorWith[A](fa: ZIO[R, Throwable, A])(
           f: Throwable => ZIO[R, Throwable, A]
-      ): ZIO[R, Throwable, A] = fa.catchAllDefect(f)
+      ): ZIO[R, Throwable, A] = fa.catchAll(f)
 
       override def zipMapAll[A](seq: IndexedSeq[ZIO[R, Throwable, Any]])(
           f: IndexedSeq[Any] => A

@@ -23,6 +23,7 @@ object AlloyBorrowedTests {
   }
 }
 
+
 final case class AllowRules(
     allowList: Vector[AllowRule],
     disallowList: Vector[AllowRule]

@@ -115,7 +115,7 @@ package object compliancetests {
         .get
         .path
         .segments
-        .map(URLDecoder.decode(_, "UTF-8"))
+       // .map(URLDecoder.decode(_, "UTF-8"))
 
     val expectedUrl = constructUrl(baseUri, testCase)
     val pathAssert: ComplianceResult =

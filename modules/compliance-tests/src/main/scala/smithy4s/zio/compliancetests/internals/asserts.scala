@@ -170,7 +170,7 @@ object asserts {
           .get(key)
           .toList
           .flatten
-          .map(URLDecoder.decode(_, "UTF-8"))
+
         if (!(values == expectedValue)) {
           fail(s"query parameter $key has value ${pprint.apply(
               queryParameters.get(key).toList.flatten
