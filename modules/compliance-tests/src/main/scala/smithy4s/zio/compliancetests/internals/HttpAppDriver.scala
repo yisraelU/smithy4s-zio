@@ -2,7 +2,18 @@ package smithy4s.zio.compliancetests.internals
 
 import zio.*
 import zio.http.ZClient.Driver
-import zio.http.{Body, ClientSSLConfig, Headers, Method, Request, Response, Routes, URL, Version, WebSocketApp}
+import zio.http.{
+  Body,
+  ClientSSLConfig,
+  Headers,
+  Method,
+  Request,
+  Response,
+  Routes,
+  URL,
+  Version,
+  WebSocketApp
+}
 
 class HttpAppDriver(app: Routes[Any, Response]) extends Driver[Any, Throwable] {
   override def request(

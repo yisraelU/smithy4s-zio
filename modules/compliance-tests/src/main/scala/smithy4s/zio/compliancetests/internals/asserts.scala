@@ -11,8 +11,6 @@ import smithy4s.zio.compliancetests.ComplianceTest.*
 import zio.http.{Headers, QueryParams}
 import zio.test.{TestResult, assertTrue}
 
-import java.net.URLDecoder
-
 object asserts {
 
   // private implicit val eventsEq: Eq[XmlEvent] = Eq.fromUniversalEquals

@@ -1,32 +1,32 @@
 package smithy4s.zio
 
+import cats.syntax.all.*
 import cats.{Eq, Monoid}
 import smithy.test.HttpRequestTestCase
 import smithy4s.zio.compliancetests.ComplianceTest.ComplianceResult
 import smithy4s.zio.compliancetests.internals.asserts.*
-import smithy4s.zio.compliancetests.internals.{asserts, parseQueryParams}
-import cats.syntax.all.*
 import smithy4s.zio.compliancetests.internals.asserts.testCase.{
   checkHeaders,
   checkQueryParameters
 }
-import zio.{Chunk, Promise, Scope, Task, ZIO, durationInt}
+import smithy4s.zio.compliancetests.internals.{asserts, parseQueryParams}
+import smithy4s.zio.shared.utils.UrlCodingUtils.pathDecode
 import zio.http.{
   Body,
   Header,
   Headers,
   MediaType,
   Method,
+  Path,
   QueryParams,
   Request,
   Routes,
   URL
 }
+import zio.interop.catz.core.*
+import zio.{Chunk, Promise, Scope, Task, ZIO, durationInt}
 
 import java.util.concurrent.TimeoutException
-import zio.interop.catz.core.*
-
-import java.net.URLDecoder
 
 package object compliancetests {
 
@@ -107,15 +107,12 @@ package object compliancetests {
         .toList
 
     val receivedPathSegments =
-      request.url.path.segments
+      request.url.path.segments.map(pathDecode)
     val expectedPathSegments =
-      URL
+      Path
         .decode(testCase.uri)
-        .toOption
-        .get
-        .path
         .segments
-       // .map(URLDecoder.decode(_, "UTF-8"))
+        .map(pathDecode)
 
     val expectedUrl = constructUrl(baseUri, testCase)
     val pathAssert: ComplianceResult =

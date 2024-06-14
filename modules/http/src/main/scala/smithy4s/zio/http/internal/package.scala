@@ -13,6 +13,7 @@ import smithy4s.http.{
   HttpUri as Smithy4sHttpUri,
   HttpUriScheme as Smithy4sHttpUriScheme
 }
+import smithy4s.zio.shared.utils.UrlCodingUtils
 import zio.http.*
 import zio.stream.ZStream
 import zio.{Chunk, IO, Task, ZIO}
@@ -100,8 +101,8 @@ package object internal {
       uriScheme,
       url.host.getOrElse("localhost"),
       url.port,
-      // we fake decoding as , we wish to have uri decoding not url decoding
-      url.path.segments.map(s => s.replace("+", "%2b")).map(URICodec.decode),
+      url.path.segments
+        .map(UrlCodingUtils.pathDecode(_)),
       getQueryParams(url),
       pathParams
     )
@@ -133,7 +134,9 @@ package object internal {
     }
 
   private def fromSmithy4sHttpUri(uri: Smithy4sHttpUri): URL = {
-    val path = Path(uri.path.map(URICodec.encode).mkString("/")).addLeadingSlash
+    val path = Path(
+      uri.path.map(UrlCodingUtils.pathEncode).mkString("/")
+    ).addLeadingSlash
     val scheme = uri.scheme match {
       case Smithy4sHttpUriScheme.Https => Scheme.HTTPS
       case _                           => Scheme.HTTP
@@ -225,7 +228,7 @@ package object internal {
 
   private def serializePathParams(pathParams: PathParams): String = {
     pathParams
-      .map { case (key, value) => s"$key=${URICodec.encode(value)}" }
+      .map { case (key, value) => s"$key=${UrlCodingUtils.urlEncode(value)}" }
       .mkString("&")
   }
 
@@ -237,7 +240,7 @@ package object internal {
       .map { param =>
         {
           param.split("=", 2) match {
-            case Array(key, value) => key -> URICodec.decode(value)
+            case Array(key, value) => key -> UrlCodingUtils.urlDecode(value)
             case Array(k)          => (k, "")
             case _ =>
               throw new Exception(
