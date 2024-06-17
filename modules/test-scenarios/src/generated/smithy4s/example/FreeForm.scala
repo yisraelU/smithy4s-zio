@@ -12,8 +12,15 @@ import smithy4s.schema.Schema.recursive
 object FreeForm extends Newtype[Document] {
   val id: ShapeId = ShapeId("smithy4s.example", "freeForm")
   val hints: Hints = Hints(
-    smithy.api.Trait(selector = None, structurallyExclusive = None, conflicts = None, breakingChanges = None),
+    smithy.api.Trait(
+      selector = None,
+      structurallyExclusive = None,
+      conflicts = None,
+      breakingChanges = None
+    )
   ).lazily
   val underlyingSchema: Schema[Document] = document.withId(id).addHints(hints)
-  implicit val schema: Schema[FreeForm] = recursive(bijection(underlyingSchema, asBijection))
+  implicit val schema: Schema[FreeForm] = recursive(
+    bijection(underlyingSchema, asBijection)
+  )
 }
