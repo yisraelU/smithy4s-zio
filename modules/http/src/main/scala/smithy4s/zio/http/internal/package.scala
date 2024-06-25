@@ -110,7 +110,8 @@ package object internal {
 
   private def fromIntNoCustom(statusCode: Int): Status =
     Status.fromInt(statusCode) match {
-      case Status.Custom(code) => throw new RuntimeException(s"Invalid status code: $code")
+      case Status.Custom(code) =>
+        throw new RuntimeException(s"Invalid status code: $code")
       case other => other
     }
 
