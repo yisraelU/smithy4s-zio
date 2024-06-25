@@ -102,14 +102,20 @@ package object internal {
       url.host.getOrElse("localhost"),
       url.port,
       url.path.segments
-        .map(UrlCodingUtils.pathDecode(_)),
+        .map(UrlCodingUtils.pathDecode),
       getQueryParams(url),
       pathParams
     )
   }
 
+  private def fromIntNoCustom(statusCode: Int): Status =
+    Status.fromInt(statusCode) match {
+      case Status.Custom(code) => throw new RuntimeException(s"Invalid status code: $code")
+      case other => other
+    }
+
   def fromSmithy4sHttpResponse(res: Smithy4sHttpResponse[Blob]): Response = {
-    val status = Status.fromInt(res.statusCode)
+    val status = fromIntNoCustom(res.statusCode)
     val headers: Headers = toHeaders(res.headers)
     val updatedHeaders: Headers = {
       val contentLength = res.body.size
@@ -228,7 +234,7 @@ package object internal {
 
   private def serializePathParams(pathParams: PathParams): String = {
     pathParams
-      .map { case (key, value) => s"$key=${UrlCodingUtils.urlEncode(value)}" }
+      .map { case (key, value) => s"$key=${UrlCodingUtils.pathEncode(value)}" }
       .mkString("&")
   }
 
@@ -240,7 +246,7 @@ package object internal {
       .map { param =>
         {
           param.split("=", 2) match {
-            case Array(key, value) => key -> UrlCodingUtils.urlDecode(value)
+            case Array(key, value) => key -> UrlCodingUtils.pathDecode(value)
             case Array(k)          => (k, "")
             case _ =>
               throw new Exception(

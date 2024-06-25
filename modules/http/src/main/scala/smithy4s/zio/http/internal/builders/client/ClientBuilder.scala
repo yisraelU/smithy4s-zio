@@ -55,7 +55,7 @@ class ClientBuilder[
             (client: Client) => ZHttpToSmithy4sClient(client),
             simpleProtocolCodecs.makeClientCodecs(url),
             middleware,
-            (response: Response) => response.status.isSuccess
+            (response: Response) => !response.status.isError
           )
         }
       }
