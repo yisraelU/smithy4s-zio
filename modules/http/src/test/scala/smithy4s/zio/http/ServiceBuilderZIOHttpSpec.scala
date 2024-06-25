@@ -16,6 +16,7 @@ import smithy4s.example.{
 import smithy4s.kinds.PolyFunction5
 import smithy4s.Service
 import zio.http.Request
+import zio.test.Assertion._
 import zio.{Scope, Task, ZIO}
 import zio.test.{Assertion, Spec, TestEnvironment, ZIOSpecDefault, assertZIO}
 
@@ -107,12 +108,21 @@ object ServiceBuilderZIOHttpSpec extends ZIOSpecDefault {
             .routes(serviceImpl)
             .lift
             .flatMap { routes =>
-              routes.sandbox.runZIO(Request.get("/health")).flatMap {
-                response =>
-                  response.body.asString.map((response.status.code, _))
-              }
+              routes
+                .handleErrorCause(ca => throw ca.squash)
+                .runZIO(Request.get("/health"))
+
             }
-        )(Assertion.equalTo((500, "{\"errorCode\":\"server.error\"}")))
+            .exit
+        )(
+          dies(
+            equalTo(
+              UnknownServerError(
+                UnknownServerErrorCode.ERROR_CODE
+              )
+            )
+          )
+        )
       }
     )
 }
