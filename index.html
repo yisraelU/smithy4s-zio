@@ -81,6 +81,7 @@
   <ul class="nav-list">
     <li class="level1 nav-leaf"><a href="#introduction">Introduction</a></li>
     <li class="level1 nav-leaf"><a href="#credits">Credits</a></li>
+    <li class="level1 nav-leaf"><a href="#protocol-compliant">Protocol Compliant</a></li>
     <li class="level1 nav-leaf"><a href="#compliance-tests-wip">Compliance Tests - wip</a></li>
     <li class="level1 nav-leaf"><a href="#published-modules">Published Modules</a></li>
     <li class="level1 nav-leaf"><a href="#notes">Notes</a></li>
@@ -114,6 +115,12 @@
         <h3 id="credits" class="section"><a class="anchor-link left" href="#credits"><i class="icofont-laika link">&#xef71;</i></a>Credits</h3>
         <ul>
           <li>This project is based completely off the <a href="https://http4s.org/">http4s</a> integration in Smithy4s.</li>
+        </ul>
+        
+        <h3 id="protocol-compliant" class="section"><a class="anchor-link left" href="#protocol-compliant"><i class="icofont-laika link">&#xef71;</i></a>Protocol Compliant</h3>
+        <ul>
+          <li>This library is protocol compliant with the <a href="https://github.com/disneystreaming/alloy">Alloy#SimpleRestJson</a> protocol</li>
+          <li>To read more about protocol in this context please see <a href="https://disneystreaming.github.io/smithy4s/docs/protocols/definition">What is a Protocol</a></li>
         </ul>
         
         <h3 id="compliance-tests-wip" class="section"><a class="anchor-link left" href="#compliance-tests-wip"><i class="icofont-laika link">&#xef71;</i></a>Compliance Tests - wip</h3>
@@ -168,7 +175,7 @@
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="identifier">libraryDependencies</span><span> ++= </span><span class="type-name">Seq</span><span>(
   </span><span class="string-literal">&quot;io.github.yisraelu&quot;</span><span> %% </span><span class="string-literal">&quot;smithy4s-zio-http&quot;</span><span> % </span><span class="string-literal">&quot;0.0.3&quot;</span><span>
 )</span></code></pre>
-        <p>The snapshot version is available via the Sonatype snapshots repository: <code>0.0.3-10-75c7e06-SNAPSHOT.</code></p>
+        <p>The snapshot version is available via the Sonatype snapshots repository: <code>0.0.3-16-f90d0d2-SNAPSHOT.</code></p>
         
         <h3 id="http-server-and-client-quickstart-borrows-from-smithy4s-example" class="section"><a class="anchor-link left" href="#http-server-and-client-quickstart-borrows-from-smithy4s-example"><i class="icofont-laika link">&#xef71;</i></a>Http Server and Client Quickstart (borrows from Smithy4s example)</h3>
         <p>Below is a quick example of smithy4s in action.
