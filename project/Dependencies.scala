@@ -12,6 +12,8 @@ object Dependencies {
       Def.setting("org.http4s" %% "http4s-ember-server" % http4sVersion.value)
     val emberClient: Def.Initialize[ModuleID] =
       Def.setting("org.http4s" %% "http4s-ember-client" % http4sVersion.value)
+    val core: Def.Initialize[ModuleID] =
+      Def.setting("org.http4s" %% "http4s-core" % http4sVersion.value)
     val dsl: Def.Initialize[ModuleID] =
       Def.setting("org.http4s" %% "http4s-dsl" % http4sVersion.value)
   }

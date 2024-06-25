@@ -1,5 +1,6 @@
-package smithy4s.zio.http
+package smithy4s.zio.http.middleware
 
+import smithy4s.zio.http.ClientEndpointMiddleware
 import smithy4s.{Endpoint, Hints, Service}
 import zio.http.Client
 

@@ -1,4 +1,4 @@
-package smithy4s.zio.http.builders.client
+package smithy4s.zio.http.internal.builders.client
 
 import smithy4s.client.UnaryClientCompiler
 import smithy4s.zio.http.internal.{ZHttpToSmithy4sClient, zioMonadThrowLike}
@@ -55,7 +55,7 @@ class ClientBuilder[
             (client: Client) => ZHttpToSmithy4sClient(client),
             simpleProtocolCodecs.makeClientCodecs(url),
             middleware,
-            (response: Response) => response.status.isSuccess
+            (response: Response) => !response.status.isError
           )
         }
       }

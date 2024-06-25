@@ -1,6 +1,7 @@
-package smithy4s.zio.http
+package smithy4s.zio.http.middleware
 
 import smithy4s.zio.http.internal.EffectOps
+import smithy4s.zio.http.{HttpRoutes, ServerEndpointMiddleware}
 import smithy4s.{Endpoint, Service}
 import zio.{Task, ZIO}
 

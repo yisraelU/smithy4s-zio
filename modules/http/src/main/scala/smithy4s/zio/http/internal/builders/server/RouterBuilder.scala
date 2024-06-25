@@ -8,6 +8,7 @@ import smithy4s.zio.http.internal.{
   toSmithy4sHttpUri,
   zioMonadThrowLike
 }
+import smithy4s.zio.http.middleware.ServerEndpointMiddleware
 import smithy4s.zio.http.protocol.SimpleProtocolCodecs
 import smithy4s.zio.http.{HttpRoutes, ServerEndpointMiddleware, SimpleHandler}
 import smithy4s.{

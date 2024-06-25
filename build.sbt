@@ -29,6 +29,7 @@ lazy val root = project
 
 lazy val allModules = Seq(
   http,
+  shared,
   prelude,
   schema,
   examples,
@@ -95,10 +96,12 @@ lazy val `compliance-tests` = (project in file("modules/compliance-tests"))
     Compile / smithy4sAllowedNamespaces := List("smithy.test"),
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
+  .dependsOn(shared)
   .enablePlugins(Smithy4sCodegenPlugin, NoPublishPlugin)
 
 lazy val http = (project in file("modules/http"))
   .dependsOn(
+    shared,
     scenarios % "test->compile",
     `compliance-tests` % "test->compile",
     `codegen-cli` % "test",
@@ -107,6 +110,8 @@ lazy val http = (project in file("modules/http"))
   .settings(
     name := s"$projectPrefix-http",
     libraryDependencies ++= Seq(
+      // http4s
+      Dependencies.Http4s.core.value,
       Dependencies.Smithy4s.core.value,
       Dependencies.Smithy4s.json.value,
       Dependencies.Typelevel.vault.value,
@@ -137,6 +142,14 @@ lazy val http = (project in file("modules/http"))
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
   .enablePlugins(ScalafixPlugin)
+
+lazy val shared = (project in file("modules/shared"))
+  .settings(
+    name := s"$projectPrefix-shared",
+    Compile / smithy4sAllowedNamespaces := List("smithy.test"),
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+  )
+  .enablePlugins(NoPublishPlugin)
 
 lazy val docs = project
   .in(file("site"))

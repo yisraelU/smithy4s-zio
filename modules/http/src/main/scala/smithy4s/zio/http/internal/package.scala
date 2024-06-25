@@ -13,6 +13,7 @@ import smithy4s.http.{
   HttpUri as Smithy4sHttpUri,
   HttpUriScheme as Smithy4sHttpUriScheme
 }
+import smithy4s.zio.shared.utils.UrlCodingUtils
 import zio.http.*
 import zio.stream.ZStream
 import zio.{Chunk, IO, Task, ZIO}
@@ -26,14 +27,14 @@ package object internal {
         fa.flatMap(f)
 
       override def raiseError[A](e: Throwable): ZIO[R, Throwable, A] =
-        ZIO.die(e)
+        ZIO.fail(e)
 
       override def pure[A](a: A): ZIO[R, Throwable, A] = ZIO.succeed(a)
 
       // we have already handled throwables via using a Response
       override def handleErrorWith[A](fa: ZIO[R, Throwable, A])(
           f: Throwable => ZIO[R, Throwable, A]
-      ): ZIO[R, Throwable, A] = fa.catchAllDefect(f)
+      ): ZIO[R, Throwable, A] = fa.catchAll(f)
 
       override def zipMapAll[A](seq: IndexedSeq[ZIO[R, Throwable, Any]])(
           f: IndexedSeq[Any] => A
@@ -100,14 +101,22 @@ package object internal {
       uriScheme,
       url.host.getOrElse("localhost"),
       url.port,
-      url.path.segments.map(s => s.replace("+", "%2b")).map(URLCodec.decode),
+      url.path.segments
+        .map(UrlCodingUtils.pathDecode),
       getQueryParams(url),
       pathParams
     )
   }
 
+  private def fromIntNoCustom(statusCode: Int): Status =
+    Status.fromInt(statusCode) match {
+      case Status.Custom(code) =>
+        throw new RuntimeException(s"Invalid status code: $code")
+      case other => other
+    }
+
   def fromSmithy4sHttpResponse(res: Smithy4sHttpResponse[Blob]): Response = {
-    val status = Status.fromInt(res.statusCode)
+    val status = fromIntNoCustom(res.statusCode)
     val headers: Headers = toHeaders(res.headers)
     val updatedHeaders: Headers = {
       val contentLength = res.body.size
@@ -131,8 +140,10 @@ package object internal {
       Smithy4sHttpResponse(res.status.code, headers, blob)
     }
 
-  def fromSmithy4sHttpUri(uri: Smithy4sHttpUri): URL = {
-    val path = Path(uri.path.mkString("/")).addLeadingSlash
+  private def fromSmithy4sHttpUri(uri: Smithy4sHttpUri): URL = {
+    val path = Path(
+      uri.path.map(UrlCodingUtils.pathEncode).mkString("/")
+    ).addLeadingSlash
     val scheme = uri.scheme match {
       case Smithy4sHttpUriScheme.Https => Scheme.HTTPS
       case _                           => Scheme.HTTP
@@ -224,7 +235,7 @@ package object internal {
 
   private def serializePathParams(pathParams: PathParams): String = {
     pathParams
-      .map { case (key, value) => s"$key=${URLCodec.encode(value)}" }
+      .map { case (key, value) => s"$key=${UrlCodingUtils.pathEncode(value)}" }
       .mkString("&")
   }
 
@@ -236,7 +247,7 @@ package object internal {
       .map { param =>
         {
           param.split("=", 2) match {
-            case Array(key, value) => key -> URLCodec.decode(value)
+            case Array(key, value) => key -> UrlCodingUtils.pathDecode(value)
             case Array(k)          => (k, "")
             case _ =>
               throw new Exception(

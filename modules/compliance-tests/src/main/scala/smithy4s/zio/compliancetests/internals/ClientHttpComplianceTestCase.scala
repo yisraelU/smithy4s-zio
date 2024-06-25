@@ -9,6 +9,7 @@ import smithy4s.zio.compliancetests.TestConfig.*
 import smithy4s.zio.compliancetests.internals.eq.EqSchemaVisitor
 import smithy4s.zio.compliancetests.{
   ComplianceTest,
+  ResourcefulTask,
   ReverseRouter,
   headerMonoid,
   matchRequest
@@ -25,7 +26,7 @@ import zio.http.{
   URL,
   handler
 }
-import zio.{Promise, Task, ZIO, durationInt}
+import zio.{Promise, Scope, Task, ZIO, durationInt}
 
 import java.util.concurrent.TimeoutException
 
@@ -42,7 +43,7 @@ private[compliancetests] class ClientHttpComplianceTestCase[
       endpoint: service.Endpoint[I, E, O, SE, SO],
       testCase: HttpRequestTestCase
   ): ComplianceTest[Task] = {
-    type R[I_, E_, O_, SE_, SO_] = Task[O_]
+    type R[I_, E_, O_, SE_, SO_] = ResourcefulTask[O_]
     val inputFromDocument = CanonicalSmithyDecoder.fromSchema(endpoint.input)
     ComplianceTest[Task](
       testCase.id,
@@ -75,6 +76,7 @@ private[compliancetests] class ClientHttpComplianceTestCase[
                 val output: Task[O] = service
                   .toPolyFunction[R](client)
                   .apply(endpoint.wrap(in))
+                  .provide(Scope.default)
                 output.attemptNarrow[HttpContractError].productR(request)
               }
               .flatMap { req => matchRequest(req, testCase, baseUri) }
@@ -90,7 +92,7 @@ private[compliancetests] class ClientHttpComplianceTestCase[
       errorSchema: Option[ErrorResponseTest[_, E]] = None
   ): ComplianceTest[Task] = {
 
-    type R[I_, E_, O_, SE_, SO_] = Task[O_]
+    type R[I_, E_, O_, SE_, SO_] = ResourcefulTask[O_]
 
     val dummyInput = DefaultSchemaVisitor(endpoint.input)
 
@@ -148,22 +150,25 @@ private[compliancetests] class ClientHttpComplianceTestCase[
               val res: Task[O] = service
                 .toPolyFunction[R](client)
                 .apply(endpoint.wrap(dummyInput))
+                .provide(Scope.default)
               res
                 .as(asserts.success)
                 .recoverWith { case ex: Throwable => onError(doc, ex) }
             case Right(onOutput) =>
-              onOutput(doc).flatMap { expectedOutput =>
-                val res: Task[O] = service
-                  .toPolyFunction[R](client)
-                  .apply(endpoint.wrap(dummyInput))
+              onOutput(doc)
+                .flatMap { expectedOutput =>
+                  val res: ResourcefulTask[O] = service
+                    .toPolyFunction[R](client)
+                    .apply(endpoint.wrap(dummyInput))
 
-                res.map { output =>
-                  asserts.eql(
-                    output,
-                    expectedOutput
-                  )
+                  res.map { output =>
+                    asserts.eql(
+                      output,
+                      expectedOutput
+                    )
+                  }
                 }
-              }
+                .provide(Scope.default)
           }
         }
       }
