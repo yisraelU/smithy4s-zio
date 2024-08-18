@@ -82,7 +82,7 @@ object Dependencies {
 
     val http = "dev.zio" %% "zio-http" % "3.0.0-RC9"
     val prelude = "dev.zio" %% "zio-prelude" % "1.0.0-RC28"
-    val schema = "dev.zio" %% "zio-schema" % "1.3.0"
+    val schema = "dev.zio" %% "zio-schema" % "1.4.1"
     val catsInterop = "dev.zio" %% "zio-interop-cats" % "23.1.0.3"
     val test = "dev.zio" %% "zio-test" % zioVersion
     val testSbt = "dev.zio" %% "zio-test-sbt" % zioVersion % Test
