@@ -119,7 +119,13 @@ abstract class ProtocolComplianceSuite extends ZIOSpecDefault {
     val codec: PayloadDecoder[Document] = codecApi.fromSchema(Schema.document)
     codec
       .decode(Blob(bytes))
-      .getOrElse(sys.error("unable to decode smithy model into document"))
+      .fold(
+        pe =>
+          sys.error(
+            s"unable to decode smithy model ${new String(bytes).take(100)} into document. error $pe"
+          ),
+        identity
+      )
 
   }
 
