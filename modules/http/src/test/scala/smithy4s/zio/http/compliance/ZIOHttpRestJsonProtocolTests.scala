@@ -62,7 +62,14 @@ object ZIOHttpRestJsonProtocolTests extends ProtocolComplianceSuite {
       dsi <- ZIO
         .readFile(p)
         .map(_.getBytes)
-        .map(decodeDocument(_, smithy4s.json.Json.payloadDecoders))
+        .map(
+          decodeDocument(
+            _,
+            smithy4s.json.Json.payloadCodecs
+              .configureJsoniterCodecCompiler(_.withMaxArity(Int.MaxValue))
+              .decoders
+          )
+        )
         .flatMap(e => ZIO.fromEither(loadDynamic(e)))
     } yield dsi
   }
