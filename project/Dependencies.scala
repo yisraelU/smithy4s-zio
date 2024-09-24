@@ -22,7 +22,7 @@ object Dependencies {
       Def.setting("org.gnieh" %% "fs2-data-xml" % "1.11.1")
   }
   object LiHaoyi {
-    val sourcecode = "com.lihaoyi" %% "sourcecode" % "0.2.7"
+    val sourcecode = "com.lihaoyi" %% "sourcecode" % "0.4.2"
     val pprint = "com.lihaoyi" %% "pprint" % "0.9.0"
   }
 
@@ -80,7 +80,7 @@ object Dependencies {
     val zioVersion = "2.1.9"
     val core = "dev.zio" %% "zio" % zioVersion
 
-    val http = "dev.zio" %% "zio-http" % "3.0.0-RC9"
+    val http = "dev.zio" %% "zio-http" % "3.0.1"
     val prelude = "dev.zio" %% "zio-prelude" % "1.0.0-RC29"
     val schema = "dev.zio" %% "zio-schema" % "1.4.1"
     val catsInterop = "dev.zio" %% "zio-interop-cats" % "23.1.0.3"

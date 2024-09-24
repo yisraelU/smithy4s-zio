@@ -15,7 +15,8 @@ import zio.http.{
   WebSocketApp
 }
 
-class HttpAppDriver(app: Routes[Any, Response]) extends Driver[Any, Throwable] {
+class HttpAppDriver(app: Routes[Any, Response])
+    extends Driver[Any, Scope, Throwable] {
   override def request(
       version: Version,
       method: Method,
@@ -35,5 +36,8 @@ class HttpAppDriver(app: Routes[Any, Response]) extends Driver[Any, Throwable] {
       url: URL,
       headers: Headers,
       app: WebSocketApp[Env1]
-  )(implicit trace: Trace): ZIO[Any, Throwable, Response] = ZIO.never
+  )(implicit
+      trace: Trace,
+      ev: Scope =:= Scope
+  ): ZIO[Env1 & Scope, Throwable, Response] = ZIO.never
 }
