@@ -58,7 +58,7 @@ object Dependencies {
   }
 
   object Smithy {
-    val smithyVersion = "1.51.0"
+    val smithyVersion = "1.52.0"
     val org = "software.amazon.smithy"
     val testTraits = org % "smithy-protocol-test-traits" % smithyVersion
     val model = org % "smithy-model" % smithyVersion
