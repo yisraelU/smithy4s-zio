@@ -3,7 +3,7 @@ import smithy4s.codegen.Smithy4sCodegenPlugin.autoImport.smithy4sVersion
 
 object Dependencies {
   object Http4s {
-    val http4sVersion = Def.setting("0.23.28")
+    val http4sVersion = Def.setting("0.23.29")
 
     val circe: Def.Initialize[ModuleID] =
       Def.setting("org.http4s" %% "http4s-circe" % http4sVersion.value)
