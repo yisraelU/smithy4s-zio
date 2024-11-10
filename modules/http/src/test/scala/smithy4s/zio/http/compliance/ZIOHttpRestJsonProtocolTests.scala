@@ -19,7 +19,7 @@ import smithy4s.zio.compliancetests.{
 import smithy4s.zio.http.{ResourcefulTask, SimpleRestJsonBuilder}
 import smithy4s.{Service, ShapeId}
 import zio.http.{Body, Response, Routes, URL, ZClient}
-import zio.{Task, ZIO}
+import zio.{Scope, Task, ZIO}
 
 import java.nio.file.Path
 
@@ -98,7 +98,7 @@ object ZIOHttpRestJsonProtocolTests extends ProtocolComplianceSuite {
         service: Service[Alg]
     ): Task[FunctorAlgebra[Alg, ResourcefulTask]] = {
       val driver: HttpAppDriver = new HttpAppDriver(routes)
-      val client: ZClient[Any, Body, Throwable, Response] =
+      val client: ZClient[Any, Scope, Body, Throwable, Response] =
         ZClient
           .fromDriver(driver)
 
