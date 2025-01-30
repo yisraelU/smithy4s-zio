@@ -8,7 +8,7 @@ import sys.process.*
 import scala.collection.Seq
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
-val Scala213 = "2.13.15"
+val Scala213 = "2.13.16"
 ThisBuild / scalaVersion := Scala213 // the default Scala
 
 addCommandAlias(
