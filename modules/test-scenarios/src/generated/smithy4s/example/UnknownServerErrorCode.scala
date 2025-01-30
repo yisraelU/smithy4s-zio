@@ -8,7 +8,12 @@ import smithy4s.ShapeTag
 import smithy4s.schema.EnumTag
 import smithy4s.schema.Schema.enumeration
 
-sealed abstract class UnknownServerErrorCode(_value: String, _name: String, _intValue: Int, _hints: Hints) extends Enumeration.Value {
+sealed abstract class UnknownServerErrorCode(
+    _value: String,
+    _name: String,
+    _intValue: Int,
+    _hints: Hints
+) extends Enumeration.Value {
   override type EnumType = UnknownServerErrorCode
   override val value: String = _value
   override val name: String = _name
@@ -17,16 +22,25 @@ sealed abstract class UnknownServerErrorCode(_value: String, _name: String, _int
   override def enumeration: Enumeration[EnumType] = UnknownServerErrorCode
   @inline final def widen: UnknownServerErrorCode = this
 }
-object UnknownServerErrorCode extends Enumeration[UnknownServerErrorCode] with ShapeTag.Companion[UnknownServerErrorCode] {
+object UnknownServerErrorCode
+    extends Enumeration[UnknownServerErrorCode]
+    with ShapeTag.Companion[UnknownServerErrorCode] {
   val id: ShapeId = ShapeId("smithy4s.example", "UnknownServerErrorCode")
 
   val hints: Hints = Hints.empty
 
-  case object ERROR_CODE extends UnknownServerErrorCode("server.error", "ERROR_CODE", 0, Hints.empty)
+  case object ERROR_CODE
+      extends UnknownServerErrorCode(
+        "server.error",
+        "ERROR_CODE",
+        0,
+        Hints.empty
+      )
 
   val values: List[UnknownServerErrorCode] = List(
-    ERROR_CODE,
+    ERROR_CODE
   )
   val tag: EnumTag[UnknownServerErrorCode] = EnumTag.ClosedStringEnum
-  implicit val schema: Schema[UnknownServerErrorCode] = enumeration(tag, values).withId(id).addHints(hints)
+  implicit val schema: Schema[UnknownServerErrorCode] =
+    enumeration(tag, values).withId(id).addHints(hints)
 }
