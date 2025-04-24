@@ -27,7 +27,7 @@ object Dependencies {
   }
 
   object Circe {
-    val version = "0.14.12"
+    val version = "0.14.13"
     val core = "io.circe" %% "circe-core" % version
     val parser = "io.circe" %% "circe-parser" % version
   }
@@ -77,11 +77,11 @@ object Dependencies {
   }
 
   object ZIO {
-    val zioVersion = "2.1.16"
+    val zioVersion = "2.1.17"
     val core = "dev.zio" %% "zio" % zioVersion
 
     val http = "dev.zio" %% "zio-http" % "3.0.1"
-    val prelude = "dev.zio" %% "zio-prelude" % "1.0.0-RC39"
+    val prelude = "dev.zio" %% "zio-prelude" % "1.0.0-RC40"
     val schema = "dev.zio" %% "zio-schema" % "1.5.0"
     val catsInterop = "dev.zio" %% "zio-interop-cats" % "23.1.0.5"
     val test = "dev.zio" %% "zio-test" % zioVersion
