@@ -19,7 +19,7 @@ object Dependencies {
   }
   object Fs2Data {
     val xml: Def.Initialize[ModuleID] =
-      Def.setting("org.gnieh" %% "fs2-data-xml" % "1.11.2")
+      Def.setting("org.gnieh" %% "fs2-data-xml" % "1.11.3")
   }
   object LiHaoyi {
     val sourcecode = "com.lihaoyi" %% "sourcecode" % "0.4.2"
