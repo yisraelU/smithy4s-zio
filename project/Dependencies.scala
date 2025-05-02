@@ -58,7 +58,7 @@ object Dependencies {
   }
 
   object Smithy {
-    val smithyVersion = "1.57.0"
+    val smithyVersion = "1.57.1"
     val org = "software.amazon.smithy"
     val testTraits = org % "smithy-protocol-test-traits" % smithyVersion
     val model = org % "smithy-model" % smithyVersion
@@ -82,7 +82,7 @@ object Dependencies {
 
     val http = "dev.zio" %% "zio-http" % "3.0.1"
     val prelude = "dev.zio" %% "zio-prelude" % "1.0.0-RC40"
-    val schema = "dev.zio" %% "zio-schema" % "1.5.0"
+    val schema = "dev.zio" %% "zio-schema" % "1.6.6"
     val catsInterop = "dev.zio" %% "zio-interop-cats" % "23.1.0.5"
     val test = "dev.zio" %% "zio-test" % zioVersion
     val testSbt = "dev.zio" %% "zio-test-sbt" % zioVersion % Test
