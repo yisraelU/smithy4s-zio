@@ -42,7 +42,7 @@ object HelloWorldAuthServiceGen extends Service.Mixin[HelloWorldAuthServiceGen, 
     type Default[F[+_, +_]] = Constant[smithy4s.kinds.stubs.Kind2[F]#toKind5]
   }
 
-  val endpoints: Vector[smithy4s.Endpoint[HelloWorldAuthServiceOperation, _, _, _, _, _]] = Vector(
+  val endpoints: Vector[smithy4s.Endpoint[HelloWorldAuthServiceOperation, ?, ?, ?, ?, ?]] = Vector(
     HelloWorldAuthServiceOperation.SayWorld,
     HelloWorldAuthServiceOperation.HealthCheck,
   )

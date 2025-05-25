@@ -51,6 +51,8 @@ trait UrlCodingUtils {
       string,
       (_: Match) match {
         case Regex.Groups(v) => "%" + v.toUpperCase(Locale.ENGLISH)
+        case _ =>
+          throw new IllegalArgumentException("Invalid URL encoding pattern")
       }
     )
   }
@@ -66,7 +68,7 @@ trait UrlCodingUtils {
       toSkip: BitSet = toSkip
   ): String = {
     val in = charset.encode(ensureUppercasedEncodings(toEncode))
-    val out = CharBuffer.allocate((in.remaining() * 3).ceil.toInt)
+    val out = CharBuffer.allocate((in.remaining() * 3.toFloat).ceil.toInt)
     while (in.hasRemaining) {
       val b = in.get() & 0xff
       if (toSkip.contains(b)) {

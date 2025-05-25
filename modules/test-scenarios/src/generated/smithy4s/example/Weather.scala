@@ -43,7 +43,7 @@ object WeatherGen extends Service.Mixin[WeatherGen, WeatherOperation] {
     type Default[F[+_, +_]] = Constant[smithy4s.kinds.stubs.Kind2[F]#toKind5]
   }
 
-  val endpoints: Vector[smithy4s.Endpoint[WeatherOperation, _, _, _, _, _]] = Vector(
+  val endpoints: Vector[smithy4s.Endpoint[WeatherOperation, ?, ?, ?, ?, ?]] = Vector(
     WeatherOperation.GetCurrentTime,
     WeatherOperation.GetCity,
     WeatherOperation.GetForecast,

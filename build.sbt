@@ -9,7 +9,8 @@ import scala.collection.Seq
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 val Scala213 = "2.13.16"
-val Scala3 = "3.2.2"
+val Scala3 = "3.5.2"
+val latest2ScalaVersions = List(Scala213, Scala3)
 ThisBuild / scalaVersion := Scala213 // the default Scala
 
 addCommandAlias(
@@ -41,7 +42,7 @@ lazy val allModules = Seq(
 ).flatMap(_.projectRefs)
 
 lazy val `codegen-cli` = (projectMatrix in file("modules/codegen-cli"))
-  .jvmPlatform(List(Scala213))
+  .jvmPlatform(Seq(Scala213))
   .settings(
     name := s"$projectPrefix-cli",
     libraryDependencies ++= Seq(
@@ -104,12 +105,11 @@ lazy val `compliance-tests` =
     .enablePlugins(Smithy4sCodegenPlugin, NoPublishPlugin)
 
 lazy val http = (projectMatrix in file("modules/http"))
-  .jvmPlatform(List(Scala213))
+  .jvmPlatform(Seq(Scala213))
   .dependsOn(
     shared,
     scenarios % "test->compile",
     `compliance-tests` % "test->compile",
-    `codegen-cli` % "test",
     transformers % "test -> compile"
   )
   .settings(
@@ -149,7 +149,7 @@ lazy val http = (projectMatrix in file("modules/http"))
   .enablePlugins(ScalafixPlugin)
 
 lazy val shared = (projectMatrix in file("modules/shared"))
-  .jvmPlatform(List(Scala213))
+  .jvmPlatform(latest2ScalaVersions)
   .settings(
     name := s"$projectPrefix-shared",
     Compile / smithy4sAllowedNamespaces := List("smithy.test"),
@@ -164,7 +164,7 @@ lazy val docs = projectMatrix
   .dependsOn(examples)
 
 lazy val scenarios = (projectMatrix in file("modules/test-scenarios"))
-  .jvmPlatform(List(Scala213))
+  .jvmPlatform(latest2ScalaVersions)
   .settings(
     name := s"$projectPrefix-tests",
     libraryDependencies ++= {
@@ -179,7 +179,7 @@ lazy val scenarios = (projectMatrix in file("modules/test-scenarios"))
   .enablePlugins(Smithy4sCodegenPlugin, NoPublishPlugin)
 
 lazy val examples = (projectMatrix in file("modules/examples"))
-  .jvmPlatform(List(Scala213))
+  .jvmPlatform(Seq(Scala213))
   .settings(
     name := s"$projectPrefix-examples",
     fork / run := true,
@@ -194,7 +194,7 @@ lazy val examples = (projectMatrix in file("modules/examples"))
   .enablePlugins(Smithy4sCodegenPlugin, NoPublishPlugin)
 
 lazy val transformers = (projectMatrix in file("modules/transformers"))
-  .jvmPlatform(List(Scala213))
+  .jvmPlatform(latest2ScalaVersions)
   .settings(
     name := s"$projectPrefix-transformers",
     libraryDependencies ++= Seq(
