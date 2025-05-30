@@ -38,9 +38,9 @@ final class SchemaVisitorZSchemaGen(
   ): ZSchema[C[A]] = {
     implicit val memberSchema: ZSchema[A] = member.compile(self)
     tag match {
-      case CollectionTag.ListTag   => ZSchema.list[A]
-      case CollectionTag.SetTag    => ZSchema.set[A]
-      case CollectionTag.VectorTag => ZSchema.vector[A]
+      case CollectionTag.ListTag       => ZSchema.list[A]
+      case CollectionTag.SetTag        => ZSchema.set[A]
+      case CollectionTag.VectorTag     => ZSchema.vector[A]
       case CollectionTag.IndexedSeqTag =>
         ZSchema.vector[A].transform(_.toIndexedSeq, _.toVector)
     }

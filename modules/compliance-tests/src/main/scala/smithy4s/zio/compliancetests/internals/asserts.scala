@@ -27,11 +27,11 @@ object asserts {
   private def jsonEql(result: String, testCase: String): ComplianceResult = {
     (result.isEmpty, testCase.isEmpty) match {
       case (true, true) => assertTrue(true)
-      case _ =>
+      case _            =>
         (parse(result), parse(testCase)) match {
           case (Right(a), Right(b)) if Eq[Json].eqv(a, b) => success
           case (Left(a), Left(b)) => fail(s"Both JSONs are invalid: $a, $b")
-          case (Left(a), _) =>
+          case (Left(a), _)       =>
             fail(s"Result JSON is invalid: $result \n Error $a ")
           case (_, Left(b)) =>
             fail(s"TestCase JSON is invalid: $testCase \n Error $b")
@@ -212,7 +212,7 @@ object asserts {
           .collect { case (key, value) =>
             headers.get(key) match {
               case Some(v) if v == value => success
-              case Some(v) =>
+              case Some(v)               =>
                 asserts.fail(
                   s"Header $key has value `$v` but expected `$value`"
                 )

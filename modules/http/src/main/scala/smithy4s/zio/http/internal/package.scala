@@ -60,7 +60,7 @@ package object internal {
     val method = fromSmithy4sHttpMethod(req.method)
     val headers: Headers = toHeaders(req.headers)
     val updatedHeaders = req.body.size match {
-      case 0 => headers
+      case 0             => headers
       case contentLength =>
         headers.addHeader("Content-Length", contentLength.toString)
     }
@@ -83,7 +83,7 @@ package object internal {
         scheme match {
           case Scheme.HTTP  => Smithy4sHttpUriScheme.Http
           case Scheme.HTTPS => Smithy4sHttpUriScheme.Https
-          case Scheme.WS =>
+          case Scheme.WS    =>
             throw new UnsupportedOperationException("Websocket not supported")
           case Scheme.WSS =>
             throw new UnsupportedOperationException(
@@ -251,7 +251,7 @@ package object internal {
           param.split("=", 2) match {
             case Array(key, value) => key -> UrlCodingUtils.pathDecode(value)
             case Array(k)          => (k, "")
-            case _ =>
+            case _                 =>
               throw new Exception(
                 s"Invalid path params string: $pathParamsString"
               )

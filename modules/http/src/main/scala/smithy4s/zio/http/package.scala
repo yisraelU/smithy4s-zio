@@ -30,7 +30,7 @@ package object http {
           param.split("=", 2) match {
             case Array(key, value) => key -> value
             case Array(k)          => (k, "")
-            case _ =>
+            case _                 =>
               throw new Exception(
                 s"Invalid path params string: $pathParamsString"
               )
