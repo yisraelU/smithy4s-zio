@@ -21,7 +21,7 @@ final class SimpleRestJsonProtocolTransformer extends ProjectionTransformer {
     val traitMapper: BiFunction[Shape, Trait, Trait] =
       (_: Shape, theTrait: Trait) => {
         theTrait match {
-          case _: RestJson1Trait => new SimpleRestJsonTrait()
+          case _: RestJson1Trait        => new SimpleRestJsonTrait()
           case c: HttpRequestTestsTrait =>
             new HttpRequestTestsTrait(
               c.getSourceLocation,

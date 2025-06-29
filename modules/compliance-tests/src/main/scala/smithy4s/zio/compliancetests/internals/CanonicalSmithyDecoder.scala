@@ -53,8 +53,8 @@ object CanonicalSmithyDecoder {
         hints: Hints,
         tag: Primitive[P]
     ): DocumentDecoder[P] = tag match {
-      case PFloat  => float
-      case PDouble => double
+      case PFloat     => float
+      case PDouble    => double
       case PTimestamp =>
         DocumentDecoder.instance("Timestamp", "Number") {
           case (_, DNumber(value)) =>

@@ -38,9 +38,9 @@ final class SchemaVisitorHash(
   ): Hash[C[A]] = {
     implicit val memberHash: Hash[A] = self(member)
     tag match {
-      case CollectionTag.ListTag   => Hash[List[A]]
-      case CollectionTag.SetTag    => Hash[Set[A]]
-      case CollectionTag.VectorTag => Hash[Vector[A]]
+      case CollectionTag.ListTag       => Hash[List[A]]
+      case CollectionTag.SetTag        => Hash[Set[A]]
+      case CollectionTag.VectorTag     => Hash[Vector[A]]
       case CollectionTag.IndexedSeqTag =>
         makeFrom(
           _.map(Hash[A].hash).hashCode,
@@ -145,7 +145,7 @@ final class SchemaVisitorHash(
 
           override def checkEquals(a: A, u: U): Boolean =
             altA.project.lift(u) match {
-              case None => false // U is not an A.
+              case None     => false // U is not an A.
               case Some(a2) =>
                 hashA.equal(a, a2) // U is an A, we delegate the comparison
             }
