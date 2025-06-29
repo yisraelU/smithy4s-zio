@@ -127,7 +127,7 @@ package object internals {
         acc + append(acc, header.headerName, header.renderedValue)
       }
     multimap.collect {
-      case (key, value :: Nil) => (key, value)
+      case (key, value :: Nil)              => (key, value)
       case (key, values) if values.size > 1 =>
         (key, values.map(escape).mkString(", "))
     }

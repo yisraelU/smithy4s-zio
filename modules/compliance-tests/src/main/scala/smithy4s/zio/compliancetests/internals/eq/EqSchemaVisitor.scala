@@ -97,7 +97,7 @@ object EqSchemaVisitor extends SchemaVisitor[Eq] { self =>
         val eqA = instance.compile(self)
         new AltEq[A] {
           def eqv(a: A, u: U): Boolean = altA.project.lift(u) match {
-            case None => false // U is not an A.
+            case None     => false // U is not an A.
             case Some(a2) =>
               eqA.eqv(a, a2) // U is an A, we delegate the comparison
           }
