@@ -537,7 +537,7 @@ object PizzaAdminServiceOperation {
     }
     def liftError(throwable: Throwable): Option[AddMenuItemError] =
       throwable match {
-        case e: PriceError => Some(AddMenuItemError.PriceErrorCase(e))
+        case e: PriceError         => Some(AddMenuItemError.PriceErrorCase(e))
         case e: GenericServerError =>
           Some(AddMenuItemError.GenericServerErrorCase(e))
         case e: GenericClientError =>
@@ -730,9 +730,9 @@ object PizzaAdminServiceOperation {
     }
     def liftError(throwable: Throwable): Option[GetMenuError] =
       throwable match {
-        case e: NotFoundError  => Some(GetMenuError.NotFoundErrorCase(e))
-        case e: FallbackError  => Some(GetMenuError.FallbackErrorCase(e))
-        case e: FallbackError2 => Some(GetMenuError.FallbackError2Case(e))
+        case e: NotFoundError      => Some(GetMenuError.NotFoundErrorCase(e))
+        case e: FallbackError      => Some(GetMenuError.FallbackErrorCase(e))
+        case e: FallbackError2     => Some(GetMenuError.FallbackError2Case(e))
         case e: GenericClientError =>
           Some(GetMenuError.GenericClientErrorCase(e))
         case _ => None

@@ -34,9 +34,9 @@ final class SchemaVisitorEqual(
   ): Equal[C[A]] = {
     implicit val memberHash: Equal[A] = self(member)
     tag match {
-      case CollectionTag.ListTag   => Equal[List[A]]
-      case CollectionTag.SetTag    => Equal[Set[A]]
-      case CollectionTag.VectorTag => Equal[Vector[A]]
+      case CollectionTag.ListTag       => Equal[List[A]]
+      case CollectionTag.SetTag        => Equal[Set[A]]
+      case CollectionTag.VectorTag     => Equal[Vector[A]]
       case CollectionTag.IndexedSeqTag =>
         Equal[scala.collection.immutable.List[A]].contramap(_.toList)
     }
@@ -119,7 +119,7 @@ final class SchemaVisitorEqual(
         val eqvA = instance.compile(self)
         new AltEqual[A] {
           def eqv(a: A, u: U): Boolean = altA.project.lift(u) match {
-            case None => false // U is not an A.
+            case None     => false // U is not an A.
             case Some(a2) =>
               eqvA.equal(a, a2) // U is an A, we delegate the comparison
           }
