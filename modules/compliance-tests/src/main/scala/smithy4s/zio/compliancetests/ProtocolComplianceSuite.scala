@@ -135,7 +135,7 @@ abstract class ProtocolComplianceSuite extends ZIOSpecDefault {
   ): Spec[Any, Throwable] = {
     val shouldRun = rule(tc)
     shouldRun match {
-      case ShouldRun.No => Spec.empty
+      case ShouldRun.No  => Spec.empty
       case ShouldRun.Yes =>
         test(tc.show)(tc.run) @@ TestAspect.withLiveClock @@ TestAspect.parallel
       case ShouldRun.NotSure => Spec.empty
