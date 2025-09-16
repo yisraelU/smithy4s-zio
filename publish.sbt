@@ -12,15 +12,11 @@ ThisBuild / developers := List(
   tlGitHubDev("yisraelu", "Yisrael Union")
 )
 
-// publish to s01.oss.sonatype.org (set to true to publish to oss.sonatype.org instead)
-ThisBuild / sonatypeCredentialHost := xerial.sbt.Sonatype.sonatypeLegacy
-
 // publish website from this branch
 ThisBuild / tlSitePublishBranch := Some("main")
 
 ThisBuild / tlCiHeaderCheck := false
 ThisBuild / tlFatalWarnings := false
 ThisBuild / tlCiMimaBinaryIssueCheck := false
-ThisBuild / sonatypeProfileName := "io.github.yisraelu"
 ThisBuild / tlJdkRelease := Some(11)
 ThisBuild / tlCiDependencyGraphJob := false
