@@ -51,7 +51,7 @@ trait UrlCodingUtils {
       string,
       (_: Match) match {
         case Regex.Groups(v) => "%" + v.toUpperCase(Locale.ENGLISH)
-        case _ =>
+        case _               =>
           throw new IllegalArgumentException("Invalid URL encoding pattern")
       }
     )

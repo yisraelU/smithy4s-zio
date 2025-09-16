@@ -10,7 +10,7 @@ import smithy4s.zio.examples.todo.impl.{
 }
 import smithy4s.zio.http.SimpleRestJsonBuilder
 import zio.http.{Routes, Server}
-import zio.{ExitCode, URIO, ZIO, ZIOAppDefault}
+import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
 
 object Main extends ZIOAppDefault {
 
@@ -29,9 +29,8 @@ object Main extends ZIOAppDefault {
     } yield app
   }
 
-  override def run: URIO[Any, ExitCode] = {
+  override def run: ZIO[Any & ZIOAppArgs & Scope, Throwable, Nothing] = {
     app
       .flatMap(Server.serve(_).provide(Server.defaultWithPort(port.value)))
-      .exitCode
   }
 }
