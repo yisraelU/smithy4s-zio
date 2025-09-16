@@ -18,8 +18,6 @@ object VersionOutput extends ShapeTag.Companion[VersionOutput] {
   private def make(version: String): VersionOutput = VersionOutput(version)
 
   implicit val schema: Schema[VersionOutput] = struct(
-    string
-      .required[VersionOutput]("version", _.version)
-      .addHints(smithy.api.HttpPayload())
+    string.required[VersionOutput]("version", _.version).addHints(smithy.api.HttpPayload()),
   )(make).withId(id).addHints(hints)
 }
