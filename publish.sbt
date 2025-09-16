@@ -20,3 +20,12 @@ ThisBuild / tlFatalWarnings := false
 ThisBuild / tlCiMimaBinaryIssueCheck := false
 ThisBuild / tlJdkRelease := Some(11)
 ThisBuild / tlCiDependencyGraphJob := false
+
+// Explicit Sonatype Central Portal configuration
+ThisBuild / sonatypeCredentialHost := "central.sonatype.com"
+ThisBuild / sonatypeRepository := "https://central.sonatype.com/api/v1/publisher"
+
+// Note: For new Sonatype Central Portal troubleshooting:
+// 1. Verify namespace at https://central.sonatype.com/
+// 2. Ensure User Token is correctly set in GitHub secrets
+// 3. Check that SONATYPE_CREDENTIAL_HOST = "central.sonatype.com"
