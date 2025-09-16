@@ -13,7 +13,7 @@ ThisBuild / developers := List(
 )
 
 // publish to s01.oss.sonatype.org (set to true to publish to oss.sonatype.org instead)
-ThisBuild / tlSonatypeUseLegacyHost := false
+ThisBuild / sonatypeCredentialHost := xerial.sbt.Sonatype.sonatypeLegacy
 
 // publish website from this branch
 ThisBuild / tlSitePublishBranch := Some("main")

@@ -15,11 +15,10 @@ object CityCoordinates extends ShapeTag.Companion[CityCoordinates] {
   val hints: Hints = Hints.empty
 
   // constructor using the original order from the spec
-  private def make(latitude: Float, longitude: Float): CityCoordinates =
-    CityCoordinates(latitude, longitude)
+  private def make(latitude: Float, longitude: Float): CityCoordinates = CityCoordinates(latitude, longitude)
 
   implicit val schema: Schema[CityCoordinates] = struct(
     float.required[CityCoordinates]("latitude", _.latitude),
-    float.required[CityCoordinates]("longitude", _.longitude)
+    float.required[CityCoordinates]("longitude", _.longitude),
   )(make).withId(id).addHints(hints)
 }

@@ -73,7 +73,7 @@ final class SchemaVisitorEqual(
   override def struct[S](
       shapeId: ShapeId,
       hints: Hints,
-      fields: Vector[Field[S, _]],
+      fields: Vector[Field[S, ?]],
       make: IndexedSeq[Any] => S
   ): Equal[S] = {
     def forField[A2](field: Field[S, A2]): Equal[S] = {
@@ -86,7 +86,7 @@ final class SchemaVisitorEqual(
   override def union[U](
       shapeId: ShapeId,
       hints: Hints,
-      alternatives: Vector[Alt[U, _]],
+      alternatives: Vector[Alt[U, ?]],
       dispatch: Alt.Dispatcher[U]
   ): Equal[U] = {
 

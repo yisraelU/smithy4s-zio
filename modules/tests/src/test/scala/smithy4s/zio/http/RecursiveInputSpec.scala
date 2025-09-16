@@ -1,6 +1,6 @@
 package smithy4s.zio.http
 
-import smithy4s.example.{RecursiveInput, RecursiveInputService}
+import smithy4s.example.{RecursiveInputService, RecursiveInput}
 import zio.Scope
 import zio.http.Client
 import zio.test.*

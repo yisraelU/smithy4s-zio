@@ -13,7 +13,7 @@ object ClientEndpointMiddleware {
     ): Client => Client
 
     final def prepare[Alg[_[_, _, _, _, _]]](service: Service[Alg])(
-        endpoint: Endpoint[service.Operation, _, _, _, _, _]
+        endpoint: Endpoint[service.Operation, ?, ?, ?, ?, ?]
     ): Client => Client =
       prepareWithHints(service.hints, endpoint.hints)
   }

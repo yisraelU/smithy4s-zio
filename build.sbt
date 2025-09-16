@@ -9,6 +9,8 @@ import scala.collection.Seq
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 val Scala213 = "2.13.16"
+val Scala3 = "3.5.2"
+val latest2ScalaVersions = List(Scala213, Scala3)
 ThisBuild / scalaVersion := Scala213 // the default Scala
 
 addCommandAlias(
@@ -28,18 +30,20 @@ lazy val root = project
   .enablePlugins(ScalafixPlugin)
 
 lazy val allModules = Seq(
-  http,
-  shared,
   prelude,
   schema,
+  http,
   examples,
+  shared,
   scenarios,
   `compliance-tests`,
   `codegen-cli`,
-  transformers
-).map(projectToRef)
+  transformers,
+  tests
+).flatMap(_.projectRefs)
 
-lazy val `codegen-cli` = (project in file("modules/codegen-cli"))
+lazy val `codegen-cli` = (projectMatrix in file("modules/codegen-cli"))
+  .jvmPlatform(Seq(Scala213))
   .settings(
     name := s"$projectPrefix-cli",
     libraryDependencies ++= Seq(
@@ -48,7 +52,8 @@ lazy val `codegen-cli` = (project in file("modules/codegen-cli"))
   )
   .enablePlugins(NoPublishPlugin)
 
-lazy val prelude = (project in file("modules/prelude"))
+lazy val prelude = (projectMatrix in file("modules/prelude"))
+  .jvmPlatform(latest2ScalaVersions)
   .settings(
     name := s"$projectPrefix-prelude",
     libraryDependencies ++= Seq(
@@ -62,7 +67,8 @@ lazy val prelude = (project in file("modules/prelude"))
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
 
-lazy val schema = (project in file("modules/schema"))
+lazy val schema = (projectMatrix in file("modules/schema"))
+  .jvmPlatform(latest2ScalaVersions)
   .settings(
     name := s"$projectPrefix-schema",
     libraryDependencies ++= Seq(
@@ -75,50 +81,120 @@ lazy val schema = (project in file("modules/schema"))
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
 
-lazy val `compliance-tests` = (project in file("modules/compliance-tests"))
-  .settings(
-    name := s"$projectPrefix-compliance-test",
-    libraryDependencies ++= Seq(
-      Dependencies.Smithy4s.core.value,
-      Dependencies.Smithy4s.json.value,
-      Dependencies.Smithy4s.tests.value,
-      Dependencies.Smithy4s.dynamic.value,
-      Dependencies.Circe.parser,
-      Dependencies.ZIO.catsInterop,
-      Dependencies.Fs2Data.xml.value,
-      Dependencies.LiHaoyi.pprint,
-      Dependencies.ZIO.http,
-      Dependencies.ZIO.test,
-      Dependencies.ZIO.testSbt,
-      Dependencies.ZIO.testMagnolia,
-      Dependencies.Smithy.testTraits % Smithy4s
-    ),
-    Compile / smithy4sAllowedNamespaces := List("smithy.test"),
-    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
-  )
-  .dependsOn(shared)
-  .enablePlugins(Smithy4sCodegenPlugin, NoPublishPlugin)
+lazy val `compliance-tests` =
+  (projectMatrix in file("modules/compliance-tests"))
+    .jvmPlatform(List(Scala213))
+    .settings(
+      name := s"$projectPrefix-compliance-test",
+      libraryDependencies ++= Seq(
+        Dependencies.Smithy4s.core.value,
+        Dependencies.Smithy4s.json.value,
+        Dependencies.Smithy4s.tests.value,
+        Dependencies.Smithy4s.dynamic.value,
+        Dependencies.Circe.parser,
+        Dependencies.ZIO.catsInterop,
+        Dependencies.Fs2Data.xml.value,
+        Dependencies.LiHaoyi.pprint,
+        Dependencies.ZIO.http,
+        Dependencies.ZIO.test,
+        Dependencies.ZIO.testSbt,
+        Dependencies.ZIO.testMagnolia,
+        Dependencies.Smithy.testTraits % Smithy4s
+      ),
+      Compile / smithy4sAllowedNamespaces := List("smithy.test"),
+      testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+    )
+    .dependsOn(shared)
+    .enablePlugins(Smithy4sCodegenPlugin, NoPublishPlugin)
 
-lazy val http = (project in file("modules/http"))
-  .dependsOn(
-    shared,
-    scenarios % "test->compile",
-    `compliance-tests` % "test->compile",
-    `codegen-cli` % "test",
-    transformers % "test -> compile"
-  )
+lazy val http = (projectMatrix in file("modules/http"))
+  .jvmPlatform(latest2ScalaVersions)
+  .dependsOn(shared)
   .settings(
     name := s"$projectPrefix-http",
     libraryDependencies ++= Seq(
-      // http4s
-      Dependencies.Http4s.core.value,
       Dependencies.Smithy4s.core.value,
       Dependencies.Smithy4s.json.value,
-      Dependencies.Typelevel.vault.value,
-      Dependencies.Alloy.core % Test,
-      Dependencies.ZIO.http,
+      Dependencies.ZIO.http
+    )
+  )
+  .enablePlugins(ScalafixPlugin)
+
+lazy val shared = (projectMatrix in file("modules/shared"))
+  .jvmPlatform(latest2ScalaVersions)
+  .settings(
+    name := s"$projectPrefix-shared",
+    Compile / smithy4sAllowedNamespaces := List("smithy.test"),
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+  )
+  .enablePlugins(NoPublishPlugin)
+
+lazy val docs = projectMatrix
+  .in(file("site"))
+  .jvmPlatform(List(Scala213))
+  .enablePlugins(TypelevelSitePlugin)
+  .dependsOn(examples)
+
+lazy val scenarios = (projectMatrix in file("modules/test-scenarios"))
+  .jvmPlatform(Seq(Scala213))
+  .settings(
+    name := s"$projectPrefix-tests",
+    libraryDependencies ++= {
+      Seq(
+        Dependencies.Smithy4s.core.value
+      )
+    },
+    Compile / smithy4sInputDirs := Seq(sourceDirectory.value / "smithy"),
+    Compile / resourceDirectory := sourceDirectory.value / "resources",
+    Compile / smithy4sOutputDir := sourceDirectory.value / "generated"
+  )
+  .enablePlugins(Smithy4sCodegenPlugin, NoPublishPlugin)
+
+lazy val examples = (projectMatrix in file("modules/examples"))
+  .jvmPlatform(Seq(Scala213))
+  .settings(
+    name := s"$projectPrefix-examples",
+    fork / run := true,
+    libraryDependencies ++= Seq(
+      Dependencies.Smithy4s.http4s.value,
+      Dependencies.Http4s.emberServer.value,
+      Dependencies.ZIO.catsInterop
+    ),
+    Compile / smithy4sAllowedNamespaces := List("example.todo", "example.hello")
+  )
+  .dependsOn(http)
+  .enablePlugins(Smithy4sCodegenPlugin, NoPublishPlugin)
+
+lazy val transformers = (projectMatrix in file("modules/transformers"))
+  .jvmPlatform(latest2ScalaVersions)
+  .settings(
+    name := s"$projectPrefix-transformers",
+    libraryDependencies ++= Seq(
+      Dependencies.Smithy.model,
+      Dependencies.Smithy.build,
+      Dependencies.Smithy.testTraits,
+      Dependencies.Smithy.awsTraits,
+      Dependencies.Alloy.core
+    ),
+    Compile / resourceDirectory := sourceDirectory.value / "resources"
+  )
+  .enablePlugins(NoPublishPlugin)
+
+lazy val tests = (projectMatrix in file("modules/tests"))
+  .jvmPlatform(List(Scala213))
+  .dependsOn(
+    http,
+    scenarios % "test->compile",
+    `compliance-tests` % "test->compile",
+    transformers % "test -> compile"
+  )
+  .settings(
+    name := s"$projectPrefix-tests",
+    libraryDependencies ++= Seq(
       Dependencies.ZIO.test,
-      Dependencies.ZIO.testSbt
+      Dependencies.ZIO.testSbt,
+      Dependencies.ZIO.http,
+      Dependencies.Alloy.core % Test
     ),
     Test / complianceTestDependencies := Seq(
       Dependencies.Alloy.`protocol-tests`
@@ -141,70 +217,16 @@ lazy val http = (project in file("modules/http"))
     },
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
-  .enablePlugins(ScalafixPlugin)
-
-lazy val shared = (project in file("modules/shared"))
-  .settings(
-    name := s"$projectPrefix-shared",
-    Compile / smithy4sAllowedNamespaces := List("smithy.test"),
-    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
-  )
-  .enablePlugins(NoPublishPlugin)
-
-lazy val docs = project
-  .in(file("site"))
-  .enablePlugins(TypelevelSitePlugin)
-  .dependsOn(examples)
-
-lazy val scenarios = (project in file("modules/test-scenarios"))
-  .settings(
-    name := s"$projectPrefix-tests",
-    libraryDependencies ++= {
-      Seq(
-        Dependencies.Smithy4s.core.value
-      )
-    },
-    Compile / smithy4sInputDirs := Seq(sourceDirectory.value / "smithy"),
-    Compile / resourceDirectory := sourceDirectory.value / "resources",
-    Compile / smithy4sOutputDir := sourceDirectory.value / "generated"
-  )
-  .enablePlugins(Smithy4sCodegenPlugin, NoPublishPlugin)
-
-lazy val examples = (project in file("modules/examples"))
-  .settings(
-    name := s"$projectPrefix-examples",
-    fork / run := true,
-    libraryDependencies ++= Seq(
-      Dependencies.Smithy4s.http4s.value,
-      Dependencies.Http4s.emberServer.value,
-      Dependencies.ZIO.catsInterop
-    ),
-    Compile / smithy4sAllowedNamespaces := List("example.todo", "example.hello")
-  )
-  .dependsOn(http)
-  .enablePlugins(Smithy4sCodegenPlugin, NoPublishPlugin)
-
-lazy val transformers = (project in file("modules/transformers"))
-  .settings(
-    name := s"$projectPrefix-transformers",
-    libraryDependencies ++= Seq(
-      Dependencies.Smithy.model,
-      Dependencies.Smithy.build,
-      Dependencies.Smithy.testTraits,
-      Dependencies.Smithy.awsTraits,
-      Dependencies.Alloy.core
-    ),
-    Compile / resourceDirectory := sourceDirectory.value / "resources"
-  )
   .enablePlugins(NoPublishPlugin)
 
 def dumpModel(config: Configuration): Def.Initialize[Task[Seq[File]]] =
   Def.task {
-    val dumpModelCp = (`codegen-cli` / Compile / fullClasspath).value
-      .map(_.data)
+    val dumpModelCp =
+      (`codegen-cli`.jvm(Scala213) / Compile / fullClasspath).value
+        .map(_.data)
 
     val modelTransformersCp =
-      (transformers / Compile / fullClasspath).value.map(_.data)
+      (transformers.jvm(Scala213) / Compile / fullClasspath).value.map(_.data)
     val transforms = (config / smithy4sModelTransformers).value
 
     val cp = (if (transforms.isEmpty) dumpModelCp

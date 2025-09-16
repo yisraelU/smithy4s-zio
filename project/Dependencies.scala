@@ -58,7 +58,7 @@ object Dependencies {
   }
 
   object Smithy {
-    val smithyVersion = "1.60.3"
+    val smithyVersion = "1.61.0"
     val org = "software.amazon.smithy"
     val testTraits = org % "smithy-protocol-test-traits" % smithyVersion
     val model = org % "smithy-model" % smithyVersion
@@ -77,20 +77,16 @@ object Dependencies {
   }
 
   object ZIO {
-    val zioVersion = "2.1.20"
+    val zioVersion = "2.1.21"
     val core = "dev.zio" %% "zio" % zioVersion
 
     val http = "dev.zio" %% "zio-http" % "3.0.1"
-    val prelude = "dev.zio" %% "zio-prelude" % "1.0.0-RC40"
+    val prelude = "dev.zio" %% "zio-prelude" % "1.0.0-RC41"
     val schema = "dev.zio" %% "zio-schema" % "1.7.5"
     val catsInterop = "dev.zio" %% "zio-interop-cats" % "23.1.0.5"
     val test = "dev.zio" %% "zio-test" % zioVersion
     val testSbt = "dev.zio" %% "zio-test-sbt" % zioVersion % Test
     val testMagnolia = "dev.zio" %% "zio-test-magnolia" % zioVersion % Test
-  }
-  object Typelevel {
-    val vault: Def.Initialize[ModuleID] =
-      Def.setting("org.typelevel" %% "vault" % "3.6.0")
   }
 
 }

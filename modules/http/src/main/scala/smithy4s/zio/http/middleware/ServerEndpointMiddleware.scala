@@ -18,7 +18,7 @@ object ServerEndpointMiddleware {
   ): ServerEndpointMiddleware =
     new ServerEndpointMiddleware {
       def prepare[Alg[_[_, _, _, _, _]]](service: Service[Alg])(
-          endpoint: Endpoint[service.Operation, _, _, _, _, _]
+          endpoint: Endpoint[service.Operation, ?, ?, ?, ?, ?]
       ): HttpRoutes => HttpRoutes = routes => {
         /* val fx: PartialFunction[Throwable, Task[Nothing]] = {
           case e @ endpoint.Error(_, _) => ZIO.die(e)

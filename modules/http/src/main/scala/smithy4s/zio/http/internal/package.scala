@@ -1,7 +1,5 @@
 package smithy4s.zio.http
 
-import cats.effect.SyncIO
-import org.typelevel.vault.Key
 import smithy4s.Blob
 import smithy4s.capability.MonadThrowLike
 import smithy4s.http.{
@@ -232,8 +230,7 @@ package object internal {
       (CaseInsensitive(k), v.map(_.renderedValue))
     }
 
-  private val pathParamsKey: String =
-    Key.newKey[SyncIO, PathParams].unsafeRunSync().hashCode().toString
+  private val pathParamsKey: String = "x-smithy4s-path-params"
 
   private def serializePathParams(pathParams: PathParams): String = {
     pathParams

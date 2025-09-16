@@ -5,6 +5,7 @@ import smithy4s.client.UnaryClientCodecs
 import smithy4s.codecs.BlobEncoder
 import smithy4s.http.*
 import smithy4s.json.Json
+import smithy4s.schema.FieldFilter
 import smithy4s.server.UnaryServerCodecs
 import smithy4s.zio.http.ResourcefulTask
 import smithy4s.zio.http.protocol.SimpleProtocolCodecs
@@ -20,12 +21,15 @@ private[http] class SimpleRestJsonCodecs(
   private val hintMask =
     alloy.SimpleRestJson.protocol.hintMask
 
+  private val fieldFilter =
+    if (explicitDefaultsEncoding) FieldFilter.EncodeAll else FieldFilter.Default
+
   private val jsonCodecs = Json.payloadCodecs
     .withJsoniterCodecCompiler(
       Json.jsoniter
         .withHintMask(hintMask)
         .withMaxArity(maxArity)
-        .withExplicitDefaultsEncoding(explicitDefaultsEncoding)
+        .withFieldFilter(fieldFilter)
     )
 
   // val mediaType = HttpMediaType("application/json")
@@ -53,12 +57,12 @@ private[http] class SimpleRestJsonCodecs(
       .withErrorDiscriminator(HttpDiscriminator.fromResponse(errorHeaders, _).pure)
       .withMetadataDecoders(Metadata.Decoder)
       .withMetadataEncoders(
-        Metadata.Encoder.withExplicitDefaultsEncoding(explicitDefaultsEncoding)
+        Metadata.Encoder.withFieldFilter(fieldFilter)
       )
       .withBaseRequest(_ => baseRequest.pure)
       .withRequestMediaType("application/json")
       .withRequestTransformation(fromSmithy4sHttpRequest(_).pure)
-      .withResponseTransformation(toSmithy4sHttpResponse(_))
+      .withResponseTransformation(toSmithy4sHttpResponse)
       .withHostPrefixInjection(hostPrefixInjection)
       .build()
 
@@ -72,7 +76,7 @@ private[http] class SimpleRestJsonCodecs(
       .withBodyDecoders(payloadDecoders)
       .withSuccessBodyEncoders(payloadEncoders)
       .withErrorBodyEncoders(payloadEncoders)
-      .withErrorTypeHeaders(errorHeaders: _*)
+      .withErrorTypeHeaders(errorHeaders*)
       .withMetadataDecoders(Metadata.Decoder)
       .withMetadataEncoders(Metadata.Encoder)
       .withBaseResponse(_ => baseResponse.pure)

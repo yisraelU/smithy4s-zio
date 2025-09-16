@@ -1,3 +1,5 @@
+package smithy4s.zio.http
+
 /*
 package smithy4s.zio.http
 

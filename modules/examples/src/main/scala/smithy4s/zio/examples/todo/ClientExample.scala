@@ -50,6 +50,6 @@ object ClientExample extends ZIOAppDefault {
       _ <- client.deleteAll().debug
     } yield ()
 
-  override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] =
-    program.exitCode.provide(Client.default, Scope.default)
+  override def run: ZIO[Any & ZIOAppArgs & Scope, Any, Any] =
+    program.provide(Client.default, Scope.default)
 }

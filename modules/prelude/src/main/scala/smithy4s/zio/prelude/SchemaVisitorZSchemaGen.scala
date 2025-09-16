@@ -71,14 +71,14 @@ final class SchemaVisitorZSchemaGen(
   override def struct[S](
       shapeId: ShapeId,
       hints: Hints,
-      fields: Vector[Field[S, _]],
+      fields: Vector[Field[S, ?]],
       make: IndexedSeq[Any] => S
   ): ZSchema[S] = ???
 
   override def union[U](
       shapeId: ShapeId,
       hints: Hints,
-      alternatives: Vector[Alt[U, _]],
+      alternatives: Vector[Alt[U, ?]],
       dispatch: Alt.Dispatcher[U]
   ): ZSchema[U] = ???
 
