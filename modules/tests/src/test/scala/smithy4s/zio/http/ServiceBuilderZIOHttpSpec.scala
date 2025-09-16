@@ -2,8 +2,19 @@ package smithy4s.zio.http
 
 import smithy4s.Service
 import smithy4s.kinds.PolyFunction5
-import smithy4s.example.{PizzaAdminService, PizzaAdminServiceGen, HealthResponse, UnknownServerError, UnknownServerErrorCode}
-import smithy4s.example.guides.auth.{HelloWorldAuthService, HelloWorldAuthServiceGen, World, HealthCheckOutput}
+import smithy4s.example.{
+  PizzaAdminService,
+  PizzaAdminServiceGen,
+  HealthResponse,
+  UnknownServerError,
+  UnknownServerErrorCode
+}
+import smithy4s.example.guides.auth.{
+  HelloWorldAuthService,
+  HelloWorldAuthServiceGen,
+  World,
+  HealthCheckOutput
+}
 import zio.http.Request
 import zio.test.Assertion.*
 import zio.test.{Assertion, Spec, TestEnvironment, ZIOSpecDefault, assertZIO}
