@@ -74,11 +74,11 @@ jobs:
 
       - name: Make target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
-        run: mkdir -p target modules/http/target/jvm-2.13 project/target
+        run: mkdir -p modules/schema/target/jvm-3 modules/prelude/target/jvm-3 target modules/http/target/jvm-3 modules/schema/target/jvm-2.13 modules/prelude/target/jvm-2.13 modules/http/target/jvm-2.13 project/target
 
       - name: Compress target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
-        run: tar cf targets.tar target modules/http/target/jvm-2.13 project/target
+        run: tar cf targets.tar modules/schema/target/jvm-3 modules/prelude/target/jvm-3 target modules/http/target/jvm-3 modules/schema/target/jvm-2.13 modules/prelude/target/jvm-2.13 modules/http/target/jvm-2.13 project/target
 
       - name: Upload target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
