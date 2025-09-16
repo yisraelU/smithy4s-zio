@@ -1,7 +1,5 @@
 package smithy4s.zio
 
-import cats.effect.SyncIO
-import org.typelevel.vault.Key
 import smithy4s.Endpoint
 import smithy4s.http.PathParams
 import zio.{Scope, Task, ZIO}
@@ -14,8 +12,7 @@ package object http {
   type ServerEndpointMiddleware = Endpoint.Middleware[HttpRoutes]
   type SimpleHandler = Request => Task[Response]
 
-  private val pathParamsKey: String =
-    Key.newKey[SyncIO, PathParams].unsafeRunSync().hashCode().toString
+  private val pathParamsKey: String = "x-smithy4s-path-params"
 
   private def serializePathParams(pathParams: PathParams): String = {
     pathParams.map { case (key, value) => s"$key=$value" }.mkString("&")

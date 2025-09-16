@@ -108,12 +108,12 @@ class RouterBuilder[
         ).asInstanceOf[SimpleHandler]
       }
 
-      override def from(b: SimpleHandler): HttpRoutes = Routes(
-        Route.route(RoutePattern.any)(
-          Handler.fromFunctionZIO[(Path, Request)](requestAndPath =>
-            b(requestAndPath._2).catchAllDefect(e => ZIO.die(e))
-          )
+      override def from(b: SimpleHandler): HttpRoutes = {
+        val handler: Handler[Any, Throwable, (Path, Request), Response] =  Handler.fromFunctionZIO[(Path, Request)](requestAndPath =>
+          b(requestAndPath._2).catchAllDefect(e => ZIO.die(e))
         )
-      )
+        val singleRoute =   Route.route(RoutePattern.any)(handler)
+        Routes(singleRoute)
+      }
     }
 }

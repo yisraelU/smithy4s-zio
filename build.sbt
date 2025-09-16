@@ -38,7 +38,8 @@ lazy val allModules = Seq(
   scenarios,
   `compliance-tests`,
   `codegen-cli`,
-  transformers
+  transformers,
+  tests
 ).flatMap(_.projectRefs)
 
 lazy val `codegen-cli` = (projectMatrix in file("modules/codegen-cli"))
@@ -52,6 +53,7 @@ lazy val `codegen-cli` = (projectMatrix in file("modules/codegen-cli"))
   .enablePlugins(NoPublishPlugin)
 
 lazy val prelude = (projectMatrix in file("modules/prelude"))
+  .jvmPlatform(latest2ScalaVersions)
   .settings(
     name := s"$projectPrefix-prelude",
     libraryDependencies ++= Seq(
@@ -66,6 +68,7 @@ lazy val prelude = (projectMatrix in file("modules/prelude"))
   )
 
 lazy val schema = (projectMatrix in file("modules/schema"))
+  .jvmPlatform(latest2ScalaVersions)
   .settings(
     name := s"$projectPrefix-schema",
     libraryDependencies ++= Seq(
@@ -105,46 +108,15 @@ lazy val `compliance-tests` =
     .enablePlugins(Smithy4sCodegenPlugin, NoPublishPlugin)
 
 lazy val http = (projectMatrix in file("modules/http"))
-  .jvmPlatform(Seq(Scala213))
-  .dependsOn(
-    shared,
-    scenarios % "test->compile",
-    `compliance-tests` % "test->compile",
-    transformers % "test -> compile"
-  )
+  .jvmPlatform(latest2ScalaVersions)
+  .dependsOn(shared)
   .settings(
     name := s"$projectPrefix-http",
     libraryDependencies ++= Seq(
-      // http4s
-      Dependencies.Http4s.core.value,
       Dependencies.Smithy4s.core.value,
       Dependencies.Smithy4s.json.value,
-      Dependencies.Typelevel.vault.value,
-      Dependencies.Alloy.core % Test,
-      Dependencies.ZIO.http,
-      Dependencies.ZIO.test,
-      Dependencies.ZIO.testSbt
-    ),
-    Test / complianceTestDependencies := Seq(
-      Dependencies.Alloy.`protocol-tests`
-    ),
-    (Test / smithy4sModelTransformers) := List("ProtocolTransformer"),
-    (Test / resourceGenerators) := Seq(dumpModel(Test).taskValue),
-    (Test / fork) := true,
-    Test / parallelExecution := false,
-    (Test / envVars) ++= {
-      val files: Seq[File] = {
-        (Test / resourceGenerators) {
-          _.join.map(_.flatten)
-        }.value
-      }
-      files.headOption
-        .map { file =>
-          Map("MODEL_DUMP" -> file.getAbsolutePath)
-        }
-        .getOrElse(Map.empty)
-    },
-    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+      Dependencies.ZIO.http
+    )
   )
   .enablePlugins(ScalafixPlugin)
 
@@ -164,7 +136,7 @@ lazy val docs = projectMatrix
   .dependsOn(examples)
 
 lazy val scenarios = (projectMatrix in file("modules/test-scenarios"))
-  .jvmPlatform(latest2ScalaVersions)
+  .jvmPlatform(Seq(Scala213))
   .settings(
     name := s"$projectPrefix-tests",
     libraryDependencies ++= {
@@ -205,6 +177,45 @@ lazy val transformers = (projectMatrix in file("modules/transformers"))
       Dependencies.Alloy.core
     ),
     Compile / resourceDirectory := sourceDirectory.value / "resources"
+  )
+  .enablePlugins(NoPublishPlugin)
+
+lazy val tests = (projectMatrix in file("modules/tests"))
+  .jvmPlatform(List(Scala213))
+  .dependsOn(
+    http,
+    scenarios % "test->compile",
+    `compliance-tests` % "test->compile",
+    transformers % "test -> compile"
+  )
+  .settings(
+    name := s"$projectPrefix-tests",
+    libraryDependencies ++= Seq(
+      Dependencies.ZIO.test,
+      Dependencies.ZIO.testSbt,
+      Dependencies.ZIO.http,
+      Dependencies.Alloy.core % Test
+    ),
+    Test / complianceTestDependencies := Seq(
+      Dependencies.Alloy.`protocol-tests`
+    ),
+    (Test / smithy4sModelTransformers) := List("ProtocolTransformer"),
+    (Test / resourceGenerators) := Seq(dumpModel(Test).taskValue),
+    (Test / fork) := true,
+    Test / parallelExecution := false,
+    (Test / envVars) ++= {
+      val files: Seq[File] = {
+        (Test / resourceGenerators) {
+          _.join.map(_.flatten)
+        }.value
+      }
+      files.headOption
+        .map { file =>
+          Map("MODEL_DUMP" -> file.getAbsolutePath)
+        }
+        .getOrElse(Map.empty)
+    },
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
   .enablePlugins(NoPublishPlugin)
 

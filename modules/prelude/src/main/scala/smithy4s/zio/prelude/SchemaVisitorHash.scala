@@ -2,7 +2,6 @@ package smithy4s.zio.prelude
 import smithy4s.{Bijection, Hints, Lazy, Refinement, ShapeId}
 import smithy4s.capability.EncoderK
 import smithy4s.zio.prelude.instances.all.primHashPf
-import smithy4s.schema.Schema
 import smithy4s.schema._
 import zio.prelude.Hash.makeFrom
 import zio.prelude.{Equal, Hash}
@@ -80,7 +79,7 @@ final class SchemaVisitorHash(
   override def struct[S](
       shapeId: ShapeId,
       hints: Hints,
-      fields: Vector[Field[S, _]],
+      fields: Vector[Field[S, ?]],
       make: IndexedSeq[Any] => S
   ): Hash[S] = {
     def forField[A2](field: Field[S, A2]): Hash[S] = {
@@ -93,7 +92,8 @@ final class SchemaVisitorHash(
     new Hash[S] {
       def hash(x: S): Int = {
         val hashCodes = hashInstances.map(_.hash(x))
-        combineHash(productSeed, nameHash +: hashCodes: _*)
+        val all = nameHash +: hashCodes
+        combineHash(productSeed, all*)
       }
 
       def checkEqual(l: S, r: S): Boolean = {
@@ -105,7 +105,7 @@ final class SchemaVisitorHash(
   override def union[U](
       shapeId: ShapeId,
       hints: Hints,
-      alternatives: Vector[Alt[U, _]],
+      alternatives: Vector[Alt[U, ?]],
       dispatch: Alt.Dispatcher[U]
   ): Hash[U] = {
 

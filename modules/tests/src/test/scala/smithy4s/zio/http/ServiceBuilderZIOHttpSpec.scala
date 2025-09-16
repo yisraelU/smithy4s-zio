@@ -1,24 +1,13 @@
 package smithy4s.zio.http
 
-import smithy4s.example.guides.auth.{
-  HealthCheckOutput,
-  HelloWorldAuthService,
-  HelloWorldAuthServiceGen,
-  World
-}
-import smithy4s.example.{
-  HealthResponse,
-  PizzaAdminService,
-  PizzaAdminServiceGen,
-  UnknownServerError,
-  UnknownServerErrorCode
-}
-import smithy4s.kinds.PolyFunction5
 import smithy4s.Service
+import smithy4s.kinds.PolyFunction5
+import smithy4s.example.{PizzaAdminService, PizzaAdminServiceGen, HealthResponse, UnknownServerError, UnknownServerErrorCode}
+import smithy4s.example.guides.auth.{HelloWorldAuthService, HelloWorldAuthServiceGen, World, HealthCheckOutput}
 import zio.http.Request
-import zio.test.Assertion._
-import zio.{Scope, Task, ZIO}
+import zio.test.Assertion.*
 import zio.test.{Assertion, Spec, TestEnvironment, ZIOSpecDefault, assertZIO}
+import zio.{Scope, Task, ZIO}
 
 object ServiceBuilderZIOHttpSpec extends ZIOSpecDefault {
 

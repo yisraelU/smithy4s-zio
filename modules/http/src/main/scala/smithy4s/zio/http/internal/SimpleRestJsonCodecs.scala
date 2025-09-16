@@ -76,7 +76,7 @@ private[http] class SimpleRestJsonCodecs(
       .withBodyDecoders(payloadDecoders)
       .withSuccessBodyEncoders(payloadEncoders)
       .withErrorBodyEncoders(payloadEncoders)
-      .withErrorTypeHeaders(errorHeaders: _*)
+      .withErrorTypeHeaders(errorHeaders*)
       .withMetadataDecoders(Metadata.Decoder)
       .withMetadataEncoders(Metadata.Encoder)
       .withBaseResponse(_ => baseResponse.pure)

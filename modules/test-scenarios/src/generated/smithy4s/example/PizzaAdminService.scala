@@ -65,7 +65,7 @@ object PizzaAdminServiceGen extends Service.Mixin[PizzaAdminServiceGen, PizzaAdm
     type Default[F[+_, +_]] = Constant[smithy4s.kinds.stubs.Kind2[F]#toKind5]
   }
 
-  val endpoints: Vector[smithy4s.Endpoint[PizzaAdminServiceOperation, ?, ?, ?, ?, ?]] = Vector(
+  val endpoints: Vector[smithy4s.Endpoint[PizzaAdminServiceOperation, _, _, _, _, _]] = Vector(
     PizzaAdminServiceOperation.GetMenu,
     PizzaAdminServiceOperation.Health,
     PizzaAdminServiceOperation.GetEnum,

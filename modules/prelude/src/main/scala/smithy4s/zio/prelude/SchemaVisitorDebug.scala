@@ -70,7 +70,7 @@ final class SchemaVisitorDebug(
   override def struct[S](
       shapeId: ShapeId,
       hints: Hints,
-      fields: Vector[Field[S, _]],
+      fields: Vector[Field[S, ?]],
       make: IndexedSeq[Any] => S
   ): Debug[S] = {
     def compileField[A](
@@ -87,7 +87,7 @@ final class SchemaVisitorDebug(
       Constructor(
         shapeId.namespace.split(".").toList,
         shapeId.name,
-        ListMap(values: _*)
+        ListMap(values*)
       )
     }
   }
@@ -95,7 +95,7 @@ final class SchemaVisitorDebug(
   override def union[U](
       shapeId: ShapeId,
       hints: Hints,
-      alternatives: Vector[Alt[U, _]],
+      alternatives: Vector[Alt[U, ?]],
       dispatch: Alt.Dispatcher[U]
   ): Debug[U] = {
     val precomputed: Precompiler[Debug] = new Precompiler[Debug] {
