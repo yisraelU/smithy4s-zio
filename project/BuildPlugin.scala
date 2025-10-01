@@ -19,7 +19,7 @@ object BuildPlugin extends AutoPlugin {
         Seq(
           compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
           compilerPlugin(
-            "org.typelevel" % "kind-projector" % "0.13.3" cross CrossVersion.full
+            "org.typelevel" % "kind-projector" % "0.13.4" cross CrossVersion.full
           )
         )
       else Seq.empty
