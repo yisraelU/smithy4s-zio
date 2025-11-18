@@ -6,9 +6,9 @@ addSbtPlugin(
   "com.disneystreaming.smithy4s" % "smithy4s-sbt-codegen" % "0.18.42"
 )
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.5")
-addSbtPlugin("org.typelevel" % "sbt-typelevel" % "0.8.1")
-addSbtPlugin("org.typelevel" % "sbt-typelevel-site" % "0.8.1")
-addSbtPlugin("org.typelevel" % "sbt-typelevel-scalafix" % "0.8.1")
+addSbtPlugin("org.typelevel" % "sbt-typelevel" % "0.8.3")
+addSbtPlugin("org.typelevel" % "sbt-typelevel-site" % "0.8.3")
+addSbtPlugin("org.typelevel" % "sbt-typelevel-scalafix" % "0.8.3")
 addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.7.2")
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.20.1")
 // sbt revolver
