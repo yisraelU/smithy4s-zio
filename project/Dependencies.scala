@@ -23,7 +23,7 @@ object Dependencies {
   }
   object LiHaoyi {
     val sourcecode = "com.lihaoyi" %% "sourcecode" % "0.4.2"
-    val pprint = "com.lihaoyi" %% "pprint" % "0.9.4"
+    val pprint = "com.lihaoyi" %% "pprint" % "0.9.5"
   }
 
   object Circe {
