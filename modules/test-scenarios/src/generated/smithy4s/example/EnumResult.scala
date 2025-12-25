@@ -8,7 +8,12 @@ import smithy4s.ShapeTag
 import smithy4s.schema.EnumTag
 import smithy4s.schema.Schema.enumeration
 
-sealed abstract class EnumResult(_value: String, _name: String, _intValue: Int, _hints: Hints) extends Enumeration.Value {
+sealed abstract class EnumResult(
+    _value: String,
+    _name: String,
+    _intValue: Int,
+    _hints: Hints
+) extends Enumeration.Value {
   override type EnumType = EnumResult
   override val value: String = _value
   override val name: String = _name
@@ -17,7 +22,9 @@ sealed abstract class EnumResult(_value: String, _name: String, _intValue: Int, 
   override def enumeration: Enumeration[EnumType] = EnumResult
   @inline final def widen: EnumResult = this
 }
-object EnumResult extends Enumeration[EnumResult] with ShapeTag.Companion[EnumResult] {
+object EnumResult
+    extends Enumeration[EnumResult]
+    with ShapeTag.Companion[EnumResult] {
   val id: ShapeId = ShapeId("smithy4s.example", "EnumResult")
 
   val hints: Hints = Hints.empty
@@ -27,8 +34,9 @@ object EnumResult extends Enumeration[EnumResult] with ShapeTag.Companion[EnumRe
 
   val values: List[EnumResult] = List(
     FIRST,
-    SECOND,
+    SECOND
   )
   val tag: EnumTag[EnumResult] = EnumTag.ClosedIntEnum
-  implicit val schema: Schema[EnumResult] = enumeration(tag, values).withId(id).addHints(hints)
+  implicit val schema: Schema[EnumResult] =
+    enumeration(tag, values).withId(id).addHints(hints)
 }
