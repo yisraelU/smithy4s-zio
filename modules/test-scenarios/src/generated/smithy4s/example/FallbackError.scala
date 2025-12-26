@@ -14,13 +14,13 @@ object FallbackError extends ShapeTag.Companion[FallbackError] {
   val id: ShapeId = ShapeId("smithy4s.example", "FallbackError")
 
   val hints: Hints = Hints(
-    smithy.api.Error.CLIENT.widen
+    smithy.api.Error.CLIENT.widen,
   ).lazily
 
   // constructor using the original order from the spec
   private def make(error: String): FallbackError = FallbackError(error)
 
   implicit val schema: Schema[FallbackError] = struct(
-    string.required[FallbackError]("error", _.error)
+    string.required[FallbackError]("error", _.error),
   )(make).withId(id).addHints(hints)
 }
