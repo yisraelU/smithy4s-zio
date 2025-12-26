@@ -30,7 +30,9 @@ class RouterBuilder[
     service: smithy4s.Service[Alg],
     impl: FunctorAlgebra[Alg, Task],
     fe: PartialFunction[Throwable, Task[Throwable]],
-    middleware: ServerEndpointMiddleware = Endpoint.Middleware.noop[HttpRoutes]
+    middleware: ServerEndpointMiddleware = Endpoint.Middleware.noop[HttpRoutes],
+    onError: PartialFunction[Throwable, Task[Unit]] = PartialFunction.empty,
+    encodeErrorsBeforeMiddleware: Boolean = false
 ) {
 
   def mapErrors(
@@ -42,7 +44,9 @@ class RouterBuilder[
       service,
       impl,
       fe andThen (e => ZIO.succeed(e)),
-      middleware
+      middleware,
+      onError,
+      encodeErrorsBeforeMiddleware
     )
 
   def flatMapErrors(
@@ -54,7 +58,9 @@ class RouterBuilder[
       service,
       impl,
       fe,
-      middleware
+      middleware,
+      onError,
+      encodeErrorsBeforeMiddleware
     )
 
   def middleware(
@@ -66,7 +72,23 @@ class RouterBuilder[
       service,
       impl,
       fe,
-      mid
+      mid,
+      onError,
+      encodeErrorsBeforeMiddleware
+    )
+
+  def onError(
+      callback: PartialFunction[Throwable, Task[Unit]]
+  ): RouterBuilder[Alg, P] =
+    new RouterBuilder[Alg, P](
+      protocolTag,
+      simpleProtocolCodecs,
+      service,
+      impl,
+      fe,
+      middleware,
+      callback,
+      encodeErrorsBeforeMiddleware
     )
 
   def make: Either[UnsupportedProtocolError, HttpRoutes] =
@@ -84,7 +106,7 @@ class RouterBuilder[
           errorHandler.andThen(middleware).andThen(errorHandler)
 
         val router: Request => Option[Task[Response]] =
-          HttpUnaryServerRouter(service)(
+          HttpUnaryServerRouter(service, encodeErrorsBeforeMiddleware, onError)(
             impl,
             simpleProtocolCodecs.makeServerCodecs,
             finalMiddleware.biject[SimpleHandler](bijection.to)(bijection.from),
