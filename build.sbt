@@ -9,7 +9,7 @@ import scala.collection.Seq
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 val Scala213 = "2.13.18"
-val Scala3 = "3.7.3"
+val Scala3 = "3.7.4"
 val latest2ScalaVersions = List(Scala213, Scala3)
 ThisBuild / scalaVersion := Scala213 // the default Scala
 

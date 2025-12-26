@@ -1,5 +1,6 @@
 package smithy4s.zio.prelude
 
+import scala.language.implicitConversions
 import smithy4s.schema.Schema
 import smithy4s.schema.Schema.*
 import smithy4s.zio.prelude.HashTestUtils.*
@@ -18,7 +19,7 @@ object DebugVisitorSpec extends zio.test.ZIOSpecDefault {
 
   implicit def render(repr: Repr): String = repr.render
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = {
+  override def spec: Spec[TestEnvironment & Scope, Any] = {
     suite("DebugVisitorSpec")(
       test("int") {
         val schema: Schema[Int] = int
