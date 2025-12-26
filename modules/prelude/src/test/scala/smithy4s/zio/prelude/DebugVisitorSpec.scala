@@ -1,6 +1,5 @@
 package smithy4s.zio.prelude
 
-import scala.language.implicitConversions
 import smithy4s.schema.Schema
 import smithy4s.schema.Schema.*
 import smithy4s.zio.prelude.HashTestUtils.*

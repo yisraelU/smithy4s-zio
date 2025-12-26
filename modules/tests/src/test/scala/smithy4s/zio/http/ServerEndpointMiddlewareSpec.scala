@@ -269,7 +269,7 @@ object ServerEndpointMiddlewareSpec extends ZIOSpecDefault {
           callbackRan
         )
       },
-      test("server - onError callback works with mapErrors") {
+      test("server - onError callback is invoked before error transformation") {
         case class OriginalError(msg: String) extends RuntimeException(msg)
         case class TransformedError(msg: String) extends RuntimeException(msg)
 
@@ -284,10 +284,10 @@ object ServerEndpointMiddlewareSpec extends ZIOSpecDefault {
                 ZIO.fail(OriginalError("original"))
             }
 
-          // Callback should see the transformed error, not the original
+          // onError runs at HttpUnaryServerRouter level, before middleware transformations
+          // So it sees the original error, not the transformed one
           errorCallback: PartialFunction[Throwable, Task[Unit]] = {
-            case e: TransformedError => observedErrors.update(e :: _)
-            case e: OriginalError    => observedErrors.update(e :: _)
+            case e: OriginalError => observedErrors.update(e :: _)
           }
 
           routes <- SimpleRestJsonBuilder
@@ -302,9 +302,9 @@ object ServerEndpointMiddlewareSpec extends ZIOSpecDefault {
         } yield assertTrue(
           response.status == Status.InternalServerError || response.status.code == 500,
           errors.length == 1,
-          // Should observe the transformed error since error handler runs before onError
-          errors.head.isInstanceOf[TransformedError],
-          errors.head.getMessage.contains("transformed-original")
+          // onError sees the original error before transformation
+          errors.head.isInstanceOf[OriginalError],
+          errors.head.getMessage == "original"
         )
       }
     )
