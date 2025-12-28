@@ -30,7 +30,9 @@ class RouterBuilder[
     service: smithy4s.Service[Alg],
     impl: FunctorAlgebra[Alg, Task],
     fe: PartialFunction[Throwable, Task[Throwable]],
-    middleware: ServerEndpointMiddleware = Endpoint.Middleware.noop[HttpRoutes]
+    middleware: ServerEndpointMiddleware = Endpoint.Middleware.noop[HttpRoutes],
+    onError: PartialFunction[Throwable, Task[Unit]] = PartialFunction.empty,
+    encodeErrorsBeforeMiddleware: Boolean = false
 ) {
 
   def mapErrors(
@@ -42,7 +44,9 @@ class RouterBuilder[
       service,
       impl,
       fe andThen (e => ZIO.succeed(e)),
-      middleware
+      middleware,
+      onError,
+      encodeErrorsBeforeMiddleware
     )
 
   def flatMapErrors(
@@ -54,7 +58,9 @@ class RouterBuilder[
       service,
       impl,
       fe,
-      middleware
+      middleware,
+      onError,
+      encodeErrorsBeforeMiddleware
     )
 
   def middleware(
@@ -66,7 +72,23 @@ class RouterBuilder[
       service,
       impl,
       fe,
-      mid
+      mid,
+      onError,
+      encodeErrorsBeforeMiddleware
+    )
+
+  def onError(
+      callback: PartialFunction[Throwable, Task[Unit]]
+  ): RouterBuilder[Alg, P] =
+    new RouterBuilder[Alg, P](
+      protocolTag,
+      simpleProtocolCodecs,
+      service,
+      impl,
+      fe,
+      middleware,
+      callback,
+      encodeErrorsBeforeMiddleware
     )
 
   def make: Either[UnsupportedProtocolError, HttpRoutes] =
@@ -77,11 +99,14 @@ class RouterBuilder[
         implicit val monadThrow = zioMonadThrowLike[Any]
         val errorHandler: ServerEndpointMiddleware =
           ServerEndpointMiddleware.flatMapErrors(fe)
+        // Apply error handler before and after user middleware
+        // First: transforms service errors (allows non-contract → contract error conversion)
+        // Second: handles errors thrown by middleware itself
         val finalMiddleware: Endpoint.Middleware[HttpRoutes] =
           errorHandler.andThen(middleware).andThen(errorHandler)
 
         val router: Request => Option[Task[Response]] =
-          HttpUnaryServerRouter(service)(
+          HttpUnaryServerRouter(service, encodeErrorsBeforeMiddleware, onError)(
             impl,
             simpleProtocolCodecs.makeServerCodecs,
             finalMiddleware.biject[SimpleHandler](bijection.to)(bijection.from),
@@ -111,7 +136,7 @@ class RouterBuilder[
       override def from(b: SimpleHandler): HttpRoutes = {
         val handler: Handler[Any, Throwable, (Path, Request), Response] =
           Handler.fromFunctionZIO[(Path, Request)](requestAndPath =>
-            b(requestAndPath._2).catchAllDefect(e => ZIO.die(e))
+            b(requestAndPath._2)
           )
         val singleRoute = Route.route(RoutePattern.any)(handler)
         Routes(singleRoute)

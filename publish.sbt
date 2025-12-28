@@ -12,8 +12,9 @@ ThisBuild / developers := List(
   tlGitHubDev("yisraelu", "Yisrael Union")
 )
 
-// publish website from this branch
-ThisBuild / tlSitePublishBranch := Some("main")
+// Publish website from version tags (so docs always show latest released version)
+ThisBuild / tlSitePublishBranch := None
+ThisBuild / tlSitePublishTags := true
 
 ThisBuild / tlCiHeaderCheck := false
 ThisBuild / tlFatalWarnings := false

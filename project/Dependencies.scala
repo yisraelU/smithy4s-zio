@@ -3,7 +3,7 @@ import smithy4s.codegen.Smithy4sCodegenPlugin.autoImport.smithy4sVersion
 
 object Dependencies {
   object Http4s {
-    val http4sVersion = Def.setting("0.23.32")
+    val http4sVersion = Def.setting("0.23.33")
 
     val circe: Def.Initialize[ModuleID] =
       Def.setting("org.http4s" %% "http4s-circe" % http4sVersion.value)
@@ -23,7 +23,7 @@ object Dependencies {
   }
   object LiHaoyi {
     val sourcecode = "com.lihaoyi" %% "sourcecode" % "0.4.2"
-    val pprint = "com.lihaoyi" %% "pprint" % "0.9.4"
+    val pprint = "com.lihaoyi" %% "pprint" % "0.9.6"
   }
 
   object Circe {
@@ -70,20 +70,20 @@ object Dependencies {
 
   val Alloy = new {
     val org = "com.disneystreaming.alloy"
-    val alloyVersion = "0.3.33"
+    val alloyVersion = "0.3.35"
     val core = org % "alloy-core" % alloyVersion
     val openapi = org %% "alloy-openapi" % alloyVersion
     val `protocol-tests` = org % "alloy-protocol-tests" % alloyVersion
   }
 
   object ZIO {
-    val zioVersion = "2.1.21"
+    val zioVersion = "2.1.23"
     val core = "dev.zio" %% "zio" % zioVersion
 
     val http = "dev.zio" %% "zio-http" % "3.0.1"
     val prelude = "dev.zio" %% "zio-prelude" % "1.0.0-RC44"
-    val schema = "dev.zio" %% "zio-schema" % "1.7.5"
-    val catsInterop = "dev.zio" %% "zio-interop-cats" % "23.1.0.5"
+    val schema = "dev.zio" %% "zio-schema" % "1.7.6"
+    val catsInterop = "dev.zio" %% "zio-interop-cats" % "23.1.0.13"
     val test = "dev.zio" %% "zio-test" % zioVersion
     val testSbt = "dev.zio" %% "zio-test-sbt" % zioVersion % Test
     val testMagnolia = "dev.zio" %% "zio-test-magnolia" % zioVersion % Test

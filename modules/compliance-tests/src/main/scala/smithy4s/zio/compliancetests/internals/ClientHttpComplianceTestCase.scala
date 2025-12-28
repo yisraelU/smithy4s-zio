@@ -58,11 +58,12 @@ private[compliancetests] class ClientHttpComplianceTestCase[
 
         Promise.make[Nothing, Request].flatMap { requestDeferred =>
           val reqHandler: Handler[Any, Response, Request, Response] =
-            handler { req: Request =>
-              req.body.asChunk
-                .map(chunk => req.copy(body = zio.http.Body.fromChunk(chunk)))
-                .flatMap(requestDeferred.succeed(_))
-                .mapBoth(Response.fromThrowable, _ => Response())
+            handler {
+              req: Request =>
+                req.body.asChunk
+                  .map(chunk => req.copy(body = zio.http.Body.fromChunk(chunk)))
+                  .flatMap(requestDeferred.succeed(_))
+                  .mapBoth(Response.fromThrowable, _ => Response())
             }
           val app = reqHandler.toRoutes
 
@@ -122,24 +123,25 @@ private[compliancetests] class ClientHttpComplianceTestCase[
         }
 
         val reqHandler: Handler[Any, Response, Request, Response] =
-          handler { req: Request =>
-            val body = testCase.body
+          handler {
+            req: Request =>
+              val body = testCase.body
 
-            val headers = testCase.headers.map(_.toList).foldMap { headers =>
-              Headers(headers.map { case (k, v) =>
-                Header.Custom(k, v)
-              })
-            }
+              val headers = testCase.headers.map(_.toList).foldMap { headers =>
+                Headers(headers.map { case (k, v) =>
+                  Header.Custom(k, v)
+                })
+              }
 
-            req.body.asString
-              .as(
-                Response(
-                  status = Status.fromInt(testCase.code),
-                  body = body.map(Body.fromString(_)).getOrElse(Body.empty)
+              req.body.asString
+                .as(
+                  Response(
+                    status = Status.fromInt(testCase.code),
+                    body = body.map(Body.fromString(_)).getOrElse(Body.empty)
+                  )
+                    .addHeaders(headers)
                 )
-                  .addHeaders(headers)
-              )
-              .mapBoth(Response.fromThrowable, identity)
+                .mapBoth(Response.fromThrowable, identity)
           }
         val app = reqHandler.toRoutes
 
