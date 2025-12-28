@@ -18,7 +18,7 @@ object DebugVisitorSpec extends zio.test.ZIOSpecDefault {
 
   implicit def render(repr: Repr): String = repr.render
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = {
+  override def spec: Spec[TestEnvironment & Scope, Any] = {
     suite("DebugVisitorSpec")(
       test("int") {
         val schema: Schema[Int] = int

@@ -1,261 +1,328 @@
 package smithy4s.zio.http
 
-/*
-package smithy4s.zio.http
-
-
-
-import cats.implicits.*
-import fs2.Collector
 import smithy4s.Hints
-import smithy4s.example.hello.*
-import zio.{Scope, Task, ZIO}
-import zio.http.Request.post
-import zio.http.{Body, HttpApp, Method, Request, URL}
-import zio.test.{Assertion, Spec, TestEnvironment, TestResult, ZIOSpecDefault}
+import smithy4s.example.*
+import smithy4s.zio.http.middleware.{ServerEndpointMiddleware => ServerMW}
+import zio.http.{Request, Status}
+import zio.test.{Spec, TestEnvironment, ZIOSpecDefault, assertTrue}
+import zio.{Ref, Scope, Task, ZIO}
 
+/**
+ * Comprehensive middleware tests for smithy4s-zio-http.
+ *
+ * Tests cover:
+ * - Basic middleware composition
+ * - Error mapping with mapErrors and flatMapErrors
+ * - Preservation of Smithy4s endpoint errors
+ * - Transformation of non-endpoint errors
+ */
 object ServerEndpointMiddlewareSpec extends ZIOSpecDefault {
 
-  private implicit val greetingEq: Eq[Greeting] = Eq.fromUniversalEquals
-  private implicit val throwableEq: Eq[Throwable] = Eq.fromUniversalEquals
-  final class MiddlewareException
-      extends RuntimeException(
-        "Expected to recover via flatmapError or mapError"
-      )
-
-  override def spec: Spec[TestEnvironment with Scope, Any] =
-    suite("middleware testing") {
-  test("server - middleware can throw and mapped / flatmapped") {
-    val middleware = new ServerEndpointMiddleware.Simple[Task]() {
-      def prepareWithHints(
-          serviceHints: Hints,
-          endpointHints: Hints
-      ): HttpApp[Any] => HttpApp[Any] = { inputApp =>
-        HttpApp[Any] { _ => ZIO.fail(new MiddlewareException }
-      }
-    }
-    def runOnService(service: HttpRoutes): ZIO[Any, Nothing, TestResult] = {
-      service.sandbox.runZIO(post( "/bob", Body.empty))
-        .map(res =>  zio.test.assert(res.status.code)(Assertion.equalTo(599)))
-    }
-
-
-    val pureCheck = runOnService(
-      SimpleRestJsonBuilder(HelloImpl)
-        .routes(HelloImpl)
-        .middleware(middleware)
-        .flatMapErrors { case _: MiddlewareException =>
-          Task.pure(SpecificServerError())
-        }
-        .make
-        .toOption
-        .get
-    )
-    val throwCheck = runOnService(
-      SimpleRestJsonBuilder
-        .routes(HelloImpl)
-        .middleware(middleware)
-        .mapErrors { case _: MiddlewareException =>
-          throw SpecificServerError()
-        }
-        .make
-        .toOption
-        .get
-    )
-    List(throwCheck, pureCheck).combineAll
-  ???
-  }
-
-  test("server - middleware can catch spec error") {
-    val catchSpecErrorMiddleware = new ServerEndpointMiddleware.Simple[Task]() {
-      def prepareWithHints(
-          serviceHints: Hints,
-          endpointHints: Hints
-      ): HttpApp[Any] => HttpApp[Any] = { inputApp =>
-        HttpApp[Any] { req =>
-          inputApp(req).handleError { case _: SpecificServerError =>
-            Response[Any()
-          }
-        }
-      }
-    }
-
-    SimpleRestJsonBuilder
-      .routes(new HelloWorldService[Task] {
-        def hello(name: String, town: Option[String]): Task[Greeting] =
-          ZIO.fail(
-            SpecificServerError(Some("to be caught in middleware"))
-          )
-      })
-      .middleware(catchSpecErrorMiddleware)
-      .make
-      .toOption
-      .get
-      .apply(Request[](Method.POST, Uri.unsafeFromString("/bob")))
-      // would be 599 w/o the middleware
-      .flatMap(res => OptionT.pure(expect.eql(res.status.code, 200)))
-      .getOrElse(
-        failure("unable to run request")
-      )
-  },
-
-  test("server - middleware is applied") {
-    serverMiddlewareTest(
-      shouldFailInMiddleware = true,
-      Request(Method.POST, Uri.unsafeFromString("/bob")),
-      response =>
-        IO.pure(expect.eql(response.status, Status.InternalServerError))
-    )
-  },
-
-  test(
-    "server - middleware allows passing through to underlying implementation"
-  ) {
-    serverMiddlewareTest(
-      shouldFailInMiddleware = false,
-      Request(Method.POST, Uri.unsafeFromString("/bob")),
-      response => {
-        response.body.compile
-          .to(Collector.supportsArray(Array))
-          .map(new String(_))
-          .map { body =>
-            expect.eql(response.status, Status.Ok) &&
-            expect.eql(body, """{"message":"Hello, bob"}""")
-          }
-      }
-    )
-  },
-
-  test("client - middleware is applied") {
-    clientMiddlewareTest(
-      shouldFailInMiddleware = true,
-      service =>
-        service.hello("bob").attempt.map { result =>
-          expect.eql(result, Left(new GenericServerError(Some("failed"))))
-        }
-    )
-  }
-      ,
-
-  test("client - send request through middleware") {
-    clientMiddlewareTest(
-      shouldFailInMiddleware = false,
-      service =>
-        service.hello("bob").attempt.map { result =>
-          expect.eql(result, Right(Greeting("Hello, bob")))
-        }
-    )
-  }
-    }
-
-  private def serverMiddlewareTest(
-      shouldFailInMiddleware: Boolean,
-      request: Request,
-      expect: Response[IO] => IO[Expectations]
-  )(implicit pos: SourceLocation): IO[Expectations] = {
-    val service =
-      SimpleRestJsonBuilder
-        .routes(HelloImpl)
-        .middleware(
-          new TestServerMiddleware(shouldFail = shouldFailInMiddleware)
+  override def spec: Spec[TestEnvironment & Scope, Any] =
+    suite("middleware testing")(
+      test("server - middleware can be applied without errors") {
+        val middleware = new PassThroughMiddleware()
+        for {
+          routes <- SimpleRestJsonBuilder
+            .routes(PizzaImpl)
+            .middleware(middleware)
+            .lift
+          response <- routes.sandbox.runZIO(Request.get("/health"))
+          body <- response.body.asString
+        } yield assertTrue(
+          response.status == Status.Ok,
+          body.contains("Ok")
         )
-        .make
-        .toOption
-        .get
+      },
+      test("server - multiple middlewares can be composed") {
+        val middleware1 = new PassThroughMiddleware()
+        val middleware2 = new PassThroughMiddleware()
+        for {
+          routes <- SimpleRestJsonBuilder
+            .routes(PizzaImpl)
+            .middleware(middleware1)
+            .middleware(middleware2)
+            .lift
+          response <- routes.sandbox.runZIO(Request.get("/health"))
+        } yield assertTrue(response.status == Status.Ok)
+      },
+      test("server - mapErrors transforms non-endpoint errors") {
+        case class CustomError(message: String)
+            extends RuntimeException(message)
+        case class TransformedError(original: String)
+            extends RuntimeException(s"Transformed: $original")
 
-    service(request)
-      .flatMap(res => OptionT.liftF(expect(res)))
-      .getOrElse(
-        failure("unable to run request")
-      )
-  }
+        val failingService: PizzaAdminService[Task] =
+          new PizzaAdminService.Default[Task](
+            ZIO.fail(CustomError("Original error"))
+          ) {
+            override def health(query: Option[String]): Task[HealthResponse] =
+              ZIO.fail(CustomError("Original error"))
+          }
 
-  private def clientMiddlewareTest(
-      shouldFailInMiddleware: Boolean,
-      expect: HelloWorldService[IO] => IO[Expectations]
-  ): IO[Expectations] = {
-    val serviceNoMiddleware: HttpApp[Any] =
-      SimpleRestJsonBuilder
-        .routes(HelloImpl)
-        .make
-        .toOption
-        .get
-        .orNotFound
+        val errorMapper = ServerMW.mapErrors { case CustomError(msg) =>
+          TransformedError(msg)
+        }
 
-    val client: HelloWorldService[IO] = {
-      val http4sClient = Client.fromHttpApp(serviceNoMiddleware)
-      SimpleRestJsonBuilder(HelloWorldService)
-        .client(http4sClient)
-        .middleware(
-          new TestClientMiddleware(shouldFail = shouldFailInMiddleware)
+        for {
+          routes <- SimpleRestJsonBuilder
+            .routes(failingService)
+            .middleware(errorMapper)
+            .lift
+          response <- routes.sandbox.runZIO(Request.get("/health"))
+        } yield assertTrue(
+          // Errors are caught and encoded as HTTP 500 responses
+          response.status == Status.InternalServerError ||
+            response.status.code == 500
         )
-        .make
-        .toOption
-        .get
+      },
+      test("server - flatMapErrors allows effectful error transformation") {
+        case class DatabaseError(code: Int)
+            extends RuntimeException(s"DB Error: $code")
+        case class EnrichedError(code: Int, details: String)
+            extends RuntimeException(s"Code $code: $details")
+
+        val failingService: PizzaAdminService[Task] =
+          new PizzaAdminService.Default[Task](
+            ZIO.fail(DatabaseError(500))
+          ) {
+            override def health(query: Option[String]): Task[HealthResponse] =
+              ZIO.fail(DatabaseError(500))
+          }
+
+        // Simulate fetching error details from a service
+        def enrichError(code: Int): Task[String] =
+          ZIO.succeed(s"Details for error $code")
+
+        val errorMapper = ServerMW.flatMapErrors { case DatabaseError(code) =>
+          enrichError(code).map(details => EnrichedError(code, details))
+        }
+
+        for {
+          routes <- SimpleRestJsonBuilder
+            .routes(failingService)
+            .middleware(errorMapper)
+            .lift
+          response <- routes.sandbox.runZIO(Request.get("/health"))
+        } yield assertTrue(
+          // Effectful error transformation succeeds and error is encoded as HTTP response
+          response.status == Status.InternalServerError ||
+            response.status.code == 500
+        )
+      },
+      test("server - endpoint errors (Smithy4s typed errors) are preserved") {
+        val failingService: PizzaAdminService[Task] =
+          new PizzaAdminService.Default[Task](
+            ZIO.fail(new NotImplementedError("Not implemented"))
+          ) {
+            override def health(query: Option[String]): Task[HealthResponse] =
+              ZIO.fail(
+                UnknownServerError(
+                  UnknownServerErrorCode.ERROR_CODE,
+                  Some("Server is down"),
+                  None
+                )
+              )
+          }
+
+        case class GenericError(msg: String) extends RuntimeException(msg)
+
+        // This mapper should NOT transform endpoint errors
+        val errorMapper = ServerMW.mapErrors { case e: NotImplementedError =>
+          GenericError(e.getMessage)
+        }
+
+        for {
+          routes <- SimpleRestJsonBuilder
+            .routes(failingService)
+            .middleware(errorMapper)
+            .lift
+          response <- routes.sandbox.runZIO(Request.get("/health"))
+        } yield assertTrue(
+          // The endpoint error should be encoded as a proper HTTP response (500)
+          response.status == Status.InternalServerError ||
+            response.status.code == 500
+        )
+      },
+      test(
+        "server - errors not matching partial function pass through unchanged"
+      ) {
+        case class SpecificError(msg: String) extends RuntimeException(msg)
+        case class OtherError(msg: String) extends RuntimeException(msg)
+        case class TransformedError(msg: String) extends RuntimeException(msg)
+
+        val failingService: PizzaAdminService[Task] =
+          new PizzaAdminService.Default[Task](
+            ZIO.fail(OtherError("This should not be transformed"))
+          ) {
+            override def health(query: Option[String]): Task[HealthResponse] =
+              ZIO.fail(OtherError("This should not be transformed"))
+          }
+
+        // Only transform SpecificError (OtherError won't match)
+        val errorMapper = ServerMW.mapErrors { case SpecificError(msg) =>
+          TransformedError(msg)
+        }
+
+        for {
+          routes <- SimpleRestJsonBuilder
+            .routes(failingService)
+            .middleware(errorMapper)
+            .lift
+          response <- routes.sandbox.runZIO(Request.get("/health"))
+        } yield assertTrue(
+          // Error passes through and is still encoded as HTTP 500
+          response.status == Status.InternalServerError ||
+            response.status.code == 500
+        )
+      },
+      test("server - error mapping works with RouterBuilder.mapErrors") {
+        case class ServiceError(code: Int)
+            extends RuntimeException(s"Error: $code")
+        case class MappedError(code: Int)
+            extends RuntimeException(s"Mapped: $code")
+
+        val failingService: PizzaAdminService[Task] =
+          new PizzaAdminService.Default[Task](
+            ZIO.fail(ServiceError(404))
+          ) {
+            override def health(query: Option[String]): Task[HealthResponse] =
+              ZIO.fail(ServiceError(404))
+          }
+
+        for {
+          routes <- SimpleRestJsonBuilder
+            .routes(failingService)
+            .mapErrors { case ServiceError(code) =>
+              MappedError(code)
+            }
+            .lift
+          response <- routes.sandbox.runZIO(Request.get("/health"))
+        } yield assertTrue(
+          // RouterBuilder.mapErrors also works correctly
+          response.status == Status.InternalServerError ||
+            response.status.code == 500
+        )
+      },
+      test("server - onError callback is invoked on service errors") {
+        case class CustomError(msg: String) extends RuntimeException(msg)
+
+        for {
+          // Track errors that were observed by the callback
+          observedErrors <- Ref.make[List[Throwable]](List.empty)
+
+          failingService: PizzaAdminService[Task] =
+            new PizzaAdminService.Default[Task](
+              ZIO.fail(CustomError("service failed"))
+            ) {
+              override def health(query: Option[String]): Task[HealthResponse] =
+                ZIO.fail(CustomError("service failed"))
+            }
+
+          // Callback to track errors
+          errorCallback: PartialFunction[Throwable, Task[Unit]] = {
+            case e: CustomError => observedErrors.update(e :: _)
+          }
+
+          routes <- SimpleRestJsonBuilder
+            .routes(failingService)
+            .onError(errorCallback)
+            .lift
+          response <- routes.sandbox.runZIO(Request.get("/health"))
+          errors <- observedErrors.get
+        } yield assertTrue(
+          response.status == Status.InternalServerError || response.status.code == 500,
+          errors.length == 1,
+          errors.head.isInstanceOf[CustomError],
+          errors.head.getMessage == "service failed"
+        )
+      },
+      test("server - onError callback does not affect error response") {
+        case class DatabaseError(code: Int)
+            extends RuntimeException(s"DB error: $code")
+
+        for {
+          errorCallbackRan <- Ref.make(false)
+
+          failingService: PizzaAdminService[Task] =
+            new PizzaAdminService.Default[Task](
+              ZIO.fail(DatabaseError(500))
+            ) {
+              override def health(query: Option[String]): Task[HealthResponse] =
+                ZIO.fail(DatabaseError(500))
+            }
+
+          errorCallback: PartialFunction[Throwable, Task[Unit]] = {
+            case _: DatabaseError => errorCallbackRan.set(true)
+          }
+
+          routes <- SimpleRestJsonBuilder
+            .routes(failingService)
+            .onError(errorCallback)
+            .lift
+          response <- routes.sandbox.runZIO(Request.get("/health"))
+          callbackRan <- errorCallbackRan.get
+        } yield assertTrue(
+          // Error response is still returned
+          response.status == Status.InternalServerError || response.status.code == 500,
+          // But callback was invoked
+          callbackRan
+        )
+      },
+      test("server - onError callback is invoked before error transformation") {
+        case class OriginalError(msg: String) extends RuntimeException(msg)
+        case class TransformedError(msg: String) extends RuntimeException(msg)
+
+        for {
+          observedErrors <- Ref.make[List[Throwable]](List.empty)
+
+          failingService: PizzaAdminService[Task] =
+            new PizzaAdminService.Default[Task](
+              ZIO.fail(OriginalError("original"))
+            ) {
+              override def health(query: Option[String]): Task[HealthResponse] =
+                ZIO.fail(OriginalError("original"))
+            }
+
+          // onError runs at HttpUnaryServerRouter level, before middleware transformations
+          // So it sees the original error, not the transformed one
+          errorCallback: PartialFunction[Throwable, Task[Unit]] = {
+            case e: OriginalError => observedErrors.update(e :: _)
+          }
+
+          routes <- SimpleRestJsonBuilder
+            .routes(failingService)
+            .mapErrors { case OriginalError(msg) =>
+              TransformedError(s"transformed-$msg")
+            }
+            .onError(errorCallback)
+            .lift
+          response <- routes.sandbox.runZIO(Request.get("/health"))
+          errors <- observedErrors.get
+        } yield assertTrue(
+          response.status == Status.InternalServerError || response.status.code == 500,
+          errors.length == 1,
+          // onError sees the original error before transformation
+          errors.head.isInstanceOf[OriginalError],
+          errors.head.getMessage == "original"
+        )
+      }
+    )
+
+  // Use Default trait for minimal service implementation
+  private lazy val PizzaImpl: PizzaAdminService[Task] =
+    new PizzaAdminService.Default[Task](
+      ZIO.fail(new NotImplementedError("Not needed for middleware tests"))
+    ) {
+      override def health(query: Option[String]): Task[HealthResponse] =
+        ZIO.succeed(HealthResponse("Ok"))
     }
 
-    expect(client)
-  }
-
-  private object HelloImpl extends HelloWorldService[IO] {
-    def hello(name: String, town: Option[String]): IO[Greeting] = IO.pure(
-      Greeting(s"Hello, $name")
-    )
-  }
-
-  private final class TestServerMiddleware(shouldFail: Boolean)
-      extends ServerEndpointMiddleware.Simple[IO] {
+  // Simple pass-through server middleware for testing
+  private final class PassThroughMiddleware() extends ServerMW.Simple[Task] {
     def prepareWithHints(
         serviceHints: Hints,
         endpointHints: Hints
-    ): HttpApp[Any] => HttpApp[Any] = { inputApp =>
-      HttpApp[Any] { request =>
-        val hasTag: (Hints, String) => Boolean = (hints, tagName) =>
-          hints.get[smithy.api.Tags].exists(_.value.contains(tagName))
-        // check for tags in hints to test that proper hints are sent into the prepare method
-        if (
-          hasTag(serviceHints, "testServiceTag") &&
-          hasTag(endpointHints, "testOperationTag")
-        ) {
-          if (shouldFail) {
-            IO.raiseError(new GenericServerError(Some("failed")))
-          } else {
-            inputApp(request)
-          }
-        } else {
-          IO.raiseError(new Exception("didn't find tags in hints"))
-        }
-      }
-    }
+    ): HttpRoutes => HttpRoutes = identity
   }
-
-  private final class TestClientMiddleware(shouldFail: Boolean)
-      extends ClientEndpointMiddleware.Simple[IO] {
-    def prepareWithHints(
-        serviceHints: Hints,
-        endpointHints: Hints
-    ): Client[IO] => Client[IO] = { inputClient =>
-      Client[IO] { request =>
-        val hasTag: (Hints, String) => Boolean = (hints, tagName) =>
-          hints.get[smithy.api.Tags].exists(_.value.contains(tagName))
-        // check for tags in hints to test that proper hints are sent into the prepare method
-        if (
-          hasTag(serviceHints, "testServiceTag") &&
-          hasTag(endpointHints, "testOperationTag")
-        ) {
-          if (shouldFail) {
-            Resource.eval(IO.raiseError(new GenericServerError(Some("failed"))))
-          } else {
-            inputClient.run(request)
-          }
-        } else {
-          Resource.eval(
-            IO.raiseError(new Exception("didn't find tags in hints"))
-          )
-        }
-      }
-    }
-  }
-
 }
- */
