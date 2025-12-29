@@ -333,7 +333,7 @@ The conversion supports all smithy4s schema types:
 - ✅ **Primitives**: int, string, boolean, long, short, byte, double, float, bigint, bigdecimal
 - ✅ **Smithy Types**: Blob, Timestamp, Document
 - ✅ **Collections**: List, Set, Vector, IndexedSeq
-- ✅ **Maps**: Map[K, V]
+- ✅ **Maps**: `Map[K, V]`
 - ✅ **Structures**: Case classes with any number of fields
 - ✅ **Unions**: Sealed traits / ADTs
 - ✅ **Enumerations**: Both string and int enums
