@@ -21,10 +21,13 @@ object Main extends ZIOAppDefault {
       _ <- zio.Console.printLine(s"Starting server on http://localhost:$port")
       keyGen = PrimaryKeyGen.default()
       db <- InMemoryDatabase.make[Todo](keyGen)
-      // liftApp automatically sandboxes routes, converting errors to HTTP responses
-      routes <- SimpleRestJsonBuilder
-        .routes(ToDoImpl(db, "http://localhost/todos"))
-        .liftApp
+      // routesAppWith automatically builds and sandboxes routes, ready for Server.serve
+      routes <- ZIO.fromEither(
+        SimpleRestJsonBuilder
+          .routesAppWith(ToDoImpl(db, "http://localhost/todos")) { builder =>
+            builder // can add middleware, error handling, etc. here
+          }
+      )
       _ <- zio.Console.printLine(s"Server ready at http://localhost:$port")
     } yield routes
   }

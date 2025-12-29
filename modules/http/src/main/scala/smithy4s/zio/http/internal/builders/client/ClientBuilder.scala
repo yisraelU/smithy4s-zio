@@ -43,9 +43,14 @@ class ClientBuilder[
 
   def make: Either[UnsupportedProtocolError, service.Impl[ResourcefulTask]] = {
 
-    checkProtocol(service, protocolTag)
-      .left.map { error =>
-        enrichProtocolError(error, service.id.name, protocolTag.id, isClient = true)
+    checkProtocol(service, protocolTag).left
+      .map { error =>
+        enrichProtocolError(
+          error,
+          service.id.name,
+          protocolTag.id,
+          isClient = true
+        )
       }
       // Making sure the router is evaluated lazily, so that all the compilation inside it
       // doesn't happen in case of a missing protocol

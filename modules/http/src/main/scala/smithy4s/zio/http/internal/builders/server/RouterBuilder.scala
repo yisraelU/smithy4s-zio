@@ -92,9 +92,14 @@ class RouterBuilder[
     )
 
   def make: Either[UnsupportedProtocolError, HttpRoutes] =
-    checkProtocol(service, protocolTag)
-      .left.map { error =>
-        enrichProtocolError(error, service.id.name, protocolTag.id, isClient = false)
+    checkProtocol(service, protocolTag).left
+      .map { error =>
+        enrichProtocolError(
+          error,
+          service.id.name,
+          protocolTag.id,
+          isClient = false
+        )
       }
       // Making sure the router is evaluated lazily, so that all the compilation inside it
       // doesn't happen in case of a missing protocol
