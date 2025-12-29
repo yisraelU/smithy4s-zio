@@ -120,7 +120,7 @@ final class SchemaVisitorZSchemaGen(
 
     // Create the GenericRecord schema
     val recordSchema: ZSchema[ListMap[String, ?]] =
-      _root_.zio.schema.Schema.record(typeId, zFields: _*)
+      _root_.zio.schema.Schema.record(typeId, zFields*)
 
     // Transform from ListMap[String, ?] to S
     recordSchema.transform(
@@ -134,7 +134,7 @@ final class SchemaVisitorZSchemaGen(
       // This lambda IS on the hot path, but only accesses pre-computed data
       (s: S) => {
         val entries = fields.map(f => f.label -> f.get(s))
-        ListMap(entries: _*)
+        ListMap(entries*)
       }
     )
   }
@@ -158,31 +158,6 @@ final class SchemaVisitorZSchemaGen(
           alt.label -> alt.schema.compile(self).asInstanceOf[ZSchema[Any]]
         )
         .toMap
-
-    // OPTIMIZATION: Create a dispatcher-based encoder to avoid iterating all alternatives
-    // The encode function IS on the hot path
-    val encoder: smithy4s.capability.EncoderK[Lambda[
-      A => ZSchema[A]
-    ], U => (String, DynamicValue)] =
-      new smithy4s.capability.EncoderK[Lambda[
-        A => ZSchema[A]
-      ], U => (String, DynamicValue)] {
-        def apply[A](schema: ZSchema[A], a: A): U => (String, DynamicValue) = {
-          _ =>
-            val dynValue = DynamicValue.fromSchemaAndValue(schema, a)
-            // Need to find the label - this requires looking up the alt
-            val label = alternatives
-              .find(alt => alt.schema == schema)
-              .map(_.label)
-              .getOrElse("")
-            (label, dynValue)
-        }
-
-        def absorb[A](f: A => U => (String, DynamicValue)): ZSchema[A] = {
-          // This is called during precompilation, not on hot path
-          altSchemas.head._2.asInstanceOf[ZSchema[A]]
-        }
-      }
 
     // Helper to encode U to (String, DynamicValue)
     // This function IS on the hot path
