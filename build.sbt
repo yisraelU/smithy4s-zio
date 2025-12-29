@@ -166,7 +166,7 @@ lazy val examples = (projectMatrix in file("modules/examples"))
     ),
     Compile / smithy4sAllowedNamespaces := List("example.todo", "example.hello")
   )
-  .dependsOn(http, prelude)
+  .dependsOn(http, schema)
   .enablePlugins(Smithy4sCodegenPlugin, NoPublishPlugin)
 
 lazy val transformers = (projectMatrix in file("modules/transformers"))
