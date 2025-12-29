@@ -154,14 +154,14 @@ object HelloWorldImpl extends HelloWorldService[Task] {
 object Main extends ZIOAppDefault {
 
   val port =  Port.fromInt(9000).get
-  val app:Task[Routes[Any,Response]] = {
+  val app: Task[Routes[Any, Response]] = {
     for {
       _ <- zio.Console.printLine(s"Starting server on http://localhost:$port")
+      // liftApp automatically sandboxes the routes, making them ready to serve
       routes <- SimpleRestJsonBuilder
         .routes(HelloWorldImpl)
-        .lift
-     app = routes.sandbox   
-    } yield app
+        .liftApp
+    } yield routes
   }
 
   override def run: URIO[Any, ExitCode] = {

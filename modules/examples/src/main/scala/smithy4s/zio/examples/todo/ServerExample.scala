@@ -9,24 +9,24 @@ import smithy4s.zio.examples.todo.impl.{
   ToDoImpl
 }
 import smithy4s.zio.http.SimpleRestJsonBuilder
-import zio.http.{Routes, Server}
+import zio.http.Server
 import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
 
 object Main extends ZIOAppDefault {
 
   private val port: Port = Port.fromInt(8091).get
 
-  val app: ZIO[Any, Throwable, Routes[Any, Nothing]] = {
+  val app = {
     for {
       _ <- zio.Console.printLine(s"Starting server on http://localhost:$port")
       keyGen = PrimaryKeyGen.default()
       db <- InMemoryDatabase.make[Todo](keyGen)
+      // liftApp automatically sandboxes routes, converting errors to HTTP responses
       routes <- SimpleRestJsonBuilder
         .routes(ToDoImpl(db, "http://localhost/todos"))
-        .lift
-      app = routes.sandbox
-      _ <- zio.Console.printLine(s"Starting server on http://localhost:$port")
-    } yield app
+        .liftApp
+      _ <- zio.Console.printLine(s"Server ready at http://localhost:$port")
+    } yield routes
   }
 
   override def run: ZIO[Any & ZIOAppArgs & Scope, Throwable, Nothing] = {
