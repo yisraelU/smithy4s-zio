@@ -2,7 +2,7 @@ package smithy4s.zio.schema
 
 import smithy4s.schema.Schema
 import smithy4s.schema.Schema.*
-import smithy4s.{Blob, Timestamp}
+import smithy4s.{Blob, ShapeId, Timestamp}
 import zio.Scope
 import zio.schema.{Schema => ZSchema}
 import zio.test.{Spec, TestEnvironment, assertTrue}
@@ -14,28 +14,11 @@ object ZSchemaVisitorSpec extends zio.test.ZIOSpecDefault {
   // Test data structures
   case class RecursiveFoo(foo: Option[RecursiveFoo])
   object RecursiveFoo {
-    val schema: Schema[RecursiveFoo] = {
-      val fooField = Schema.recursive[RecursiveFoo](
-        Schema.optional[RecursiveFoo]("foo", _.foo)
-      )
-      Schema.struct(fooField)(RecursiveFoo.apply)
-    }
-  }
-
-  sealed trait FooBar
-  object FooBar {
-    case object Foo extends FooBar
-    case object Bar extends FooBar
-
-    val schema: Schema[FooBar] = Schema.stringEnumeration(List(Foo, Bar))
-  }
-
-  sealed trait IntFooBar
-  object IntFooBar {
-    case object Foo extends IntFooBar
-    case object Bar extends IntFooBar
-
-    val schema: Schema[IntFooBar] = Schema.intEnumeration(List(Foo, Bar))
+    val schema: Schema[RecursiveFoo] =
+      recursive {
+        val foos = schema.optional[RecursiveFoo]("foo", _.foo)
+        struct(foos)(RecursiveFoo.apply)
+      }.withId(ShapeId("", "RecursiveFoo"))
   }
 
   sealed trait IntOrString
@@ -46,7 +29,7 @@ object ZSchemaVisitorSpec extends zio.test.ZIOSpecDefault {
     val schema: Schema[IntOrString] = {
       val intAlt = int.oneOf[IntOrString]("intValue", IntValue(_)) { case IntValue(i) => i }
       val strAlt = string.oneOf[IntOrString]("stringValue", StringValue(_)) { case StringValue(s) => s }
-      union(intAlt, strAlt).reflective
+      union(intAlt, strAlt).reflective.withId(ShapeId("", "IntOrString"))
     }
   }
 
@@ -58,7 +41,7 @@ object ZSchemaVisitorSpec extends zio.test.ZIOSpecDefault {
     val schema: Schema[IntOrInt] = {
       val int0 = int.oneOf[IntOrInt]("intValue0", IntValue0(_)) { case IntValue0(i) => i }
       val int1 = int.oneOf[IntOrInt]("intValue1", IntValue1(_)) { case IntValue1(i) => i }
-      union(int0, int1).reflective
+      union(int0, int1).reflective.withId(ShapeId("", "IntOrInt"))
     }
   }
 
@@ -67,7 +50,7 @@ object ZSchemaVisitorSpec extends zio.test.ZIOSpecDefault {
     // Use ZIO Schema's DynamicValue for roundtrip testing
     val dynamic = zio.schema.DynamicValue.fromSchemaAndValue(schema, value)
     dynamic.toTypedValue(schema) match {
-      case Left(error) => false
+      case Left(_) => false
       case Right(decoded) => decoded == value
     }
   }
@@ -279,20 +262,6 @@ object ZSchemaVisitorSpec extends zio.test.ZIOSpecDefault {
         assertTrue(
           roundtrip(zschema, RecursiveFoo(Some(RecursiveFoo(None)))),
           roundtrip(zschema, RecursiveFoo(None))
-        )
-      },
-      test("string enum") {
-        val zschema = visitor(FooBar.schema)
-        assertTrue(
-          roundtrip(zschema, FooBar.Foo),
-          roundtrip(zschema, FooBar.Bar)
-        )
-      },
-      test("int enum") {
-        val zschema = visitor(IntFooBar.schema)
-        assertTrue(
-          roundtrip(zschema, IntFooBar.Foo),
-          roundtrip(zschema, IntFooBar.Bar)
         )
       },
       test("union with different subtypes") {

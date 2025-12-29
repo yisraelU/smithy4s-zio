@@ -25,6 +25,7 @@
       - Hash
       - Equals
       - Ord (total ordering)
+  - Schema for [ZIO Schema](https://zio.dev/zio-schema/) library
     - Conversion from Smithy4s Schema to ZIO Schema
       - Access to ZIO Schema codec ecosystem (Protobuf, Avro, JSON, Thrift, MessagePack)
       - Schema validation, migrations, and introspection
@@ -257,7 +258,7 @@ object ClientImpl extends ZIOAppDefault {
 
 ## ZIO Schema Integration
 
-The `smithy4s-zio-prelude` module provides seamless integration with [ZIO Schema](https://zio.dev/zio-schema/), enabling smithy4s-generated types to access the entire ZIO Schema ecosystem including codecs, validation, migrations, and more.
+The `smithy4s-zio-schema` module provides seamless integration with [ZIO Schema](https://zio.dev/zio-schema/), enabling smithy4s-generated types to access the entire ZIO Schema ecosystem including codecs, validation, migrations, and more.
 
 ### Benefits
 
@@ -272,11 +273,11 @@ Converting Smithy4s schemas to ZIO Schemas unlocks:
 
 ### Setup
 
-Add the prelude module to your `build.sbt`:
+Add the schema module to your `build.sbt`:
 
 ```scala
 libraryDependencies ++= Seq(
-  "io.github.yisraelu" %% "smithy4s-zio-prelude" % "@VERSION@",
+  "io.github.yisraelu" %% "smithy4s-zio-schema" % "@VERSION@",
   "dev.zio" %% "zio-schema-json" % "1.7.6",      // For JSON codec
   "dev.zio" %% "zio-schema-protobuf" % "1.7.6"   // For Protobuf codec
 )
@@ -285,7 +286,7 @@ libraryDependencies ++= Seq(
 ### Basic Usage
 
 ```scala
-import smithy4s.zio.prelude.instances._
+import smithy4s.zio.schema._
 import zio.schema.{Schema => ZSchema}
 import zio.schema.codec.{JsonCodec, ProtobufCodec}
 

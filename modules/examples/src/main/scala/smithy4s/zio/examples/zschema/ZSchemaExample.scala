@@ -1,7 +1,7 @@
 package smithy4s.zio.examples.zschema
 
 import smithy4s.Schema
-import smithy4s.zio.prelude.instances._
+import smithy4s.zio.schema._
 import zio._
 import zio.schema.codec.{BinaryCodec, JsonCodec, ProtobufCodec}
 import zio.schema.{Schema => ZSchema}
