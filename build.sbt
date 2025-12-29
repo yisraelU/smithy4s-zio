@@ -160,11 +160,13 @@ lazy val examples = (projectMatrix in file("modules/examples"))
     libraryDependencies ++= Seq(
       Dependencies.Smithy4s.http4s.value,
       Dependencies.Http4s.emberServer.value,
-      Dependencies.ZIO.catsInterop
+      Dependencies.ZIO.catsInterop,
+      "dev.zio" %% "zio-schema-json" % Dependencies.ZIO.schemaVersion,
+      "dev.zio" %% "zio-schema-protobuf" % Dependencies.ZIO.schemaVersion
     ),
     Compile / smithy4sAllowedNamespaces := List("example.todo", "example.hello")
   )
-  .dependsOn(http)
+  .dependsOn(http, prelude)
   .enablePlugins(Smithy4sCodegenPlugin, NoPublishPlugin)
 
 lazy val transformers = (projectMatrix in file("modules/transformers"))
