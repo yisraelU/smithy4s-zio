@@ -9,9 +9,9 @@ object ClientExample extends ZIOAppDefault {
   private val client = {
     for {
       url <- ZIO.fromEither(URL.decode("http://localhost:8091"))
-      client <- ZIO.service[Client]
+      httpClient <- ZIO.service[Client]
       clientService <- SimpleRestJsonBuilder(TodoServiceGen)
-        .client(client)
+        .client(httpClient)
         .url(url)
         .lift
     } yield clientService

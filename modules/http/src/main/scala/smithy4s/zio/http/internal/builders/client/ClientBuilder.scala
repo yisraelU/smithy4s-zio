@@ -43,7 +43,15 @@ class ClientBuilder[
 
   def make: Either[UnsupportedProtocolError, service.Impl[ResourcefulTask]] = {
 
-    checkProtocol(service, protocolTag)
+    checkProtocol(service, protocolTag).left
+      .map { error =>
+        enrichProtocolError(
+          error,
+          service.id.name,
+          protocolTag.id,
+          isClient = true
+        )
+      }
       // Making sure the router is evaluated lazily, so that all the compilation inside it
       // doesn't happen in case of a missing protocol
       .map { _ =>
@@ -59,6 +67,46 @@ class ClientBuilder[
           )
         }
       }
+  }
+
+  private def enrichProtocolError(
+      original: UnsupportedProtocolError,
+      serviceName: String,
+      expectedProtocol: smithy4s.ShapeId,
+      isClient: Boolean
+  ): UnsupportedProtocolError = {
+    val componentType = if (isClient) "client" else "server"
+    val enrichedMessage =
+      s"""
+         |━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+         |❌ Protocol Mismatch: Cannot build $componentType for service '$serviceName'
+         |━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+         |
+         |Expected protocol: ${expectedProtocol.show}
+         |
+         |${original.getMessage}
+         |
+         |💡 How to fix:
+         |  1. Add the protocol annotation to your Smithy service:
+         |
+         |     use ${expectedProtocol.namespace}#${expectedProtocol.name}
+         |
+         |     @${expectedProtocol.name}
+         |     service $serviceName {
+         |       version: "1.0.0"
+         |       operations: [YourOperations]
+         |     }
+         |
+         |  2. Or use a different builder that matches your service's actual protocol
+         |
+         |📚 Docs: https://yisraelu.github.io/smithy4s-zio/
+         |━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+         |""".stripMargin
+
+    // Create a new exception with enriched message in the cause
+    val enriched = new UnsupportedProtocolError(service, protocolTag)
+    enriched.initCause(new Exception(enrichedMessage, original))
+    enriched
   }
 
   def lift: IO[UnsupportedProtocolError, service.Impl[ResourcefulTask]] =

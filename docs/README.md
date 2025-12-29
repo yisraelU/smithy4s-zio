@@ -154,14 +154,14 @@ object HelloWorldImpl extends HelloWorldService[Task] {
 object Main extends ZIOAppDefault {
 
   val port =  Port.fromInt(9000).get
-  val app:Task[Routes[Any,Response]] = {
+  val app: Task[Routes[Any, Response]] = {
     for {
       _ <- zio.Console.printLine(s"Starting server on http://localhost:$port")
+      // liftApp automatically sandboxes the routes, making them ready to serve
       routes <- SimpleRestJsonBuilder
         .routes(HelloWorldImpl)
-        .lift
-     app = routes.sandbox   
-    } yield app
+        .liftApp
+    } yield routes
   }
 
   override def run: URIO[Any, ExitCode] = {
@@ -171,6 +171,48 @@ object Main extends ZIOAppDefault {
   }
 }
 ```
+
+## Alternative DSL Style
+
+You can also use the builder-style DSL for more declarative configuration:
+
+```scala mdoc:compile-only
+import smithy4s.zio.http.SimpleRestJsonBuilder._
+import example.hello._
+import zio.{Task, ZIO, ZIOAppDefault, ExitCode, URIO}
+import zio.http._
+import com.comcast.ip4s._
+
+object Main extends ZIOAppDefault {
+
+  val port = Port.fromInt(9000).get
+
+  val app: Task[Routes[Any, Response]] = {
+    for {
+      _ <- zio.Console.printLine(s"Starting server on http://localhost:$port")
+      // routesAppWith builds and sandboxes routes in one call
+      routes <- ZIO.fromEither(
+        routesAppWith(HelloWorldImpl) { builder =>
+          builder
+            // .middleware(loggingMiddleware)
+            // .mapErrors { case e: MyError => MappedError(e) }
+            // .onError { case e => logError(e) }
+        }
+      )
+    } yield routes
+  }
+
+  override def run: URIO[Any, ExitCode] = {
+    app
+      .flatMap(Server.serve(_).provide(Server.defaultWithPort(port.value)))
+      .exitCode
+  }
+}
+```
+
+The DSL methods are:
+- `routesWith(impl) { builder => ... }` - Returns `Either[Error, HttpRoutes]`
+- `routesAppWith(impl) { builder => ... }` - Returns `Either[Error, Routes[Any, Response]]` (sandboxed, ready for `Server.serve`)
 
 ## Run Service
 

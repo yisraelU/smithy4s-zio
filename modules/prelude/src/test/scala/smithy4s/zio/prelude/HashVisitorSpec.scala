@@ -17,7 +17,7 @@ object HashVisitorSpec extends zio.test.ZIOSpecDefault {
 
   def visitor[A]: Schema[A] => Hash[A] = SchemaVisitorHash.fromSchema(_)
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = {
+  override def spec: Spec[TestEnvironment & Scope, Any] = {
     suite("HashVisitorSpec")(
       test("int") {
         val schema: Schema[Int] = int
@@ -295,7 +295,7 @@ object HashTestUtils {
   def testStructHash[A: Hash](name: String, a: A*): Int = {
     val nameHash = Hash[String].hash(name)
     val hashes = a.toList.map(Hash[A].hash)
-    combineHash(productSeed, nameHash +: hashes: _*)
+    combineHash(productSeed, (nameHash +: hashes)*)
   }
 
   def getTimestamp(now: Instant): Timestamp = {
