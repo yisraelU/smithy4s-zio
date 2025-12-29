@@ -6,5 +6,6 @@ package object instances {
       extends EqualsInstances
       with HashInstances
       with DebugInstances
+      with OrdInstances
 
 }
