@@ -91,8 +91,17 @@
     <li class="level1 nav-leaf"><a href="#build-sbt">build.sbt</a></li>
     <li class="level1 nav-leaf"><a href="#smithy-content">Smithy content</a></li>
     <li class="level1 nav-leaf"><a href="#using-the-generated-code">Using the generated code</a></li>
+    <li class="level1 nav-leaf"><a href="#alternative-dsl-style">Alternative DSL Style</a></li>
     <li class="level1 nav-leaf"><a href="#run-service">Run Service</a></li>
     <li class="level1 nav-leaf"><a href="#client-example">Client Example</a></li>
+    <li class="level1 nav-node"><a href="#zio-schema-integration">ZIO Schema Integration</a></li>
+    <li class="level2 nav-leaf"><a href="#benefits">Benefits</a></li>
+    <li class="level2 nav-leaf"><a href="#setup">Setup</a></li>
+    <li class="level2 nav-leaf"><a href="#basic-usage">Basic Usage</a></li>
+    <li class="level2 nav-leaf"><a href="#complete-example">Complete Example</a></li>
+    <li class="level2 nav-leaf"><a href="#supported-schema-types">Supported Schema Types</a></li>
+    <li class="level2 nav-leaf"><a href="#implementation-details">Implementation Details</a></li>
+    <li class="level2 nav-leaf"><a href="#zio-prelude-typeclasses">ZIO Prelude Typeclasses</a></li>
   </ul>
 
   <p class="footer"></p>
@@ -140,9 +149,9 @@
         </ul>
         <ul>
           <li>
-            Prelude for the <a href="https://zio.dev/zio-prelude/">ZIO Prelude</a> library <br>
+            Prelude for the <a href="https://zio.dev/zio-prelude/">ZIO Prelude</a> library
             <ul>
-              <li>Automatic derivation of the following Typeclasses for Smithy4s generated schemas </li>
+              <li>Automatic derivation of the following Typeclasses for Smithy4s generated schemas</li>
             </ul>
             <ul>
               <li>Debug</li>
@@ -153,13 +162,22 @@
             <ul>
               <li>Equals</li>
             </ul>
+            <ul>
+              <li>Ord (total ordering)</li>
+            </ul>
           </li>
         </ul>
         <ul>
           <li>
-            Schema for <a href="https://zio.dev/schema/">ZIO Schema</a> library - WIP
+            Schema for the <a href="https://zio.dev/zio-schema/">ZIO Schema</a> library
             <ul>
-              <li>a Natural Transformation from Smithy4s Schema to a ZIO Schema</li>
+              <li>Conversion from Smithy4s Schema to ZIO Schema</li>
+            </ul>
+            <ul>
+              <li>Access to ZIO Schema codec ecosystem (Protobuf, Avro, JSON, Thrift, MessagePack)</li>
+            </ul>
+            <ul>
+              <li>Schema validation, migrations, and introspection</li>
             </ul>
           </li>
         </ul>
@@ -173,9 +191,9 @@
         <p>This library is currently available for Scala binary versions 2.13 and 3.1.</p>
         <p>To use the latest version, include the following in your <code>build.sbt</code>:</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="identifier">libraryDependencies</span><span> ++= </span><span class="type-name">Seq</span><span>(
-  </span><span class="string-literal">&quot;io.github.yisraelu&quot;</span><span> %% </span><span class="string-literal">&quot;smithy4s-zio-http&quot;</span><span> % </span><span class="string-literal">&quot;0.0.9&quot;</span><span>
+  </span><span class="string-literal">&quot;io.github.yisraelu&quot;</span><span> %% </span><span class="string-literal">&quot;smithy4s-zio-http&quot;</span><span> % </span><span class="string-literal">&quot;0.0.10&quot;</span><span>
 )</span></code></pre>
-        <p>The snapshot version is available via the Sonatype snapshots repository: <code>0.0.9.</code></p>
+        <p>The snapshot version is available via the Sonatype snapshots repository: <code>0.0.10.</code></p>
         
         <h3 id="http-server-and-client-quickstart-borrows-from-smithy4s-example" class="section"><a class="anchor-link left" href="#http-server-and-client-quickstart-borrows-from-smithy4s-example"><i class="icofont-laika link">&#xef71;</i></a>Http Server and Client Quickstart (borrows from Smithy4s example)</h3>
         <p>Below is a quick example of smithy4s in action.
@@ -195,7 +213,7 @@
   .</span><span class="identifier">enablePlugins</span><span>(</span><span class="type-name">Smithy4sCodegenPlugin</span><span>)
   .</span><span class="identifier">settings</span><span>(
     </span><span class="identifier">libraryDependencies</span><span> ++= </span><span class="type-name">Seq</span><span>(
-      </span><span class="string-literal">&quot;io.github.yisraelu&quot;</span><span> %% </span><span class="string-literal">&quot;smithy4s-zio-http&quot;</span><span> % </span><span class="string-literal">&quot;0.0.9&quot;</span><span>
+      </span><span class="string-literal">&quot;io.github.yisraelu&quot;</span><span> %% </span><span class="string-literal">&quot;smithy4s-zio-http&quot;</span><span> % </span><span class="string-literal">&quot;0.0.10&quot;</span><span>
     )
   )</span></code></pre>
         
@@ -261,14 +279,14 @@ structure Greeting {
 </span><span class="keyword">object</span><span> </span><span class="type-name">Main</span><span> </span><span class="keyword">extends</span><span> </span><span class="type-name">ZIOAppDefault</span><span> {
 
   </span><span class="keyword">val</span><span> </span><span class="identifier">port</span><span> =  </span><span class="type-name">Port</span><span>.</span><span class="identifier">fromInt</span><span>(</span><span class="number-literal">9000</span><span>).</span><span class="identifier">get</span><span>
-  </span><span class="keyword">val</span><span> </span><span class="identifier">app</span><span>:</span><span class="type-name">Task</span><span>[</span><span class="type-name">Routes</span><span>[</span><span class="type-name">Any</span><span>,</span><span class="type-name">Response</span><span>]] = {
+  </span><span class="keyword">val</span><span> </span><span class="identifier">app</span><span>: </span><span class="type-name">Task</span><span>[</span><span class="type-name">Routes</span><span>[</span><span class="type-name">Any</span><span>, </span><span class="type-name">Response</span><span>]] = {
     </span><span class="keyword">for</span><span> {
       </span><span class="identifier">_</span><span> &lt;- </span><span class="identifier">zio</span><span>.</span><span class="type-name">Console</span><span>.</span><span class="identifier">printLine</span><span>(</span><span class="string-literal">s&quot;Starting server on http://localhost:</span><span class="substitution">$port</span><span class="string-literal">&quot;</span><span>)
-      </span><span class="identifier">routes</span><span> &lt;- </span><span class="type-name">SimpleRestJsonBuilder</span><span>
+      </span><span class="comment">// liftApp automatically sandboxes the routes, making them ready to serve
+</span><span>      </span><span class="identifier">routes</span><span> &lt;- </span><span class="type-name">SimpleRestJsonBuilder</span><span>
         .</span><span class="identifier">routes</span><span>(</span><span class="type-name">HelloWorldImpl</span><span>)
-        .</span><span class="identifier">lift</span><span>
-     </span><span class="identifier">app</span><span> = </span><span class="identifier">routes</span><span>.</span><span class="identifier">sandbox</span><span>   
-    } </span><span class="keyword">yield</span><span> </span><span class="identifier">app</span><span>
+        .</span><span class="identifier">liftApp</span><span>
+    } </span><span class="keyword">yield</span><span> </span><span class="identifier">routes</span><span>
   }
 
   </span><span class="keyword">override</span><span> </span><span class="keyword">def</span><span> </span><span class="declaration-name">run</span><span>: </span><span class="type-name">URIO</span><span>[</span><span class="type-name">Any</span><span>, </span><span class="type-name">ExitCode</span><span>] = {
@@ -277,6 +295,45 @@ structure Greeting {
       .</span><span class="identifier">exitCode</span><span>
   }
 }</span></code></pre>
+        
+        <h2 id="alternative-dsl-style" class="section"><a class="anchor-link left" href="#alternative-dsl-style"><i class="icofont-laika link">&#xef71;</i></a>Alternative DSL Style</h2>
+        <p>You can also use the builder-style DSL for more declarative configuration:</p>
+        <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">smithy4s</span><span>.</span><span class="identifier">zio</span><span>.</span><span class="identifier">http</span><span>.</span><span class="type-name">SimpleRestJsonBuilder</span><span>.</span><span class="identifier">_</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">example</span><span>.</span><span class="identifier">hello</span><span>.</span><span class="identifier">_</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">zio</span><span>.{</span><span class="type-name">Task</span><span>, </span><span class="type-name">ZIO</span><span>, </span><span class="type-name">ZIOAppDefault</span><span>, </span><span class="type-name">ExitCode</span><span>, </span><span class="type-name">URIO</span><span>}
+</span><span class="keyword">import</span><span> </span><span class="identifier">zio</span><span>.</span><span class="identifier">http</span><span>.</span><span class="identifier">_</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">com</span><span>.</span><span class="identifier">comcast</span><span>.</span><span class="identifier">ip4s</span><span>.</span><span class="identifier">_</span><span>
+
+</span><span class="keyword">object</span><span> </span><span class="type-name">Main</span><span> </span><span class="keyword">extends</span><span> </span><span class="type-name">ZIOAppDefault</span><span> {
+
+  </span><span class="keyword">val</span><span> </span><span class="identifier">port</span><span> = </span><span class="type-name">Port</span><span>.</span><span class="identifier">fromInt</span><span>(</span><span class="number-literal">9000</span><span>).</span><span class="identifier">get</span><span>
+
+  </span><span class="keyword">val</span><span> </span><span class="identifier">app</span><span>: </span><span class="type-name">Task</span><span>[</span><span class="type-name">Routes</span><span>[</span><span class="type-name">Any</span><span>, </span><span class="type-name">Response</span><span>]] = {
+    </span><span class="keyword">for</span><span> {
+      </span><span class="identifier">_</span><span> &lt;- </span><span class="identifier">zio</span><span>.</span><span class="type-name">Console</span><span>.</span><span class="identifier">printLine</span><span>(</span><span class="string-literal">s&quot;Starting server on http://localhost:</span><span class="substitution">$port</span><span class="string-literal">&quot;</span><span>)
+      </span><span class="comment">// routesAppWith builds and sandboxes routes in one call
+</span><span>      </span><span class="identifier">routes</span><span> &lt;- </span><span class="type-name">ZIO</span><span>.</span><span class="identifier">fromEither</span><span>(
+        </span><span class="identifier">routesAppWith</span><span>(</span><span class="type-name">HelloWorldImpl</span><span>) { </span><span class="identifier">builder</span><span> =&gt;
+          </span><span class="identifier">builder</span><span>
+            </span><span class="comment">// .middleware(loggingMiddleware)
+</span><span>            </span><span class="comment">// .mapErrors { case e: MyError =&gt; MappedError(e) }
+</span><span>            </span><span class="comment">// .onError { case e =&gt; logError(e) }
+</span><span>        }
+      )
+    } </span><span class="keyword">yield</span><span> </span><span class="identifier">routes</span><span>
+  }
+
+  </span><span class="keyword">override</span><span> </span><span class="keyword">def</span><span> </span><span class="declaration-name">run</span><span>: </span><span class="type-name">URIO</span><span>[</span><span class="type-name">Any</span><span>, </span><span class="type-name">ExitCode</span><span>] = {
+    </span><span class="identifier">app</span><span>
+      .</span><span class="identifier">flatMap</span><span>(</span><span class="type-name">Server</span><span>.</span><span class="identifier">serve</span><span>(</span><span class="identifier">_</span><span>).</span><span class="identifier">provide</span><span>(</span><span class="type-name">Server</span><span>.</span><span class="identifier">defaultWithPort</span><span>(</span><span class="identifier">port</span><span>.</span><span class="identifier">value</span><span>)))
+      .</span><span class="identifier">exitCode</span><span>
+  }
+}</span></code></pre>
+        <p>The DSL methods are:</p>
+        <ul>
+          <li><code>routesWith(impl) { builder =&gt; ... }</code> - Returns <code>Either[Error, HttpRoutes]</code></li>
+          <li><code>routesAppWith(impl) { builder =&gt; ... }</code> - Returns <code>Either[Error, Routes[Any, Response]]</code> (sandboxed, ready for <code>Server.serve</code>)</li>
+        </ul>
         
         <h2 id="run-service" class="section"><a class="anchor-link left" href="#run-service"><i class="icofont-laika link">&#xef71;</i></a>Run Service</h2>
         <ul>
@@ -312,6 +369,108 @@ structure Greeting {
     </span><span class="identifier">program</span><span>.</span><span class="identifier">exitCode</span><span>.</span><span class="identifier">provide</span><span>(</span><span class="type-name">Client</span><span>.</span><span class="keyword">default</span><span>, </span><span class="type-name">Scope</span><span>.</span><span class="keyword">default</span><span>)
 
 }</span></code></pre>
+        
+        <h2 id="zio-schema-integration" class="section"><a class="anchor-link left" href="#zio-schema-integration"><i class="icofont-laika link">&#xef71;</i></a>ZIO Schema Integration</h2>
+        <p>The <code>smithy4s-zio-schema</code> module provides seamless integration with <a href="https://zio.dev/zio-schema/">ZIO Schema</a>, enabling smithy4s-generated types to access the entire ZIO Schema ecosystem including codecs, validation, migrations, and more.</p>
+        
+        <h3 id="benefits" class="section"><a class="anchor-link left" href="#benefits"><i class="icofont-laika link">&#xef71;</i></a>Benefits</h3>
+        <p>Converting Smithy4s schemas to ZIO Schemas unlocks:</p>
+        <ul>
+          <li><strong>Binary Codecs</strong>: Protobuf, Avro, Thrift, MessagePack</li>
+          <li><strong>JSON Codecs</strong>: Integration with zio-json</li>
+          <li><strong>Validation</strong>: Field-level and cross-field validation</li>
+          <li><strong>Schema Migrations</strong>: Version management and evolution</li>
+          <li><strong>Introspection</strong>: Runtime schema inspection and diffing</li>
+          <li><strong>Pretty Printing</strong>: Human-readable schema descriptions</li>
+        </ul>
+        
+        <h3 id="setup" class="section"><a class="anchor-link left" href="#setup"><i class="icofont-laika link">&#xef71;</i></a>Setup</h3>
+        <p>Add the schema module to your <code>build.sbt</code>:</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="identifier">libraryDependencies</span><span> ++= </span><span class="type-name">Seq</span><span>(
+  </span><span class="string-literal">&quot;io.github.yisraelu&quot;</span><span> %% </span><span class="string-literal">&quot;smithy4s-zio-schema&quot;</span><span> % </span><span class="string-literal">&quot;0.0.10&quot;</span><span>,
+  </span><span class="string-literal">&quot;dev.zio&quot;</span><span> %% </span><span class="string-literal">&quot;zio-schema-json&quot;</span><span> % </span><span class="string-literal">&quot;1.7.6&quot;</span><span>,      </span><span class="comment">// For JSON codec
+</span><span>  </span><span class="string-literal">&quot;dev.zio&quot;</span><span> %% </span><span class="string-literal">&quot;zio-schema-protobuf&quot;</span><span> % </span><span class="string-literal">&quot;1.7.6&quot;</span><span>   </span><span class="comment">// For Protobuf codec
+</span><span>)</span></code></pre>
+        
+        <h3 id="basic-usage" class="section"><a class="anchor-link left" href="#basic-usage"><i class="icofont-laika link">&#xef71;</i></a>Basic Usage</h3>
+        <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">smithy4s</span><span>.</span><span class="identifier">zio</span><span>.</span><span class="identifier">schema</span><span>.</span><span class="identifier">_</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">zio</span><span>.</span><span class="identifier">schema</span><span>.{</span><span class="type-name">Schema</span><span> =&gt; </span><span class="type-name">ZSchema</span><span>}
+</span><span class="keyword">import</span><span> </span><span class="identifier">zio</span><span>.</span><span class="identifier">schema</span><span>.</span><span class="identifier">codec</span><span>.{</span><span class="type-name">JsonCodec</span><span>, </span><span class="type-name">ProtobufCodec</span><span>}
+
+</span><span class="comment">// Your smithy4s-generated type
+</span><span class="keyword">case</span><span> </span><span class="keyword">class</span><span> </span><span class="type-name">Person</span><span>(</span><span class="identifier">name</span><span>: </span><span class="type-name">String</span><span>, </span><span class="identifier">age</span><span>: </span><span class="type-name">Int</span><span>, </span><span class="identifier">email</span><span>: </span><span class="type-name">Option</span><span>[</span><span class="type-name">String</span><span>])
+</span><span class="keyword">object</span><span> </span><span class="type-name">Person</span><span> {
+  </span><span class="keyword">val</span><span> </span><span class="identifier">smithy4sSchema</span><span>: </span><span class="identifier">smithy4s</span><span>.</span><span class="type-name">Schema</span><span>[</span><span class="type-name">Person</span><span>] = </span><span class="comment">/* generated by smithy4s */</span><span>
+
+  </span><span class="comment">// Convert to ZIO Schema using the .toZSchema extension method
+</span><span>  </span><span class="keyword">implicit</span><span> </span><span class="keyword">val</span><span> </span><span class="identifier">zioSchema</span><span>: </span><span class="type-name">ZSchema</span><span>[</span><span class="type-name">Person</span><span>] = </span><span class="identifier">smithy4sSchema</span><span>.</span><span class="identifier">toZSchema</span><span>
+
+  </span><span class="comment">// Derive codecs from the ZIO Schema
+</span><span>  </span><span class="keyword">val</span><span> </span><span class="identifier">jsonCodec</span><span> = </span><span class="type-name">JsonCodec</span><span>.</span><span class="identifier">schemaBasedBinaryCodec</span><span>(</span><span class="identifier">zioSchema</span><span>)
+  </span><span class="keyword">val</span><span> </span><span class="identifier">protobufCodec</span><span> = </span><span class="type-name">ProtobufCodec</span><span>.</span><span class="identifier">protobufCodec</span><span>(</span><span class="identifier">zioSchema</span><span>)
+}
+
+</span><span class="comment">// Use the codecs
+</span><span class="keyword">val</span><span> </span><span class="identifier">person</span><span> = </span><span class="type-name">Person</span><span>(</span><span class="string-literal">&quot;Alice&quot;</span><span>, </span><span class="number-literal">30</span><span>, </span><span class="type-name">Some</span><span>(</span><span class="string-literal">&quot;alice@example.com&quot;</span><span>))
+
+</span><span class="comment">// JSON encoding/decoding
+</span><span class="keyword">val</span><span> </span><span class="identifier">jsonBytes</span><span> = </span><span class="type-name">Person</span><span>.</span><span class="identifier">jsonCodec</span><span>.</span><span class="identifier">encode</span><span>(</span><span class="identifier">person</span><span>)
+</span><span class="keyword">val</span><span> </span><span class="identifier">decoded</span><span> = </span><span class="type-name">Person</span><span>.</span><span class="identifier">jsonCodec</span><span>.</span><span class="identifier">decode</span><span>(</span><span class="identifier">jsonBytes</span><span>) </span><span class="comment">// Either[String, Person]
+</span><span>
+</span><span class="comment">// Protobuf encoding/decoding
+</span><span class="keyword">val</span><span> </span><span class="identifier">protobufBytes</span><span> = </span><span class="type-name">Person</span><span>.</span><span class="identifier">protobufCodec</span><span>.</span><span class="identifier">encode</span><span>(</span><span class="identifier">person</span><span>)
+</span><span class="keyword">val</span><span> </span><span class="identifier">decodedProto</span><span> = </span><span class="type-name">Person</span><span>.</span><span class="identifier">protobufCodec</span><span>.</span><span class="identifier">decode</span><span>(</span><span class="identifier">protobufBytes</span><span>)</span></code></pre>
+        
+        <h3 id="complete-example" class="section"><a class="anchor-link left" href="#complete-example"><i class="icofont-laika link">&#xef71;</i></a>Complete Example</h3>
+        <p>See the full working example at <a href="../modules/examples/src/main/scala/smithy4s/zio/examples/zschema/ZSchemaExample.scala">ZSchemaExample.scala</a> which demonstrates:</p>
+        <ul>
+          <li>JSON and Protobuf codec usage</li>
+          <li>Collections support</li>
+          <li>Schema introspection</li>
+          <li>Roundtrip serialization</li>
+        </ul>
+        <p>Run it with: <code>sbt &quot;examples/runMain smithy4s.zio.examples.zschema.ZSchemaExample&quot;</code></p>
+        
+        <h3 id="supported-schema-types" class="section"><a class="anchor-link left" href="#supported-schema-types"><i class="icofont-laika link">&#xef71;</i></a>Supported Schema Types</h3>
+        <p>The conversion supports all smithy4s schema types:</p>
+        <ul>
+          <li>✅ <strong>Primitives</strong>: int, string, boolean, long, short, byte, double, float, bigint, bigdecimal</li>
+          <li>✅ <strong>Smithy Types</strong>: Blob, Timestamp, Document</li>
+          <li>✅ <strong>Collections</strong>: List, Set, Vector, IndexedSeq</li>
+          <li>✅ <strong>Maps</strong>: <code>Map[K, V]</code></li>
+          <li>✅ <strong>Structures</strong>: Case classes with any number of fields</li>
+          <li>✅ <strong>Unions</strong>: Sealed traits / ADTs</li>
+          <li>✅ <strong>Enumerations</strong>: Both string and int enums</li>
+          <li>✅ <strong>Options</strong>: Optional fields</li>
+          <li>✅ <strong>Bijections</strong>: Newtypes and custom transformations</li>
+          <li>✅ <strong>Refinements</strong>: Constrained types</li>
+          <li>✅ <strong>Recursive Types</strong>: Self-referencing schemas</li>
+        </ul>
+        
+        <h3 id="implementation-details" class="section"><a class="anchor-link left" href="#implementation-details"><i class="icofont-laika link">&#xef71;</i></a>Implementation Details</h3>
+        <p><strong>Structs</strong>: Converted using ZIO Schema&#39;s <code>GenericRecord</code> with transformations to preserve type safety at the API boundary.</p>
+        <p><strong>Unions</strong>: Represented as tagged tuples <code>(tag: String, value: DynamicValue)</code> where <code>DynamicValue</code> is ZIO Schema&#39;s runtime-typed value representation.</p>
+        <p><strong>Performance</strong>: The conversion adds minimal overhead. For codec operations (serialization/deserialization), the schema conversion cost is negligible compared to the encoding/decoding work.</p>
+        
+        <h3 id="zio-prelude-typeclasses" class="section"><a class="anchor-link left" href="#zio-prelude-typeclasses"><i class="icofont-laika link">&#xef71;</i></a>ZIO Prelude Typeclasses</h3>
+        <p>The prelude module also provides automatic derivation of ZIO Prelude typeclasses:</p>
+        <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">smithy4s</span><span>.</span><span class="identifier">zio</span><span>.</span><span class="identifier">prelude</span><span>.</span><span class="identifier">_</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">zio</span><span>.</span><span class="identifier">prelude</span><span>.{</span><span class="type-name">Debug</span><span>, </span><span class="type-name">Equal</span><span>, </span><span class="type-name">Hash</span><span>, </span><span class="type-name">Ord</span><span>}
+
+</span><span class="comment">// Derive typeclasses from smithy4s schemas
+</span><span class="keyword">implicit</span><span> </span><span class="keyword">val</span><span> </span><span class="identifier">personDebug</span><span>: </span><span class="type-name">Debug</span><span>[</span><span class="type-name">Person</span><span>] = </span><span class="type-name">SchemaVisitorDebug</span><span>.</span><span class="identifier">fromSchema</span><span>(</span><span class="type-name">Person</span><span>.</span><span class="identifier">schema</span><span>)
+</span><span class="keyword">implicit</span><span> </span><span class="keyword">val</span><span> </span><span class="identifier">personEqual</span><span>: </span><span class="type-name">Equal</span><span>[</span><span class="type-name">Person</span><span>] = </span><span class="type-name">SchemaVisitorEqual</span><span>.</span><span class="identifier">fromSchema</span><span>(</span><span class="type-name">Person</span><span>.</span><span class="identifier">schema</span><span>)
+</span><span class="keyword">implicit</span><span> </span><span class="keyword">val</span><span> </span><span class="identifier">personHash</span><span>: </span><span class="type-name">Hash</span><span>[</span><span class="type-name">Person</span><span>] = </span><span class="type-name">SchemaVisitorHash</span><span>.</span><span class="identifier">fromSchema</span><span>(</span><span class="type-name">Person</span><span>.</span><span class="identifier">schema</span><span>)
+</span><span class="keyword">implicit</span><span> </span><span class="keyword">val</span><span> </span><span class="identifier">personOrd</span><span>: </span><span class="type-name">Ord</span><span>[</span><span class="type-name">Person</span><span>] = </span><span class="type-name">SchemaVisitorOrd</span><span>.</span><span class="identifier">fromSchema</span><span>(</span><span class="type-name">Person</span><span>.</span><span class="identifier">schema</span><span>)
+
+</span><span class="comment">// Now you can use ZIO Prelude operations
+</span><span class="keyword">val</span><span> </span><span class="identifier">p1</span><span> = </span><span class="type-name">Person</span><span>(</span><span class="string-literal">&quot;Alice&quot;</span><span>, </span><span class="number-literal">30</span><span>, </span><span class="type-name">Some</span><span>(</span><span class="string-literal">&quot;alice@example.com&quot;</span><span>))
+</span><span class="keyword">val</span><span> </span><span class="identifier">p2</span><span> = </span><span class="type-name">Person</span><span>(</span><span class="string-literal">&quot;Bob&quot;</span><span>, </span><span class="number-literal">25</span><span>, </span><span class="type-name">None</span><span>)
+
+</span><span class="type-name">Debug</span><span>[</span><span class="type-name">Person</span><span>].</span><span class="identifier">debug</span><span>(</span><span class="identifier">p1</span><span>)           </span><span class="comment">// Pretty print
+</span><span class="type-name">Equal</span><span>[</span><span class="type-name">Person</span><span>].</span><span class="identifier">equal</span><span>(</span><span class="identifier">p1</span><span>, </span><span class="identifier">p2</span><span>)       </span><span class="comment">// Equality check
+</span><span class="type-name">Hash</span><span>[</span><span class="type-name">Person</span><span>].</span><span class="identifier">hash</span><span>(</span><span class="identifier">p1</span><span>)             </span><span class="comment">// Hash code
+</span><span class="type-name">Ord</span><span>[</span><span class="type-name">Person</span><span>].</span><span class="identifier">compare</span><span>(</span><span class="identifier">p1</span><span>, </span><span class="identifier">p2</span><span>)       </span><span class="comment">// Total ordering</span></code></pre>
 
         
 <hr class="footer-rule"/>
