@@ -26,7 +26,6 @@
       - Equals
       - Ord (total ordering)
   - Schema for the [ZIO Schema](https://zio.dev/zio-schema/) library
-  - Schema for [ZIO Schema](https://zio.dev/zio-schema/) library
     - Conversion from Smithy4s Schema to ZIO Schema
       - Access to ZIO Schema codec ecosystem (Protobuf, Avro, JSON, Thrift, MessagePack)
       - Schema validation, migrations, and introspection
