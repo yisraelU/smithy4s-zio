@@ -106,7 +106,8 @@ final class SchemaVisitorZSchemaGen(
     // IMPORTANT: Compile all field schemas ONCE upfront, not on every field access
     val zFields: Seq[_root_.zio.schema.Schema.Field[ListMap[String, ?], Any]] =
       fields.map { field =>
-        val fieldSchema: ZSchema[Any] = field.schema.compile(self).asInstanceOf[ZSchema[Any]]
+        val fieldSchema: ZSchema[Any] =
+          field.schema.compile(self).asInstanceOf[ZSchema[Any]]
         _root_.zio.schema.Schema.Field(
           name0 = field.label,
           schema0 = fieldSchema,
@@ -152,17 +153,29 @@ final class SchemaVisitorZSchemaGen(
 
     // IMPORTANT: Compile all alternative schemas ONCE upfront
     val altSchemas: Map[String, ZSchema[Any]] =
-      alternatives.map(alt => alt.label -> alt.schema.compile(self).asInstanceOf[ZSchema[Any]]).toMap
+      alternatives
+        .map(alt =>
+          alt.label -> alt.schema.compile(self).asInstanceOf[ZSchema[Any]]
+        )
+        .toMap
 
     // OPTIMIZATION: Create a dispatcher-based encoder to avoid iterating all alternatives
     // The encode function IS on the hot path
-    val encoder: smithy4s.capability.EncoderK[Lambda[A => ZSchema[A]], U => (String, DynamicValue)] =
-      new smithy4s.capability.EncoderK[Lambda[A => ZSchema[A]], U => (String, DynamicValue)] {
-        def apply[A](schema: ZSchema[A], a: A): U => (String, DynamicValue) = { _ =>
-          val dynValue = DynamicValue.fromSchemaAndValue(schema, a)
-          // Need to find the label - this requires looking up the alt
-          val label = alternatives.find(alt => alt.schema == schema).map(_.label).getOrElse("")
-          (label, dynValue)
+    val encoder: smithy4s.capability.EncoderK[Lambda[
+      A => ZSchema[A]
+    ], U => (String, DynamicValue)] =
+      new smithy4s.capability.EncoderK[Lambda[
+        A => ZSchema[A]
+      ], U => (String, DynamicValue)] {
+        def apply[A](schema: ZSchema[A], a: A): U => (String, DynamicValue) = {
+          _ =>
+            val dynValue = DynamicValue.fromSchemaAndValue(schema, a)
+            // Need to find the label - this requires looking up the alt
+            val label = alternatives
+              .find(alt => alt.schema == schema)
+              .map(_.label)
+              .getOrElse("")
+            (label, dynValue)
         }
 
         def absorb[A](f: A => U => (String, DynamicValue)): ZSchema[A] = {
@@ -190,7 +203,9 @@ final class SchemaVisitorZSchemaGen(
       }
 
       if (result == null) {
-        throw new IllegalStateException(s"No alternative matched for union value: $u")
+        throw new IllegalStateException(
+          s"No alternative matched for union value: $u"
+        )
       }
       result
     }
@@ -204,7 +219,8 @@ final class SchemaVisitorZSchemaGen(
         // Map lookup - O(log n), uses pre-compiled schema
         val schema = altSchemas(tag).asInstanceOf[ZSchema[A]]
         dynValue.toTypedValue(schema) match {
-          case Left(error) => Left(s"Failed to decode union alternative '$tag': $error")
+          case Left(error) =>
+            Left(s"Failed to decode union alternative '$tag': $error")
           case Right(value) =>
             val u = alt.inject(value)
             Right(u)

@@ -35,8 +35,10 @@ object ZSchemaExample extends ZIOAppDefault {
     implicit val zioSchema: ZSchema[Person] = smithy4sSchema.toZSchema
 
     // Derive codecs from the ZIO Schema
-    val jsonCodec: BinaryCodec[Person] = JsonCodec.schemaBasedBinaryCodec(zioSchema)
-    val protobufCodec: BinaryCodec[Person] = ProtobufCodec.protobufCodec(zioSchema)
+    val jsonCodec: BinaryCodec[Person] =
+      JsonCodec.schemaBasedBinaryCodec(zioSchema)
+    val protobufCodec: BinaryCodec[Person] =
+      ProtobufCodec.protobufCodec(zioSchema)
   }
 
   override def run: ZIO[Any, Throwable, Unit] = {
@@ -57,7 +59,9 @@ object ZSchemaExample extends ZIOAppDefault {
         .fromEither(Person.jsonCodec.decode(jsonBytes))
         .mapError(error => new Exception(s"JSON decode failed: $error"))
       _ <- Console.printLine(s"Decoded from JSON: $decodedFromJson")
-      _ <- Console.printLine(s"JSON roundtrip successful: ${person == decodedFromJson}\n")
+      _ <- Console.printLine(
+        s"JSON roundtrip successful: ${person == decodedFromJson}\n"
+      )
 
       // === Protobuf Codec Example ===
       _ <- Console.printLine("--- Protobuf Codec ---")

@@ -9,7 +9,8 @@ import zio.test.{Spec, TestEnvironment, assertTrue}
 
 object ZSchemaVisitorSpec extends zio.test.ZIOSpecDefault {
 
-  def visitor[A]: Schema[A] => ZSchema[A] = SchemaVisitorZSchemaGen.fromSchema(_)
+  def visitor[A]: Schema[A] => ZSchema[A] =
+    SchemaVisitorZSchemaGen.fromSchema(_)
 
   // Test data structures
   case class RecursiveFoo(foo: Option[RecursiveFoo])
@@ -27,8 +28,12 @@ object ZSchemaVisitorSpec extends zio.test.ZIOSpecDefault {
     case class StringValue(value: String) extends IntOrString
 
     val schema: Schema[IntOrString] = {
-      val intAlt = int.oneOf[IntOrString]("intValue", IntValue(_)) { case IntValue(i) => i }
-      val strAlt = string.oneOf[IntOrString]("stringValue", StringValue(_)) { case StringValue(s) => s }
+      val intAlt = int.oneOf[IntOrString]("intValue", IntValue(_)) {
+        case IntValue(i) => i
+      }
+      val strAlt = string.oneOf[IntOrString]("stringValue", StringValue(_)) {
+        case StringValue(s) => s
+      }
       union(intAlt, strAlt).reflective.withId(ShapeId("", "IntOrString"))
     }
   }
@@ -39,8 +44,12 @@ object ZSchemaVisitorSpec extends zio.test.ZIOSpecDefault {
     case class IntValue1(value: Int) extends IntOrInt
 
     val schema: Schema[IntOrInt] = {
-      val int0 = int.oneOf[IntOrInt]("intValue0", IntValue0(_)) { case IntValue0(i) => i }
-      val int1 = int.oneOf[IntOrInt]("intValue1", IntValue1(_)) { case IntValue1(i) => i }
+      val int0 = int.oneOf[IntOrInt]("intValue0", IntValue0(_)) {
+        case IntValue0(i) => i
+      }
+      val int1 = int.oneOf[IntOrInt]("intValue1", IntValue1(_)) {
+        case IntValue1(i) => i
+      }
       union(int0, int1).reflective.withId(ShapeId("", "IntOrInt"))
     }
   }
@@ -50,7 +59,7 @@ object ZSchemaVisitorSpec extends zio.test.ZIOSpecDefault {
     // Use ZIO Schema's DynamicValue for roundtrip testing
     val dynamic = zio.schema.DynamicValue.fromSchemaAndValue(schema, value)
     dynamic.toTypedValue(schema) match {
-      case Left(_) => false
+      case Left(_)        => false
       case Right(decoded) => decoded == value
     }
   }
