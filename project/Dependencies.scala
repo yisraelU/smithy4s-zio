@@ -3,7 +3,7 @@ import smithy4s.codegen.Smithy4sCodegenPlugin.autoImport.smithy4sVersion
 
 object Dependencies {
   object Http4s {
-    val http4sVersion = Def.setting("0.23.33")
+    val http4sVersion = Def.setting("0.23.34")
 
     val circe: Def.Initialize[ModuleID] =
       Def.setting("org.http4s" %% "http4s-circe" % http4sVersion.value)
@@ -27,7 +27,7 @@ object Dependencies {
   }
 
   object Circe {
-    val version = "0.14.15"
+    val version = "0.14.16"
     val core = "io.circe" %% "circe-core" % version
     val parser = "io.circe" %% "circe-parser" % version
   }
@@ -70,14 +70,14 @@ object Dependencies {
 
   val Alloy = new {
     val org = "com.disneystreaming.alloy"
-    val alloyVersion = "0.3.38"
+    val alloyVersion = "0.3.39"
     val core = org % "alloy-core" % alloyVersion
     val openapi = org %% "alloy-openapi" % alloyVersion
     val `protocol-tests` = org % "alloy-protocol-tests" % alloyVersion
   }
 
   object ZIO {
-    val zioVersion = "2.1.25"
+    val zioVersion = "2.1.26"
     val schemaVersion = "1.7.6"
     val core = "dev.zio" %% "zio" % zioVersion
 

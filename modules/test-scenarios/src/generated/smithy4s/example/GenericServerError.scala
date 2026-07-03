@@ -17,13 +17,15 @@ object GenericServerError extends ShapeTag.Companion[GenericServerError] {
 
   val hints: Hints = Hints(
     smithy.api.Error.SERVER.widen,
-    smithy.api.HttpError(502),
+    smithy.api.HttpError(502)
   ).lazily
 
   // constructor using the original order from the spec
-  private def make(message: String): GenericServerError = GenericServerError(message)
+  private def make(message: String): GenericServerError = GenericServerError(
+    message
+  )
 
   implicit val schema: Schema[GenericServerError] = struct(
-    string.required[GenericServerError]("message", _.message),
+    string.required[GenericServerError]("message", _.message)
   )(make).withId(id).addHints(hints)
 }

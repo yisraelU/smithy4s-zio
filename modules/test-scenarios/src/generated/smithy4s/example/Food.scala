@@ -12,8 +12,10 @@ sealed trait Food extends scala.Product with scala.Serializable { self =>
   def $ordinal: Int
 
   object project {
-    def pizza: Option[Pizza] = Food.PizzaCase.alt.project.lift(self).map(_.pizza)
-    def salad: Option[Salad] = Food.SaladCase.alt.project.lift(self).map(_.salad)
+    def pizza: Option[Pizza] =
+      Food.PizzaCase.alt.project.lift(self).map(_.pizza)
+    def salad: Option[Salad] =
+      Food.SaladCase.alt.project.lift(self).map(_.salad)
   }
 
   def accept[A](visitor: Food.Visitor[A]): A = this match {
@@ -30,17 +32,23 @@ object Food extends ShapeTag.Companion[Food] {
 
   val hints: Hints = Hints.empty
 
-  final case class PizzaCase(pizza: Pizza) extends Food { final def $ordinal: Int = 0 }
-  final case class SaladCase(salad: Salad) extends Food { final def $ordinal: Int = 1 }
+  final case class PizzaCase(pizza: Pizza) extends Food {
+    final def $ordinal: Int = 0
+  }
+  final case class SaladCase(salad: Salad) extends Food {
+    final def $ordinal: Int = 1
+  }
 
   object PizzaCase {
     val hints: Hints = Hints.empty
-    val schema: Schema[Food.PizzaCase] = bijection(Pizza.schema.addHints(hints), Food.PizzaCase(_), _.pizza)
+    val schema: Schema[Food.PizzaCase] =
+      bijection(Pizza.schema.addHints(hints), Food.PizzaCase(_), _.pizza)
     val alt = schema.oneOf[Food]("pizza")
   }
   object SaladCase {
     val hints: Hints = Hints.empty
-    val schema: Schema[Food.SaladCase] = bijection(Salad.schema.addHints(hints), Food.SaladCase(_), _.salad)
+    val schema: Schema[Food.SaladCase] =
+      bijection(Salad.schema.addHints(hints), Food.SaladCase(_), _.salad)
     val alt = schema.oneOf[Food]("salad")
   }
 
@@ -59,8 +67,8 @@ object Food extends ShapeTag.Companion[Food] {
 
   implicit val schema: Schema[Food] = union(
     Food.PizzaCase.alt,
-    Food.SaladCase.alt,
-  ){
+    Food.SaladCase.alt
+  ) {
     _.$ordinal
   }.withId(id).addHints(hints)
 }
