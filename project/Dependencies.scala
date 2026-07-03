@@ -27,7 +27,7 @@ object Dependencies {
   }
 
   object Circe {
-    val version = "0.14.15"
+    val version = "0.14.16"
     val core = "io.circe" %% "circe-core" % version
     val parser = "io.circe" %% "circe-parser" % version
   }
@@ -70,14 +70,14 @@ object Dependencies {
 
   val Alloy = new {
     val org = "com.disneystreaming.alloy"
-    val alloyVersion = "0.3.35"
+    val alloyVersion = "0.3.39"
     val core = org % "alloy-core" % alloyVersion
     val openapi = org %% "alloy-openapi" % alloyVersion
     val `protocol-tests` = org % "alloy-protocol-tests" % alloyVersion
   }
 
   object ZIO {
-    val zioVersion = "2.1.24"
+    val zioVersion = "2.1.26"
     val schemaVersion = "1.7.6"
     val core = "dev.zio" %% "zio" % zioVersion
 
