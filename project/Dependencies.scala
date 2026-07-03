@@ -27,7 +27,7 @@ object Dependencies {
   }
 
   object Circe {
-    val version = "0.14.15"
+    val version = "0.14.16"
     val core = "io.circe" %% "circe-core" % version
     val parser = "io.circe" %% "circe-parser" % version
   }
