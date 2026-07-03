@@ -1,11 +1,13 @@
 package smithy4s
 
 package object example {
-  type PizzaAdminService[F[_]] = smithy4s.kinds.FunctorAlgebra[PizzaAdminServiceGen, F]
+  type PizzaAdminService[F[_]] =
+    smithy4s.kinds.FunctorAlgebra[PizzaAdminServiceGen, F]
   val PizzaAdminService = PizzaAdminServiceGen
   type Weather[F[_]] = smithy4s.kinds.FunctorAlgebra[WeatherGen, F]
   val Weather = WeatherGen
-  type RecursiveInputService[F[_]] = smithy4s.kinds.FunctorAlgebra[RecursiveInputServiceGen, F]
+  type RecursiveInputService[F[_]] =
+    smithy4s.kinds.FunctorAlgebra[RecursiveInputServiceGen, F]
   val RecursiveInputService = RecursiveInputServiceGen
 
   type ChanceOfRain = smithy4s.example.ChanceOfRain.Type

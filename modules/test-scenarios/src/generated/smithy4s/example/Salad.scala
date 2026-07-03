@@ -15,10 +15,11 @@ object Salad extends ShapeTag.Companion[Salad] {
   val hints: Hints = Hints.empty
 
   // constructor using the original order from the spec
-  private def make(name: String, ingredients: List[Ingredient]): Salad = Salad(name, ingredients)
+  private def make(name: String, ingredients: List[Ingredient]): Salad =
+    Salad(name, ingredients)
 
   implicit val schema: Schema[Salad] = struct(
     string.required[Salad]("name", _.name),
-    Ingredients.underlyingSchema.required[Salad]("ingredients", _.ingredients),
+    Ingredients.underlyingSchema.required[Salad]("ingredients", _.ingredients)
   )(make).withId(id).addHints(hints)
 }
