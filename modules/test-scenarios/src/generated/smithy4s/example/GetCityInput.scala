@@ -15,13 +15,14 @@ object GetCityInput extends ShapeTag.Companion[GetCityInput] {
   val hints: Hints = Hints.empty
 
   object optics {
-    val cityId: Lens[GetCityInput, CityId] = Lens[GetCityInput, CityId](_.cityId)(n => a => a.copy(cityId = n))
+    val cityId: Lens[GetCityInput, CityId] =
+      Lens[GetCityInput, CityId](_.cityId)(n => a => a.copy(cityId = n))
   }
 
   // constructor using the original order from the spec
   private def make(cityId: CityId): GetCityInput = GetCityInput(cityId)
 
   implicit val schema: Schema[GetCityInput] = struct(
-    CityId.schema.required[GetCityInput]("cityId", _.cityId),
+    CityId.schema.required[GetCityInput]("cityId", _.cityId)
   )(make).withId(id).addHints(hints)
 }

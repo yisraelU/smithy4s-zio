@@ -7,7 +7,9 @@ import smithy4s.ShapeTag
 import smithy4s.schema.Schema.recursive
 import smithy4s.schema.Schema.struct
 
-final case class RecursiveInput(hello: Option[smithy4s.example.RecursiveInput] = None)
+final case class RecursiveInput(
+    hello: Option[smithy4s.example.RecursiveInput] = None
+)
 
 object RecursiveInput extends ShapeTag.Companion[RecursiveInput] {
   val id: ShapeId = ShapeId("smithy4s.example", "RecursiveInput")
@@ -15,9 +17,14 @@ object RecursiveInput extends ShapeTag.Companion[RecursiveInput] {
   val hints: Hints = Hints.empty
 
   // constructor using the original order from the spec
-  private def make(hello: Option[smithy4s.example.RecursiveInput]): RecursiveInput = RecursiveInput(hello)
+  private def make(
+      hello: Option[smithy4s.example.RecursiveInput]
+  ): RecursiveInput = RecursiveInput(hello)
 
-  implicit val schema: Schema[RecursiveInput] = recursive(struct(
-    smithy4s.example.RecursiveInput.schema.optional[RecursiveInput]("hello", _.hello),
-  )(make).withId(id).addHints(hints))
+  implicit val schema: Schema[RecursiveInput] = recursive(
+    struct(
+      smithy4s.example.RecursiveInput.schema
+        .optional[RecursiveInput]("hello", _.hello)
+    )(make).withId(id).addHints(hints)
+  )
 }
