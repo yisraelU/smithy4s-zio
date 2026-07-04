@@ -3,7 +3,7 @@ addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.4.8")
 addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.5.11")
 addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.7.0")
 addSbtPlugin(
-  "com.disneystreaming.smithy4s" % "smithy4s-sbt-codegen" % "0.18.55"
+  "com.disneystreaming.smithy4s" % "smithy4s-sbt-codegen" % "0.19.8"
 )
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.6")
 addSbtPlugin("org.typelevel" % "sbt-typelevel" % "0.8.6")
