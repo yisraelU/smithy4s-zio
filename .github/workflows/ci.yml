@@ -28,7 +28,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04]
-        scala: [2.13]
+        scala: [3]
         java: [temurin@11]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
@@ -74,11 +74,11 @@ jobs:
 
       - name: Make target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
-        run: mkdir -p modules/schema/target/jvm-3 modules/prelude/target/jvm-3 target modules/http/target/jvm-3 modules/schema/target/jvm-2.13 modules/prelude/target/jvm-2.13 modules/http/target/jvm-2.13 project/target
+        run: mkdir -p modules/schema/target/jvm-3 modules/prelude/target/jvm-3 target modules/http/target/jvm-3 project/target
 
       - name: Compress target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
-        run: tar cf targets.tar modules/schema/target/jvm-3 modules/prelude/target/jvm-3 target modules/http/target/jvm-3 modules/schema/target/jvm-2.13 modules/prelude/target/jvm-2.13 modules/http/target/jvm-2.13 project/target
+        run: tar cf targets.tar modules/schema/target/jvm-3 modules/prelude/target/jvm-3 target modules/http/target/jvm-3 project/target
 
       - name: Upload target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
@@ -118,12 +118,12 @@ jobs:
         if: matrix.java == 'temurin@11' && steps.setup-java-temurin-11.outputs.cache-hit == 'false'
         run: sbt +update
 
-      - name: Download target directories (2.13)
+      - name: Download target directories (3)
         uses: actions/download-artifact@v6
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.13
+          name: target-${{ matrix.os }}-${{ matrix.java }}-3
 
-      - name: Inflate target directories (2.13)
+      - name: Inflate target directories (3)
         run: |
           tar xf targets.tar
           rm targets.tar
@@ -182,12 +182,12 @@ jobs:
         run: sbt +update
 
       - name: Generate site
-        run: sbt docs/tlSite
+        run: sbt docs3/tlSite
 
       - name: Publish site
         if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/v')
         uses: peaceiris/actions-gh-pages@v4.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: site/target/jvm-2.13/docs/site
+          publish_dir: site/target/jvm-3/docs/site
           keep_files: true
