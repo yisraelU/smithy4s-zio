@@ -77,7 +77,7 @@ object Dependencies {
   }
 
   object ZIO {
-    val zioVersion = "2.1.26"
+    val zioVersion = "2.1.27"
     val schemaVersion = "1.8.7"
     val core = "dev.zio" %% "zio" % zioVersion
 
